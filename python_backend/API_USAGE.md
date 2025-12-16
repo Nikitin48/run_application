@@ -10,8 +10,11 @@
 ```bash
 cd python_backend
 source .venv/bin/activate
-uvicorn app.main:app --reload --port 8000
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
+
+Если вы запускаете Flutter на **физическом устройстве**, бекенд должен слушать `0.0.0.0`, а приложение должно ходить на IP вашего Mac в Wi‑Fi сети:
+- `http://<MAC_IP>:8000`
 
 ## Настройки (`.env`)
 

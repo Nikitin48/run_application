@@ -35,11 +35,13 @@ cp env.example .env
 4) Запуск сервера:
 
 ```bash
-uvicorn app.main:app --reload --port 8000
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 Проверка:
 - `GET /health` → `{"ok": true}`
+
+Если Flutter запускается на **физическом устройстве**, используйте IP вашего Mac в `API_BASE_URL` (см. ниже).
 
 ## Auth (email+пароль)
 
@@ -63,6 +65,19 @@ uvicorn app.main:app --reload --port 8000
 curl -s "http://127.0.0.1:8000/territories?minLng=37.60&minLat=55.74&maxLng=37.63&maxLat=55.76"
 curl -s "http://127.0.0.1:8000/notifications/last" -H "Authorization: Bearer ACCESS_TOKEN"
 ```
+
+## Документация и Swagger
+
+- Swagger UI: `http://127.0.0.1:8000/docs`
+- OpenAPI JSON: `http://127.0.0.1:8000/openapi.json`
+- Примеры использования API (curl): `python_backend/API_USAGE.md`
+
+## Flutter: доступ к локальному бекенду “везде”
+
+- Android Emulator (по умолчанию): `http://10.0.2.2:8000`
+- iOS Simulator (по умолчанию): `http://127.0.0.1:8000`
+- Физическое устройство: запускать с
+  - `--dart-define=API_BASE_URL=http://<MAC_IP>:8000`
 
 
 

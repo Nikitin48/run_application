@@ -1,0 +1,62 @@
+{
+  "@@locale": "ru",
+  "appTitle": "Беговой трекер",
+
+  "loginTitle": "Вход",
+  "registerTitle": "Регистрация",
+  "emailLabel": "Почта",
+  "displayNameLabel": "Имя",
+  "passwordLabel": "Пароль",
+  "loginAction": "Войти",
+  "registerAction": "Создать аккаунт",
+  "switchToLogin": "Уже есть аккаунт? Войти",
+  "switchToRegister": "Нет аккаунта? Зарегистрироваться",
+  "loading": "Загрузка…",
+
+  "mapTitle": "Карта",
+  "logout": "Выйти",
+  "followOn": "Слежение",
+  "followOff": "Ко мне",
+  "testModeOn": "Тестовый режим",
+  "testModeOff": "Тестовый режим",
+
+  "territoriesCount": "Территорий: {count}",
+  "territoriesLoadError": "Ошибка загрузки территорий",
+
+  "territoryStolenTitle": "Территория отжата",
+  "territoryStolenMessage": "У вас отжали {area}",
+  "refresh": "Обновить",
+  "close": "Закрыть",
+
+  "runReady": "Готово",
+  "runRunning": "Бег",
+  "runPaused": "Пауза",
+  "runFinishing": "Завершение…",
+  "runStart": "Старт",
+  "runPause": "Пауза",
+  "runResume": "Продолжить",
+  "runFinish": "Финиш",
+  "pointsCount": "Точек: {count}",
+
+  "runSummaryTitle": "Итоги пробежки",
+  "runSummaryNoData": "Нет данных о завершённой пробежке.",
+  "backToMap": "Вернуться к карте",
+  "done": "Готово",
+
+  "distance": "Дистанция",
+  "elapsed": "Общее время",
+  "paused": "Пауза",
+  "moving": "В движении",
+  "avgPaceMoving": "Средний темп",
+  "capturedArea": "Захваченная площадь",
+  "victims": "Отжато у пользователей",
+
+  "noLocationYet": "Местоположение ещё не получено",
+  "enableLocationFirst": "Сначала включите геолокацию",
+  "runFinished": "Пробежка завершена",
+
+  "runLiveStats": "Дистанция: {distance} • Захват: {area} • Отжато: {victims}",
+  "runLiveDistanceOnly": "Дистанция: {distance}"
+}
+
+

@@ -1,0 +1,62 @@
+{
+  "@@locale": "en",
+  "appTitle": "Run Application",
+
+  "loginTitle": "Login",
+  "registerTitle": "Register",
+  "emailLabel": "Email",
+  "displayNameLabel": "Display name",
+  "passwordLabel": "Password",
+  "loginAction": "Login",
+  "registerAction": "Create account",
+  "switchToLogin": "Already have an account? Login",
+  "switchToRegister": "No account? Register",
+  "loading": "Loading…",
+
+  "mapTitle": "Map",
+  "logout": "Logout",
+  "followOn": "Following",
+  "followOff": "Follow me",
+  "testModeOn": "Test mode on",
+  "testModeOff": "Test mode",
+
+  "territoriesCount": "Territories: {count}",
+  "territoriesLoadError": "Failed to load territories",
+
+  "territoryStolenTitle": "Territory stolen",
+  "territoryStolenMessage": "You lost {area}",
+  "refresh": "Refresh",
+  "close": "Close",
+
+  "runReady": "Ready",
+  "runRunning": "Running",
+  "runPaused": "Paused",
+  "runFinishing": "Finishing…",
+  "runStart": "Start",
+  "runPause": "Pause",
+  "runResume": "Resume",
+  "runFinish": "Finish",
+  "pointsCount": "Points: {count}",
+
+  "runSummaryTitle": "Run summary",
+  "runSummaryNoData": "No finished run in memory.",
+  "backToMap": "Back to map",
+  "done": "Done",
+
+  "distance": "Distance",
+  "elapsed": "Elapsed",
+  "paused": "Paused",
+  "moving": "Moving",
+  "avgPaceMoving": "Avg pace (moving)",
+  "capturedArea": "Captured area",
+  "victims": "Victims",
+
+  "noLocationYet": "No location yet",
+  "enableLocationFirst": "Enable location first",
+  "runFinished": "Run finished",
+
+  "runLiveStats": "Distance: {distance} • Capture: {area} • Victims: {victims}",
+  "runLiveDistanceOnly": "Distance: {distance}"
+}
+
+
