@@ -1,0 +1,19 @@
+fastapi==0.115.6
+uvicorn[standard]==0.32.1
+psycopg[binary]==3.2.13
+pydantic==2.10.3
+pydantic-settings==2.7.0
+passlib[argon2]==1.7.4
+PyJWT==2.10.1
+email-validator==2.2.0
+argon2-cffi==23.1.0
+# passlib 1.7.4 expects bcrypt's legacy __about__.__version__ attribute.
+# Pin bcrypt<4 to avoid noisy "(trapped) error reading bcrypt version" warnings.
+bcrypt==3.2.2
+
+
+
+
+
+
+
