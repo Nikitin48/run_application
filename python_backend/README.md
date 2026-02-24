@@ -50,13 +50,15 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 - `POST /auth/login`
 - `POST /auth/refresh` (rotation refresh token)
 - `GET /me` (Bearer access token)
+- `GET /me/profile` (персональные данные + агрегированная статистика)
+- `PATCH /me/territory-color` (смена цвета территории пользователя)
 
 Перед запуском примените SQL из `db/` (в корне репозитория): `db/schema.sql`, `db/functions.sql`.
 
 ## Runs / Territories
 
 - `POST /runs/finish` — загрузить завершённую пробежку (points + pauses), сохранить в БД и выполнить захват территорий.
-- `GET /territories?minLng&minLat&maxLng&maxLat` — получить территории в bbox (GeoJSON FeatureCollection).
+- `GET /territories?minLng&minLat&maxLng&maxLat` — получить территории в bbox (GeoJSON FeatureCollection, включая `territory_color` владельца).
 - `GET /notifications/last` — последнее уведомление “у вас отжали” (для текущего пользователя).
 
 Пример (после логина, с `ACCESS_TOKEN`):

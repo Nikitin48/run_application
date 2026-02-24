@@ -47,7 +47,40 @@ class UserOut(BaseModel):
     username: str
     display_name: str
     avatar_url: str | None = None
+    territory_color: str
     created_at: datetime
+
+
+class UserStatsOut(BaseModel):
+    run_count: int
+    total_distance_m: float
+    total_elapsed_s: int
+    total_paused_s: int
+    total_moving_s: int
+    owned_area_m2: float
+
+
+class MeProfileOut(BaseModel):
+    id: str
+    username: str
+    display_name: str
+    avatar_url: str | None = None
+    email: EmailStr | None = None
+    territory_color: str
+    created_at: datetime
+    stats: UserStatsOut
+
+
+class UpdateTerritoryColorRequest(BaseModel):
+    territory_color: str = Field(
+        min_length=7,
+        max_length=7,
+        pattern="^#[0-9A-Fa-f]{6}$",
+    )
+
+
+class TerritoryColorOut(BaseModel):
+    territory_color: str
 
 
 class RunPointIn(BaseModel):

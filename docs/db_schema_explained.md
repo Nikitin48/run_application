@@ -7,6 +7,7 @@
 - `username text unique` — логин/хэндл; уникален.
 - `display_name text` — отображаемое имя.
 - `avatar_url text` — опциональная ссылка на аватар.
+- `territory_color text default '#3B82F6'` — цвет территории пользователя в HEX (`#RRGGBB`).
 - `is_banned boolean default false` — флаг блокировки.
 - `created_at timestamptz default now()` — когда создан.
 - `updated_at timestamptz default now()` — когда изменён.

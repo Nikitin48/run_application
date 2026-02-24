@@ -49,6 +49,22 @@ curl -s http://127.0.0.1:8000/me \
   -H "Authorization: Bearer ACCESS_TOKEN"
 ```
 
+### 3.1) Профиль + статистика (Bearer)
+
+```bash
+curl -s http://127.0.0.1:8000/me/profile \
+  -H "Authorization: Bearer ACCESS_TOKEN"
+```
+
+### 3.2) Сменить цвет территории (Bearer)
+
+```bash
+curl -s -X PATCH http://127.0.0.1:8000/me/territory-color \
+  -H "Authorization: Bearer ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"territory_color":"#22C55E"}'
+```
+
 ### 4) Refresh
 
 ```bash
@@ -66,6 +82,7 @@ curl -s "http://127.0.0.1:8000/territories?minLng=37.60&minLat=55.74&maxLng=37.6
 ```
 
 Ответ: GeoJSON `FeatureCollection`.
+`properties` каждой зоны содержит: `user_id`, `territory_color`, `area_m2`.
 
 ## Пробежка → захват → отжим (finish)
 

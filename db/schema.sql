@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS users (
   username text NOT NULL UNIQUE,
   display_name text NOT NULL,
   avatar_url text,
+  territory_color text NOT NULL DEFAULT '#3B82F6' CHECK (territory_color ~ '^#[0-9A-Fa-f]{6}$'),
   is_banned boolean NOT NULL DEFAULT false,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
