@@ -170,6 +170,12 @@ abstract class AppLocalizations {
   /// **'Map'**
   String get mapTitle;
 
+  /// No description provided for @profileTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get profileTitle;
+
   /// No description provided for @logout.
   ///
   /// In en, this message translates to:
@@ -385,6 +391,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Distance: {distance}'**
   String runLiveDistanceOnly(Object distance);
+
+  /// No description provided for @profilePersonalSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal data'**
+  String get profilePersonalSection;
+
+  /// No description provided for @profileAvatarUrlLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Avatar URL'**
+  String get profileAvatarUrlLabel;
+
+  /// No description provided for @profileEmailReadonlyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Email is read-only.'**
+  String get profileEmailReadonlyHint;
+
+  /// No description provided for @profileSaveProfileAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Save profile'**
+  String get profileSaveProfileAction;
+
+  /// No description provided for @profileTerritoryColorSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Territory color'**
+  String get profileTerritoryColorSection;
+
+  /// No description provided for @profileColorCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Current color'**
+  String get profileColorCurrent;
+
+  /// No description provided for @profilePickCustomColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick color'**
+  String get profilePickCustomColor;
+
+  /// No description provided for @profileApplyColorAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get profileApplyColorAction;
+
+  /// No description provided for @profileSaveColorAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Save color'**
+  String get profileSaveColorAction;
+
+  /// No description provided for @profilePasswordSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Change password'**
+  String get profilePasswordSection;
+
+  /// No description provided for @profileCurrentPasswordLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Current password'**
+  String get profileCurrentPasswordLabel;
+
+  /// No description provided for @profileNewPasswordLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'New password'**
+  String get profileNewPasswordLabel;
+
+  /// No description provided for @profileConfirmPasswordLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm new password'**
+  String get profileConfirmPasswordLabel;
+
+  /// No description provided for @profileChangePasswordAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Change password'**
+  String get profileChangePasswordAction;
+
+  /// No description provided for @profilePasswordMismatchError.
+  ///
+  /// In en, this message translates to:
+  /// **'New password and confirmation do not match.'**
+  String get profilePasswordMismatchError;
+
+  /// No description provided for @profilePasswordMinLengthError.
+  ///
+  /// In en, this message translates to:
+  /// **'New password must be at least 8 characters long.'**
+  String get profilePasswordMinLengthError;
+
+  /// No description provided for @profileStatsSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Stats'**
+  String get profileStatsSection;
+
+  /// No description provided for @profileRunsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Runs count'**
+  String get profileRunsCount;
+
+  /// No description provided for @profileOwnedArea.
+  ///
+  /// In en, this message translates to:
+  /// **'Current owned area'**
+  String get profileOwnedArea;
+
+  /// No description provided for @profileSaveSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Changes saved'**
+  String get profileSaveSuccess;
 }
 
 class _AppLocalizationsDelegate

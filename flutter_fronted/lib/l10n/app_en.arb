@@ -14,6 +14,7 @@
   "loading": "Loading…",
 
   "mapTitle": "Map",
+  "profileTitle": "Profile",
   "logout": "Logout",
   "followOn": "Following",
   "followOff": "Follow me",
@@ -56,7 +57,28 @@
   "runFinished": "Run finished",
 
   "runLiveStats": "Distance: {distance} • Capture: {area} • Victims: {victims}",
-  "runLiveDistanceOnly": "Distance: {distance}"
+  "runLiveDistanceOnly": "Distance: {distance}",
+
+  "profilePersonalSection": "Personal data",
+  "profileAvatarUrlLabel": "Avatar URL",
+  "profileEmailReadonlyHint": "Email is read-only.",
+  "profileSaveProfileAction": "Save profile",
+  "profileTerritoryColorSection": "Territory color",
+  "profileColorCurrent": "Current color",
+  "profilePickCustomColor": "Pick color",
+  "profileApplyColorAction": "Apply",
+  "profileSaveColorAction": "Save color",
+  "profilePasswordSection": "Change password",
+  "profileCurrentPasswordLabel": "Current password",
+  "profileNewPasswordLabel": "New password",
+  "profileConfirmPasswordLabel": "Confirm new password",
+  "profileChangePasswordAction": "Change password",
+  "profilePasswordMismatchError": "New password and confirmation do not match.",
+  "profilePasswordMinLengthError": "New password must be at least 8 characters long.",
+  "profileStatsSection": "Stats",
+  "profileRunsCount": "Runs count",
+  "profileOwnedArea": "Current owned area",
+  "profileSaveSuccess": "Changes saved"
 }
 
 

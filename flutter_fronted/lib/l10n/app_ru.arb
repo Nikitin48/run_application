@@ -14,6 +14,7 @@
   "loading": "Загрузка…",
 
   "mapTitle": "Карта",
+  "profileTitle": "Профиль",
   "logout": "Выйти",
   "followOn": "Слежение",
   "followOff": "Ко мне",
@@ -56,7 +57,28 @@
   "runFinished": "Пробежка завершена",
 
   "runLiveStats": "Дистанция: {distance} • Захват: {area} • Отжато: {victims}",
-  "runLiveDistanceOnly": "Дистанция: {distance}"
+  "runLiveDistanceOnly": "Дистанция: {distance}",
+
+  "profilePersonalSection": "Персональные данные",
+  "profileAvatarUrlLabel": "Ссылка на аватар",
+  "profileEmailReadonlyHint": "Email доступен только для чтения.",
+  "profileSaveProfileAction": "Сохранить данные",
+  "profileTerritoryColorSection": "Цвет территории",
+  "profileColorCurrent": "Текущий цвет",
+  "profilePickCustomColor": "Выбрать цвет",
+  "profileApplyColorAction": "Применить",
+  "profileSaveColorAction": "Сохранить цвет",
+  "profilePasswordSection": "Смена пароля",
+  "profileCurrentPasswordLabel": "Текущий пароль",
+  "profileNewPasswordLabel": "Новый пароль",
+  "profileConfirmPasswordLabel": "Подтвердите новый пароль",
+  "profileChangePasswordAction": "Сменить пароль",
+  "profilePasswordMismatchError": "Новый пароль и подтверждение не совпадают.",
+  "profilePasswordMinLengthError": "Новый пароль должен быть не короче 8 символов.",
+  "profileStatsSection": "Статистика",
+  "profileRunsCount": "Количество пробежек",
+  "profileOwnedArea": "Текущая площадь",
+  "profileSaveSuccess": "Изменения сохранены"
 }
 
 

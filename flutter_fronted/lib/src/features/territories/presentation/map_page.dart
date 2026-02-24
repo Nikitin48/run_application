@@ -9,12 +9,12 @@ import 'package:latlong2/latlong.dart';
 import 'package:go_router/go_router.dart';
 import 'package:run_application/l10n/app_localizations.dart';
 
-import '../../auth/application/auth_controller.dart';
 import '../../notifications/application/last_notification_provider.dart';
 import '../application/territories_controller.dart';
 import '../domain/territory.dart';
 import '../../runs/application/run_tracker_controller.dart';
 import 'widgets/run_controls_card.dart';
+import '../../../core/utils/color_utils.dart';
 import '../../../core/utils/formatters.dart';
 import '../domain/value_objects/bbox.dart';
 
@@ -195,6 +195,7 @@ class _MapPageBodyState extends ConsumerState<_MapPageBody> {
 
     final lastNotifAsync = ref.watch(lastNotificationProvider);
     final runState = ref.watch(runTrackerProvider);
+    final bottomBarInset = 58.0 + 10.0;
 
     final trackPoints = runState.points
         .map((p) => LatLng(p.lat, p.lng))
@@ -235,10 +236,6 @@ class _MapPageBodyState extends ConsumerState<_MapPageBody> {
               }
             },
             icon: Icon(_followMe ? Icons.gps_fixed : Icons.gps_not_fixed),
-          ),
-          TextButton(
-            onPressed: () => ref.read(authControllerProvider.notifier).logout(),
-            child: Text(l10n.logout),
           ),
         ],
       ),
@@ -304,12 +301,11 @@ class _MapPageBodyState extends ConsumerState<_MapPageBody> {
                 data: (territories) {
                   final polygons = <Polygon>[];
                   for (final t in territories) {
-                    final fill = territoryColor(
-                      t.userId,
-                    ).withValues(alpha: 0.25);
-                    final border = territoryColor(
-                      t.userId,
-                    ).withValues(alpha: 0.9);
+                    final baseColor = colorFromHexOrDefault(
+                      t.territoryColorHex,
+                    );
+                    final fill = baseColor.withValues(alpha: 0.25);
+                    final border = baseColor.withValues(alpha: 0.9);
                     for (final ring in t.polygons) {
                       polygons.add(
                         Polygon(
@@ -355,7 +351,7 @@ class _MapPageBodyState extends ConsumerState<_MapPageBody> {
           Positioned(
             left: 12,
             right: 12,
-            bottom: 12,
+            bottom: 12 + bottomBarInset,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -388,7 +384,7 @@ class _MapPageBodyState extends ConsumerState<_MapPageBody> {
           if (_testMode)
             Positioned(
               right: 12,
-              bottom: 170,
+              bottom: 170 + bottomBarInset,
               child: _TestPad(
                 onUp: () => _simulateStep(northM: 5, eastM: 0),
                 onDown: () => _simulateStep(northM: -5, eastM: 0),

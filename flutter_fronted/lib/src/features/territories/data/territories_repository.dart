@@ -27,9 +27,12 @@ class TerritoriesRepositoryImpl implements TerritoriesRepository {
 
     for (final f in features) {
       if (f is! Map<String, dynamic>) continue;
-      final props = (f['properties'] as Map?)?.cast<String, dynamic>() ?? const {};
+      final props =
+          (f['properties'] as Map?)?.cast<String, dynamic>() ?? const {};
       final userId = (props['user_id'] ?? '') as String;
       final areaM2 = (props['area_m2'] as num?)?.toDouble() ?? 0.0;
+      final territoryColorHex =
+          (props['territory_color'] as String?) ?? '#3B82F6';
 
       final geometry = (f['geometry'] as Map?)?.cast<String, dynamic>();
       if (geometry == null) continue;
@@ -58,7 +61,14 @@ class TerritoriesRepositoryImpl implements TerritoriesRepository {
         continue;
       }
 
-      out.add(Territory(userId: userId, areaM2: areaM2, polygons: polygons));
+      out.add(
+        Territory(
+          userId: userId,
+          areaM2: areaM2,
+          territoryColorHex: territoryColorHex,
+          polygons: polygons,
+        ),
+      );
     }
 
     return out;
@@ -75,5 +85,3 @@ class TerritoriesRepositoryImpl implements TerritoriesRepository {
     return pts;
   }
 }
-
-

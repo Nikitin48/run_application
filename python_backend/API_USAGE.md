@@ -65,6 +65,24 @@ curl -s -X PATCH http://127.0.0.1:8000/me/territory-color \
   -d '{"territory_color":"#22C55E"}'
 ```
 
+### 3.3) Обновить профиль (кроме email)
+
+```bash
+curl -s -X PATCH http://127.0.0.1:8000/me/profile \
+  -H "Authorization: Bearer ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"display_name":"Claus","avatar_url":"https://example.com/avatar.png"}'
+```
+
+### 3.4) Сменить пароль
+
+```bash
+curl -s -X PATCH http://127.0.0.1:8000/me/password \
+  -H "Authorization: Bearer ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"current_password":"password123","new_password":"new_password_123"}'
+```
+
 ### 4) Refresh
 
 ```bash

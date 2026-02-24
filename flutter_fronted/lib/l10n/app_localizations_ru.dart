@@ -45,6 +45,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get mapTitle => 'Карта';
 
   @override
+  String get profileTitle => 'Профиль';
+
+  @override
   String get logout => 'Выйти';
 
   @override
@@ -161,4 +164,66 @@ class AppLocalizationsRu extends AppLocalizations {
   String runLiveDistanceOnly(Object distance) {
     return 'Дистанция: $distance';
   }
+
+  @override
+  String get profilePersonalSection => 'Персональные данные';
+
+  @override
+  String get profileAvatarUrlLabel => 'Ссылка на аватар';
+
+  @override
+  String get profileEmailReadonlyHint => 'Email доступен только для чтения.';
+
+  @override
+  String get profileSaveProfileAction => 'Сохранить данные';
+
+  @override
+  String get profileTerritoryColorSection => 'Цвет территории';
+
+  @override
+  String get profileColorCurrent => 'Текущий цвет';
+
+  @override
+  String get profilePickCustomColor => 'Выбрать цвет';
+
+  @override
+  String get profileApplyColorAction => 'Применить';
+
+  @override
+  String get profileSaveColorAction => 'Сохранить цвет';
+
+  @override
+  String get profilePasswordSection => 'Смена пароля';
+
+  @override
+  String get profileCurrentPasswordLabel => 'Текущий пароль';
+
+  @override
+  String get profileNewPasswordLabel => 'Новый пароль';
+
+  @override
+  String get profileConfirmPasswordLabel => 'Подтвердите новый пароль';
+
+  @override
+  String get profileChangePasswordAction => 'Сменить пароль';
+
+  @override
+  String get profilePasswordMismatchError =>
+      'Новый пароль и подтверждение не совпадают.';
+
+  @override
+  String get profilePasswordMinLengthError =>
+      'Новый пароль должен быть не короче 8 символов.';
+
+  @override
+  String get profileStatsSection => 'Статистика';
+
+  @override
+  String get profileRunsCount => 'Количество пробежек';
+
+  @override
+  String get profileOwnedArea => 'Текущая площадь';
+
+  @override
+  String get profileSaveSuccess => 'Изменения сохранены';
 }

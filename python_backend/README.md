@@ -51,6 +51,8 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 - `POST /auth/refresh` (rotation refresh token)
 - `GET /me` (Bearer access token)
 - `GET /me/profile` (персональные данные + агрегированная статистика)
+- `PATCH /me/profile` (обновление `display_name` и/или `avatar_url`; `email` не изменяется)
+- `PATCH /me/password` (смена пароля по текущему паролю)
 - `PATCH /me/territory-color` (смена цвета территории пользователя)
 
 Перед запуском примените SQL из `db/` (в корне репозитория): `db/schema.sql`, `db/functions.sql`.

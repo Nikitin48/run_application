@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, model_validator
 
 
 class RegisterRequest(BaseModel):
@@ -81,6 +81,28 @@ class UpdateTerritoryColorRequest(BaseModel):
 
 class TerritoryColorOut(BaseModel):
     territory_color: str
+
+
+class UpdateMeProfileRequest(BaseModel):
+    display_name: str | None = Field(default=None, min_length=1, max_length=80)
+    avatar_url: str | None = Field(default=None, max_length=500)
+
+    @model_validator(mode="after")
+    def validate_any_field_provided(self) -> "UpdateMeProfileRequest":
+        if self.display_name is None and self.avatar_url is None:
+            raise ValueError("at least one field must be provided")
+        return self
+
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str = Field(min_length=1, max_length=200)
+    new_password: str = Field(min_length=8, max_length=200)
+
+    @model_validator(mode="after")
+    def validate_passwords_are_different(self) -> "ChangePasswordRequest":
+        if self.current_password == self.new_password:
+            raise ValueError("new_password must differ from current_password")
+        return self
 
 
 class RunPointIn(BaseModel):

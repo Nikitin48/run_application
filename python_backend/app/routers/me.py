@@ -5,13 +5,15 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from ..db import db_conn
 from ..models import (
+    ChangePasswordRequest,
     MeProfileOut,
     TerritoryColorOut,
+    UpdateMeProfileRequest,
     UpdateTerritoryColorRequest,
     UserOut,
     UserStatsOut,
 )
-from ..security import decode_access_token
+from ..security import decode_access_token, hash_password, verify_password
 
 
 router = APIRouter(tags=["me"])
@@ -129,5 +131,83 @@ def update_territory_color(
             if row is None:
                 raise HTTPException(status_code=404, detail="user not found")
             return TerritoryColorOut(territory_color=row[0] or DEFAULT_TERRITORY_COLOR)
+
+
+@router.patch("/me/profile", response_model=MeProfileOut)
+def update_me_profile(
+    payload: UpdateMeProfileRequest,
+    user_id: str = Depends(current_user_id),
+) -> MeProfileOut:
+    with db_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                UPDATE users
+                SET display_name = COALESCE(%s, display_name),
+                    avatar_url = COALESCE(%s, avatar_url),
+                    updated_at = now()
+                WHERE id = %s
+                """,
+                (payload.display_name, payload.avatar_url, user_id),
+            )
+    return me_profile(user_id=user_id)
+
+
+@router.patch("/me/password")
+def change_password(
+    payload: ChangePasswordRequest,
+    user_id: str = Depends(current_user_id),
+) -> dict:
+    with db_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT ai.password_hash, u.is_banned
+                FROM auth_identities ai
+                JOIN users u ON u.id = ai.user_id
+                WHERE ai.user_id = %s AND ai.provider = 'email'
+                LIMIT 1
+                """,
+                (user_id,),
+            )
+            row = cur.fetchone()
+            if row is None:
+                raise HTTPException(status_code=404, detail="email identity not found")
+
+            pw_hash, is_banned = row
+            if is_banned:
+                raise HTTPException(status_code=403, detail="user banned")
+
+            if not verify_password(payload.current_password, pw_hash):
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="invalid current password",
+                )
+
+            try:
+                new_hash = hash_password(payload.new_password)
+            except ValueError as e:
+                raise HTTPException(status_code=422, detail=str(e))
+
+            cur.execute(
+                """
+                UPDATE auth_identities
+                SET password_hash = %s, updated_at = now()
+                WHERE user_id = %s AND provider = 'email'
+                """,
+                (new_hash, user_id),
+            )
+
+            # Security best practice: force re-login on other sessions.
+            cur.execute(
+                """
+                UPDATE refresh_tokens
+                SET revoked_at = now()
+                WHERE user_id = %s AND revoked_at IS NULL
+                """,
+                (user_id,),
+            )
+
+    return {"ok": True}
 
 

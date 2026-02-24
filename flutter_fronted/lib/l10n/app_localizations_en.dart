@@ -45,6 +45,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mapTitle => 'Map';
 
   @override
+  String get profileTitle => 'Profile';
+
+  @override
   String get logout => 'Logout';
 
   @override
@@ -161,4 +164,66 @@ class AppLocalizationsEn extends AppLocalizations {
   String runLiveDistanceOnly(Object distance) {
     return 'Distance: $distance';
   }
+
+  @override
+  String get profilePersonalSection => 'Personal data';
+
+  @override
+  String get profileAvatarUrlLabel => 'Avatar URL';
+
+  @override
+  String get profileEmailReadonlyHint => 'Email is read-only.';
+
+  @override
+  String get profileSaveProfileAction => 'Save profile';
+
+  @override
+  String get profileTerritoryColorSection => 'Territory color';
+
+  @override
+  String get profileColorCurrent => 'Current color';
+
+  @override
+  String get profilePickCustomColor => 'Pick color';
+
+  @override
+  String get profileApplyColorAction => 'Apply';
+
+  @override
+  String get profileSaveColorAction => 'Save color';
+
+  @override
+  String get profilePasswordSection => 'Change password';
+
+  @override
+  String get profileCurrentPasswordLabel => 'Current password';
+
+  @override
+  String get profileNewPasswordLabel => 'New password';
+
+  @override
+  String get profileConfirmPasswordLabel => 'Confirm new password';
+
+  @override
+  String get profileChangePasswordAction => 'Change password';
+
+  @override
+  String get profilePasswordMismatchError =>
+      'New password and confirmation do not match.';
+
+  @override
+  String get profilePasswordMinLengthError =>
+      'New password must be at least 8 characters long.';
+
+  @override
+  String get profileStatsSection => 'Stats';
+
+  @override
+  String get profileRunsCount => 'Runs count';
+
+  @override
+  String get profileOwnedArea => 'Current owned area';
+
+  @override
+  String get profileSaveSuccess => 'Changes saved';
 }
