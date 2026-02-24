@@ -1,0 +1,95 @@
+Архитектура API - FastAPI Backend
+==================================
+
+Структура проекта:
+------------------
+python_backend/
+  ├── app/
+  │   ├── main.py          # FastAPI app, роутеры
+  │   ├── models.py        # Pydantic модели (Request/Response)
+  │   ├── db.py            # Подключение к PostgreSQL
+  │   ├── geo.py           # Гео-утилиты (Haversine, WKT)
+  │   ├── security.py      # JWT, password hashing
+  │   ├── settings.py      # Конфигурация
+  │   └── routers/
+  │       ├── auth.py      # /auth/register, /auth/login, /auth/refresh
+  │       ├── me.py        # /me (профиль)
+  │       ├── runs.py      # /runs/finish
+  │       ├── territories.py  # /territories (GeoJSON)
+  │       └── notifications.py  # /notifications/last
+
+
+Эндпоинты:
+----------
+
+POST /auth/register
+  Request: {email, password, display_name}
+  Response: {access_token, access_expires_at, refresh_token}
+
+POST /auth/login
+  Request: {email, password}
+  Response: {access_token, access_expires_at, refresh_token}
+
+POST /auth/refresh
+  Request: {refresh_token}
+  Response: {access_token, access_expires_at, refresh_token}
+
+GET /me
+  Headers: Authorization: Bearer <token>
+  Response: {id, username, display_name, avatar_url, created_at}
+
+POST /runs/finish
+  Headers: Authorization: Bearer <token>
+  Request: {
+    started_at, ended_at,
+    points: [{lat, lng, ts, accuracy_m, speed_mps, altitude_m}],
+    pauses: [{started_at, ended_at, reason}]
+  }
+  Response: {
+    run_id, distance_m, elapsed_s, paused_s, moving_s,
+    capture_area_m2, victims_count
+  }
+  → Сохраняет пробежку в БД
+  → Вызывает finalize_run_capture() для захвата территорий
+
+GET /territories
+  Query: minLng, minLat, maxLng, maxLat (bbox)
+  Response: GeoJSON FeatureCollection
+  → Возвращает территории в указанном bounding box
+
+GET /notifications/last
+  Headers: Authorization: Bearer <token>
+  Response: {
+    kind, attacker_user_id, run_id,
+    stolen_area_m2, payload, created_at
+  }
+  → Последнее уведомление о захвате территории
+
+
+Поток данных при завершении пробежки:
+--------------------------------------
+1. Flutter отправляет POST /runs/finish с точками и паузами
+2. FastAPI валидирует данные (Pydantic)
+3. Вычисляет расстояние (Haversine) и создает LineString
+4. Сохраняет в таблицы: runs, run_points, run_pauses
+5. Вызывает SQL функцию: finalize_run_capture(run_id)
+   ├── compute_capture_polygons() → MultiPolygon
+   ├── ST_Intersects() → находит жертв
+   ├── ST_Difference() → убирает захват у жертв
+   ├── ST_Union() → добавляет захват бегуну
+   ├── Обновляет user_stats
+   └── Создает уведомления в user_last_notification
+6. Возвращает результат: capture_area_m2, victims_count
+
+
+Технологии:
+-----------
+- FastAPI: веб-фреймворк
+- Pydantic: валидация данных
+- psycopg: драйвер PostgreSQL
+- PostGIS: пространственные операции в БД
+- JWT: авторизация (access + refresh tokens)
+- bcrypt: хеширование паролей
+
+
+

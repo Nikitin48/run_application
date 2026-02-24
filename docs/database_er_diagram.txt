@@ -1,0 +1,97 @@
+ER-диаграмма базы данных Run Application
+==========================================
+
+users
+  ├── id (uuid, PK)
+  ├── username (text, UNIQUE)
+  ├── display_name (text)
+  ├── avatar_url (text)
+  ├── is_banned (boolean)
+  └── created_at, updated_at (timestamptz)
+
+  ├── auth_identities (1:N)
+  │     ├── id (uuid, PK)
+  │     ├── user_id (FK → users.id)
+  │     ├── provider (text: 'email'|'phone')
+  │     ├── identifier (text, UNIQUE)
+  │     ├── password_hash (text)
+  │     └── verified_at (timestamptz)
+  │
+  ├── refresh_tokens (1:N)
+  │     ├── id (uuid, PK)
+  │     ├── user_id (FK → users.id)
+  │     ├── token_hash (text, UNIQUE)
+  │     ├── expires_at (timestamptz)
+  │     └── revoked_at (timestamptz)
+  │
+  ├── runs (1:N)
+  │     ├── id (uuid, PK)
+  │     ├── user_id (FK → users.id)
+  │     ├── status (text: 'draft'|'finished'|'processed'|'failed')
+  │     ├── started_at, ended_at (timestamptz)
+  │     ├── distance_m (double precision)
+  │     ├── elapsed_s, paused_s, moving_s (integer)
+  │     ├── points (jsonb) - raw points
+  │     ├── track_line (geometry LineString, 4326) - PostGIS
+  │     └── processing_error (text)
+  │
+  │     ├── run_points (1:N)
+  │     │     ├── run_id (FK → runs.id, PK part 1)
+  │     │     ├── seq (integer, PK part 2)
+  │     │     ├── ts (timestamptz)
+  │     │     ├── lat, lng (double precision)
+  │     │     ├── altitude_m (double precision)
+  │     │     ├── accuracy_m (double precision)
+  │     │     └── speed_mps (double precision)
+  │     │
+  │     └── run_pauses (1:N)
+  │           ├── id (uuid, PK)
+  │           ├── run_id (FK → runs.id)
+  │           ├── started_at, ended_at (timestamptz)
+  │           └── reason (text: 'manual'|'gps_lost'|'internet_lost')
+  │
+  ├── territories (1:1)
+  │     ├── user_id (FK → users.id, PK)
+  │     ├── geom (geometry MultiPolygon, 4326) - PostGIS
+  │     └── updated_at (timestamptz)
+  │
+  ├── user_stats (1:1)
+  │     ├── user_id (FK → users.id, PK)
+  │     ├── run_count (integer)
+  │     ├── total_distance_m (double precision)
+  │     ├── total_elapsed_s, total_paused_s, total_moving_s (bigint)
+  │     ├── owned_area_m2 (double precision)
+  │     └── updated_at (timestamptz)
+  │
+  └── user_last_notification (1:1)
+        ├── user_id (FK → users.id, PK)
+        ├── kind (text: 'territory_stolen')
+        ├── attacker_user_id (FK → users.id)
+        ├── run_id (FK → runs.id)
+        ├── stolen_area_m2 (double precision)
+        ├── payload (jsonb)
+        └── created_at (timestamptz)
+
+
+Ключевые индексы:
+==================
+- refresh_tokens: user_id, expires_at, revoked_at
+- runs: user_id, status
+- run_points: run_id, ts
+- run_pauses: run_id, started_at
+- territories: geom (GIST индекс для пространственных запросов)
+
+
+PostGIS функции:
+================
+1. compute_capture_polygons(track_line, tol_m, min_area_m2)
+   → MultiPolygon (захваченные территории)
+
+2. finalize_run_capture(run_id, tol_m, min_area_m2)
+   → (capture_area_m2, victims_count)
+   - Вычисляет захваченные полигоны
+   - Перераспределяет территории (ST_Difference, ST_Union)
+   - Обновляет статистику и уведомления
+
+
+
