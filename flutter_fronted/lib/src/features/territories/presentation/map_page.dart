@@ -10,6 +10,7 @@ import 'package:go_router/go_router.dart';
 import 'package:run_application/l10n/app_localizations.dart';
 
 import '../../notifications/application/last_notification_provider.dart';
+import '../../profile/application/profile_controller.dart';
 import '../application/territories_controller.dart';
 import '../domain/territory.dart';
 import '../../runs/application/run_tracker_controller.dart';
@@ -193,9 +194,14 @@ class _MapPageBodyState extends ConsumerState<_MapPageBody> {
         ? const AsyncValue<List<Territory>>.data([])
         : ref.watch(territoriesForBboxProvider(bbox));
 
+    final meProfileAsync = ref.watch(meProfileProvider);
     final lastNotifAsync = ref.watch(lastNotificationProvider);
     final runState = ref.watch(runTrackerProvider);
     final bottomBarInset = 58.0 + 10.0;
+    final myTrackColor = meProfileAsync.maybeWhen(
+      data: (profile) => colorFromHexOrDefault(profile.territoryColor),
+      orElse: () => Theme.of(context).colorScheme.primary,
+    );
 
     final trackPoints = runState.points
         .map((p) => LatLng(p.lat, p.lng))
@@ -274,9 +280,7 @@ class _MapPageBodyState extends ConsumerState<_MapPageBody> {
                     Polyline(
                       points: trackPoints,
                       strokeWidth: 4,
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.primary.withValues(alpha: 0.9),
+                      color: myTrackColor.withValues(alpha: 0.9),
                     ),
                   ],
                 ),
@@ -289,7 +293,7 @@ class _MapPageBodyState extends ConsumerState<_MapPageBody> {
                       height: 18,
                       child: DecoratedBox(
                         decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primary,
+                          color: myTrackColor,
                           shape: BoxShape.circle,
                           border: Border.all(color: Colors.white, width: 2),
                         ),
