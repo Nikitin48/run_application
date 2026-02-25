@@ -1,0 +1,45 @@
+@startuml
+title Run Application - sequence diagram (system + environment)
+
+actor User as "Пользователь"
+participant App as "Flutter приложение\n(MapPage + RunTrackerController)"
+participant GPS as "Geolocator (GPS SDK)"
+participant API as "FastAPI backend"
+database DB as "PostgreSQL + PostGIS"
+
+' 1) Пользователь запустил приложение
+User -> App: Запускает приложение
+activate App
+
+' 2) Определилось местоположение
+App -> GPS: Проверка GPS/permission + запрос позиции
+GPS --> App: Текущие координаты
+App --> User: Показана карта с текущим местоположением
+
+' 3) Пользователь начал активность
+User -> App: Нажимает "Старт"
+App -> GPS: Подписка на stream геопозиции
+App --> User: Активность запущена (таймер/статус running)
+
+' 4) Пользователь ведет активность
+loop Пока активность не завершена
+  GPS --> App: Новая точка (lat, lng, ts, accuracy)
+  App -> App: Добавляет точку в трек\nобновляет состояние активности
+  App --> User: Обновляет трек/дистанцию/время на экране
+end
+
+' 5) Пользователь закончил активность
+User -> App: Нажимает "Финиш"
+App -> App: Формирует FinishRunRequest\n(started_at, ended_at, points, pauses)
+App -> API: POST /runs/finish
+activate API
+API -> DB: Сохраняет run/points/pauses\nвызывает finalize_run_capture()
+DB --> API: run_id + статистика\n(distance, elapsed, paused, moving,\ncapture_area, victims)
+API --> App: 200 OK + RunFinishResponse
+deactivate API
+
+' 6) Статистика записалась и показано пользователю
+App --> User: Открывает экран итогов\nи показывает статистику пробежки
+deactivate App
+
+@enduml

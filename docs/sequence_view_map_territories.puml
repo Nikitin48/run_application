@@ -1,0 +1,53 @@
+@startuml
+title Sequence - Просмотр карты с территориями
+
+actor User as "Пользователь"
+participant MapUI as "MapPage (Flutter UI)"
+participant Geo as "Geolocator (GPS SDK)"
+participant TerrProv as "territoriesForBboxProvider"
+participant TerrUC as "GetTerritoriesForBboxUseCase"
+participant TerrRepo as "TerritoriesRepositoryImpl"
+participant TerrApi as "TerritoriesApi"
+participant NotifApi as "NotificationsApi"
+participant API as "FastAPI backend"
+database DB as "PostgreSQL + PostGIS"
+participant OSM as "OSM Tile Server"
+
+User -> MapUI: Открывает экран карты
+MapUI -> Geo: getCurrentPosition()
+Geo --> MapUI: lat/lng текущей позиции
+
+MapUI -> MapUI: Формирует bbox по области карты
+MapUI -> TerrProv: watch(territoriesForBboxProvider(bbox))
+TerrProv -> TerrUC: call(bbox)
+TerrUC -> TerrRepo: fetchByBbox(minLng, minLat, maxLng, maxLat)
+TerrRepo -> TerrApi: getTerritories(...)
+TerrApi -> API: GET /territories?minLng&minLat&maxLng&maxLat
+
+activate API
+API -> DB: SELECT territories intersecting bbox\n+ ST_AsGeoJSON + area
+DB --> API: FeatureCollection (GeoJSON)
+API --> TerrApi: 200 OK + GeoJSON
+deactivate API
+
+TerrApi --> TerrRepo: json
+TerrRepo -> TerrRepo: Парсит Polygon/MultiPolygon\nв domain Territory
+TerrRepo --> TerrUC: List<Territory>
+TerrUC --> TerrProv: List<Territory>
+TerrProv --> MapUI: AsyncData(List<Territory>)
+
+MapUI -> OSM: Запрос map tiles
+OSM --> MapUI: Tile images
+MapUI --> User: Отрисована карта + полигоны территорий
+
+opt Показать последнее уведомление
+  MapUI -> NotifApi: GET /notifications/last
+  NotifApi -> API: GET /notifications/last
+  API -> DB: SELECT user_last_notification
+  DB --> API: notification or empty
+  API --> NotifApi: has_notification + payload
+  NotifApi --> MapUI: данные уведомления
+  MapUI --> User: Баннер "у вас отжали" (если есть)
+end
+
+@enduml
