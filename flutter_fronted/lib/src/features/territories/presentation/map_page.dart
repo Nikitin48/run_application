@@ -6,7 +6,6 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:go_router/go_router.dart';
 import 'package:run_application/l10n/app_localizations.dart';
 
 import '../../notifications/application/last_notification_provider.dart';
@@ -14,7 +13,6 @@ import '../../profile/application/profile_controller.dart';
 import '../application/territories_controller.dart';
 import '../domain/territory.dart';
 import '../../runs/application/run_tracker_controller.dart';
-import 'widgets/run_controls_card.dart';
 import '../../../core/utils/color_utils.dart';
 import '../../../core/utils/formatters.dart';
 import '../domain/value_objects/bbox.dart';
@@ -197,7 +195,7 @@ class _MapPageBodyState extends ConsumerState<_MapPageBody> {
     final meProfileAsync = ref.watch(meProfileProvider);
     final lastNotifAsync = ref.watch(lastNotificationProvider);
     final runState = ref.watch(runTrackerProvider);
-    final bottomBarInset = 58.0 + 10.0;
+    final bottomBarInset = 52.0 + 10.0;
     final myTrackColor = meProfileAsync.maybeWhen(
       data: (profile) => colorFromHexOrDefault(profile.territoryColor),
       orElse: () => Theme.of(context).colorScheme.primary,
@@ -352,39 +350,6 @@ class _MapPageBodyState extends ConsumerState<_MapPageBody> {
               error: (_, __) => const SizedBox.shrink(),
             ),
           ),
-          Positioned(
-            left: 12,
-            right: 12,
-            bottom: 12 + bottomBarInset,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                RunControlsCard(
-                  runState: runState,
-                  onStart: () => ref.read(runTrackerProvider.notifier).start(),
-                  onPause: () =>
-                      ref.read(runTrackerProvider.notifier).pauseManual(),
-                  onResume: () =>
-                      ref.read(runTrackerProvider.notifier).resume(),
-                  onFinish: () async {
-                    await ref.read(runTrackerProvider.notifier).finish();
-                    // refresh UI data after capture
-                    if (_bbox != null) {
-                      ref.invalidate(territoriesForBboxProvider(_bbox!));
-                    }
-                    ref.invalidate(lastNotificationProvider);
-
-                    final finish = ref.read(runTrackerProvider).lastFinish;
-                    if (finish != null && mounted) {
-                      context.push('/run-summary');
-                    } else {
-                      _showSnack(l10n.runFinished);
-                    }
-                  },
-                ),
-              ],
-            ),
-          ),
           if (_testMode)
             Positioned(
               right: 12,
@@ -403,15 +368,39 @@ class _MapPageBodyState extends ConsumerState<_MapPageBody> {
                 child: const Center(child: CircularProgressIndicator()),
               ),
             ),
+          if (runState.countdownSeconds != null)
+            Positioned.fill(
+              child: ColoredBox(
+                color: Colors.black.withValues(alpha: 0.45),
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '${runState.countdownSeconds}',
+                        style: Theme.of(context).textTheme.displayLarge
+                            ?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w800,
+                            ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        l10n.runStartingSoon,
+                        style: Theme.of(
+                          context,
+                        ).textTheme.titleMedium?.copyWith(color: Colors.white),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );
   }
 }
-
-// _InfoPill removed (territories pill hidden for now)
-
-// moved to widgets/run_controls_card.dart
 
 class _NotificationBanner extends StatelessWidget {
   const _NotificationBanner({

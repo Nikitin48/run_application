@@ -169,6 +169,9 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get runStartingSoon => 'Старт через…';
+
+  @override
   String get profilePersonalSection => 'Персональные данные';
 
   @override

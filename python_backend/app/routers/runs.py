@@ -29,8 +29,6 @@ def finish_run(payload: RunFinishRequest, user_id: str = Depends(current_user_id
         raise HTTPException(status_code=422, detail="ended_at must be after started_at")
 
     points = payload.points
-    if len(points) < 2:
-        raise HTTPException(status_code=422, detail="at least 2 points required")
 
     # Normalize pauses: close open pauses at ended_at.
     pauses: list[tuple[datetime, datetime]] = []
@@ -53,6 +51,19 @@ def finish_run(payload: RunFinishRequest, user_id: str = Depends(current_user_id
         coords.append((pt.lat, pt.lng))
     for (lat1, lng1), (lat2, lng2) in zip(coords, coords[1:], strict=False):
         distance_m += haversine_m(lat1, lng1, lat2, lng2)
+
+    # Don't store "empty" activities in DB/history.
+    # We still return a successful response so UI can close the run flow gracefully.
+    if len(coords) < 2:
+        return RunFinishResponse(
+            run_id="",
+            distance_m=float(distance_m),
+            elapsed_s=elapsed_s,
+            paused_s=paused_s,
+            moving_s=moving_s,
+            capture_area_m2=0.0,
+            victims_count=0,
+        )
 
     track_wkt = wkt_linestring(coords)
     points_jsonb = Jsonb([p.model_dump(mode="json") for p in points])
@@ -115,7 +126,10 @@ def finish_run(payload: RunFinishRequest, user_id: str = Depends(current_user_id
                 )
 
             # Finalize capture (repaint territories, stats, notifications).
-            cur.execute("SELECT capture_area_m2, victims_count FROM finalize_run_capture(%s)", (run_id,))
+            cur.execute(
+                "SELECT capture_area_m2, victims_count FROM finalize_run_capture(%s)",
+                (run_id,),
+            )
             cap_area, victims = cur.fetchone()
             cur.execute(
                 """

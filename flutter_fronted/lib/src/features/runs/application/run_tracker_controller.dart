@@ -19,6 +19,7 @@ class RunTrackerState {
     required this.startedAt,
     required this.points,
     required this.pauses,
+    required this.countdownSeconds,
     this.lastFinish,
     this.error,
   });
@@ -27,16 +28,21 @@ class RunTrackerState {
   final DateTime? startedAt;
   final List<RunPoint> points;
   final List<RunPause> pauses;
+  final int? countdownSeconds;
   final FinishRunResponse? lastFinish;
   final String? error;
 
-  RunPause? get openPause => pauses.where((p) => p.isOpen).cast<RunPause?>().firstWhere((p) => p != null, orElse: () => null);
+  RunPause? get openPause => pauses
+      .where((p) => p.isOpen)
+      .cast<RunPause?>()
+      .firstWhere((p) => p != null, orElse: () => null);
 
   RunTrackerState copyWith({
     RunPhase? phase,
     DateTime? startedAt,
     List<RunPoint>? points,
     List<RunPause>? pauses,
+    int? countdownSeconds,
     FinishRunResponse? lastFinish,
     String? error,
   }) {
@@ -45,25 +51,36 @@ class RunTrackerState {
       startedAt: startedAt ?? this.startedAt,
       points: points ?? this.points,
       pauses: pauses ?? this.pauses,
+      countdownSeconds: countdownSeconds,
       lastFinish: lastFinish ?? this.lastFinish,
       error: error,
     );
   }
 
   const RunTrackerState.idle()
-      : phase = RunPhase.idle,
-        startedAt = null,
-        points = const [],
-        pauses = const [],
-        lastFinish = null,
-        error = null;
+    : phase = RunPhase.idle,
+      startedAt = null,
+      points = const [],
+      pauses = const [],
+      countdownSeconds = null,
+      lastFinish = null,
+      error = null;
 }
 
-final runsApiProvider = Provider<RunsApi>((ref) => RunsApi(ref.watch(dioProvider)));
-final runsRepositoryProvider = Provider<RunsRepository>((ref) => RunsRepositoryImpl(ref.watch(runsApiProvider)));
-final finishRunUseCaseProvider = Provider<FinishRunUseCase>((ref) => FinishRunUseCase(ref.watch(runsRepositoryProvider)));
+final runsApiProvider = Provider<RunsApi>(
+  (ref) => RunsApi(ref.watch(dioProvider)),
+);
+final runsRepositoryProvider = Provider<RunsRepository>(
+  (ref) => RunsRepositoryImpl(ref.watch(runsApiProvider)),
+);
+final finishRunUseCaseProvider = Provider<FinishRunUseCase>(
+  (ref) => FinishRunUseCase(ref.watch(runsRepositoryProvider)),
+);
 
-final runTrackerProvider = NotifierProvider<RunTrackerController, RunTrackerState>(RunTrackerController.new);
+final runTrackerProvider =
+    NotifierProvider<RunTrackerController, RunTrackerState>(
+      RunTrackerController.new,
+    );
 
 class RunTrackerController extends Notifier<RunTrackerState> {
   StreamSubscription<Position>? _posSub;
@@ -88,9 +105,21 @@ class RunTrackerController extends Notifier<RunTrackerState> {
     if (perm == LocationPermission.denied) {
       perm = await Geolocator.requestPermission();
     }
-    if (perm == LocationPermission.denied || perm == LocationPermission.deniedForever) {
+    if (perm == LocationPermission.denied ||
+        perm == LocationPermission.deniedForever) {
       state = state.copyWith(error: 'Location permission denied');
       return;
+    }
+
+    state = const RunTrackerState.idle().copyWith(
+      countdownSeconds: 3,
+      error: null,
+    );
+
+    for (var seconds = 3; seconds >= 1; seconds--) {
+      state = state.copyWith(countdownSeconds: seconds, error: null);
+      await Future<void>.delayed(const Duration(seconds: 1));
+      if (state.phase != RunPhase.idle) return;
     }
 
     final startedAt = DateTime.now().toUtc();
@@ -99,6 +128,7 @@ class RunTrackerController extends Notifier<RunTrackerState> {
       startedAt: startedAt,
       points: const [],
       pauses: const [],
+      countdownSeconds: null,
       lastFinish: null,
       error: null,
     );
@@ -107,54 +137,62 @@ class RunTrackerController extends Notifier<RunTrackerState> {
       final online = results.any((r) => r != ConnectivityResult.none);
       if (!online && state.phase == RunPhase.running) {
         _openPause(PauseReason.internetLost);
-      } else if (online && state.phase == RunPhase.paused && state.openPause?.reason == PauseReason.internetLost) {
+      } else if (online &&
+          state.phase == RunPhase.paused &&
+          state.openPause?.reason == PauseReason.internetLost) {
         _closePause();
       }
     });
 
-    _posSub = Geolocator.getPositionStream(
-      locationSettings: const LocationSettings(
-        accuracy: LocationAccuracy.best,
-        distanceFilter: 5,
-      ),
-    ).listen(
-      (pos) {
-        // Auto pause if accuracy is too poor (MVP heuristic).
-        final accuracy = pos.accuracy;
-        if (accuracy.isFinite && accuracy > 35) {
-          _openPause(PauseReason.gpsLost);
-          return;
-        }
+    _posSub =
+        Geolocator.getPositionStream(
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.best,
+            distanceFilter: 5,
+          ),
+        ).listen(
+          (pos) {
+            // Auto pause if accuracy is too poor (MVP heuristic).
+            final accuracy = pos.accuracy;
+            if (accuracy.isFinite && accuracy > 35) {
+              _openPause(PauseReason.gpsLost);
+              return;
+            }
 
-        // If we were auto-paused by GPS loss, resume automatically on good fix.
-        if (state.phase == RunPhase.paused && state.openPause?.reason == PauseReason.gpsLost) {
-          _closePause();
-        }
+            // If we were auto-paused by GPS loss, resume automatically on good fix.
+            if (state.phase == RunPhase.paused &&
+                state.openPause?.reason == PauseReason.gpsLost) {
+              _closePause();
+            }
 
-        if (state.phase != RunPhase.running) return;
+            if (state.phase != RunPhase.running) return;
 
-        // Basic throttle: don't record points too frequently.
-        final last = state.points.isEmpty ? null : state.points.last;
-        if (last != null) {
-          final dt = pos.timestamp.difference(last.ts).inMilliseconds.abs();
-          if (dt < 800) return;
-        }
+            // Basic throttle: don't record points too frequently.
+            final last = state.points.isEmpty ? null : state.points.last;
+            if (last != null) {
+              final dt = pos.timestamp.difference(last.ts).inMilliseconds.abs();
+              if (dt < 800) return;
+            }
 
-        final p = RunPoint(
-          lat: pos.latitude,
-          lng: pos.longitude,
-          ts: DateTime.fromMillisecondsSinceEpoch(pos.timestamp.millisecondsSinceEpoch, isUtc: true),
-          accuracyM: pos.accuracy,
-          speedMps: pos.speed,
-          altitudeM: pos.altitude,
+            final p = RunPoint(
+              lat: pos.latitude,
+              lng: pos.longitude,
+              ts: DateTime.fromMillisecondsSinceEpoch(
+                pos.timestamp.millisecondsSinceEpoch,
+                isUtc: true,
+              ),
+              accuracyM: pos.accuracy,
+              speedMps: pos.speed,
+              altitudeM: pos.altitude,
+            );
+
+            state = state.copyWith(points: [...state.points, p]);
+          },
+          onError: (_) {
+            if (state.phase == RunPhase.running)
+              _openPause(PauseReason.gpsLost);
+          },
         );
-
-        state = state.copyWith(points: [...state.points, p]);
-      },
-      onError: (_) {
-        if (state.phase == RunPhase.running) _openPause(PauseReason.gpsLost);
-      },
-    );
   }
 
   void pauseManual() {
@@ -167,7 +205,13 @@ class RunTrackerController extends Notifier<RunTrackerState> {
 
   void _openPause(PauseReason reason) {
     if (state.openPause != null) return;
-    state = state.copyWith(phase: RunPhase.paused, pauses: [...state.pauses, RunPause(startedAt: DateTime.now().toUtc(), reason: reason)]);
+    state = state.copyWith(
+      phase: RunPhase.paused,
+      pauses: [
+        ...state.pauses,
+        RunPause(startedAt: DateTime.now().toUtc(), reason: reason),
+      ],
+    );
   }
 
   void _closePause() {
@@ -182,7 +226,8 @@ class RunTrackerController extends Notifier<RunTrackerState> {
   }
 
   Future<void> finish() async {
-    if (state.phase != RunPhase.running && state.phase != RunPhase.paused) return;
+    if (state.phase != RunPhase.running && state.phase != RunPhase.paused)
+      return;
     if (state.startedAt == null) return;
 
     if (state.phase == RunPhase.paused) {
@@ -216,12 +261,9 @@ class RunTrackerController extends Notifier<RunTrackerState> {
   /// Adds a simulated point (for emulator / test mode).
   /// Works when run is running or paused.
   void addSimulatedPoint({required double lat, required double lng}) {
-    if (state.phase != RunPhase.running && state.phase != RunPhase.paused) return;
-    final p = RunPoint(
-      lat: lat,
-      lng: lng,
-      ts: DateTime.now().toUtc(),
-    );
+    if (state.phase != RunPhase.running && state.phase != RunPhase.paused)
+      return;
+    final p = RunPoint(lat: lat, lng: lng, ts: DateTime.now().toUtc());
     state = state.copyWith(points: [...state.points, p]);
   }
 
@@ -232,5 +274,3 @@ class RunTrackerController extends Notifier<RunTrackerState> {
     _connSub = null;
   }
 }
-
-

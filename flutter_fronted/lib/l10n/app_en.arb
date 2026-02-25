@@ -59,6 +59,7 @@
 
   "runLiveStats": "Distance: {distance} • Capture: {area} • Victims: {victims}",
   "runLiveDistanceOnly": "Distance: {distance}",
+  "runStartingSoon": "Starting in…",
 
   "profilePersonalSection": "Personal data",
   "profileAvatarUrlLabel": "Avatar URL",

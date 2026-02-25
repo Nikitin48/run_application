@@ -59,6 +59,7 @@
 
   "runLiveStats": "Дистанция: {distance} • Захват: {area} • Отжато: {victims}",
   "runLiveDistanceOnly": "Дистанция: {distance}",
+  "runStartingSoon": "Старт через…",
 
   "profilePersonalSection": "Персональные данные",
   "profileAvatarUrlLabel": "Ссылка на аватар",

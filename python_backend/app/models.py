@@ -123,7 +123,7 @@ class RunPauseIn(BaseModel):
 class RunFinishRequest(BaseModel):
     started_at: datetime
     ended_at: datetime
-    points: list[RunPointIn] = Field(min_length=2)
+    points: list[RunPointIn] = Field(default_factory=list)
     pauses: list[RunPauseIn] = Field(default_factory=list)
 
     model_config = {

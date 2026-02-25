@@ -398,6 +398,12 @@ abstract class AppLocalizations {
   /// **'Distance: {distance}'**
   String runLiveDistanceOnly(Object distance);
 
+  /// No description provided for @runStartingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting in…'**
+  String get runStartingSoon;
+
   /// No description provided for @profilePersonalSection.
   ///
   /// In en, this message translates to:

@@ -169,6 +169,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get runStartingSoon => 'Starting in…';
+
+  @override
   String get profilePersonalSection => 'Personal data';
 
   @override
