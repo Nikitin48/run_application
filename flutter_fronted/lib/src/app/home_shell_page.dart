@@ -32,6 +32,11 @@ class HomeShellPage extends StatelessWidget {
                 label: l10n.mapTitle,
               ),
               NavigationDestination(
+                icon: const Icon(Icons.history_outlined),
+                selectedIcon: const Icon(Icons.history),
+                label: l10n.historiesTitle,
+              ),
+              NavigationDestination(
                 icon: const Icon(Icons.person_outline),
                 selectedIcon: const Icon(Icons.person),
                 label: l10n.profileTitle,

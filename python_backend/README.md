@@ -60,6 +60,7 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ## Runs / Territories
 
 - `POST /runs/finish` — загрузить завершённую пробежку (points + pauses), сохранить в БД и выполнить захват территорий.
+- `GET /runs/history?limit&offset` — история пробежек текущего пользователя.
 - `GET /territories?minLng&minLat&maxLng&maxLat` — получить территории в bbox (GeoJSON FeatureCollection, включая `territory_color` владельца).
 - `GET /notifications/last` — последнее уведомление “у вас отжали” (для текущего пользователя).
 

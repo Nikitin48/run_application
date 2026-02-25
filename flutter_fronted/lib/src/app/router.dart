@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import 'home_shell_page.dart';
 import '../features/auth/presentation/login_page.dart';
+import '../features/histories/presentation/histories_page.dart';
 import '../features/profile/presentation/profile_page.dart';
 import '../features/territories/presentation/map_page.dart';
 import '../features/auth/application/auth_controller.dart';
@@ -34,6 +35,14 @@ final goRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/map',
                 builder: (context, state) => const MapPage(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/histories',
+                builder: (context, state) => const HistoriesPage(),
               ),
             ],
           ),

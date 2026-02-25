@@ -170,6 +170,12 @@ abstract class AppLocalizations {
   /// **'Map'**
   String get mapTitle;
 
+  /// No description provided for @historiesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get historiesTitle;
+
   /// No description provided for @profileTitle.
   ///
   /// In en, this message translates to:
@@ -511,6 +517,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Changes saved'**
   String get profileSaveSuccess;
+
+  /// No description provided for @historiesEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No finished runs yet.'**
+  String get historiesEmpty;
+
+  /// No description provided for @historiesStartedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Started'**
+  String get historiesStartedAt;
+
+  /// No description provided for @historiesEndedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Finished'**
+  String get historiesEndedAt;
 }
 
 class _AppLocalizationsDelegate

@@ -125,6 +125,18 @@ curl -s -X POST http://127.0.0.1:8000/runs/finish \
 - `victims_count` — сколько пользователей потеряли пересечение
 - `capture_area_m2` — площадь захваченной фигуры
 
+## История пробежек
+
+```bash
+curl -s "http://127.0.0.1:8000/runs/history?limit=50&offset=0" \
+  -H "Authorization: Bearer ACCESS_TOKEN"
+```
+
+Поля в элементах истории включают:
+- `started_at`, `ended_at`
+- `distance_m`, `elapsed_s`, `paused_s`, `moving_s`
+- `capture_area_m2`, `victims_count`
+
 ## Последнее уведомление
 
 ```bash

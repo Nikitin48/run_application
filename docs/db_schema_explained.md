@@ -46,6 +46,8 @@
 - `elapsed_s integer` — общее время, включая паузы.
 - `paused_s integer default 0 not null` — суммарно на паузе.
 - `moving_s integer` — время движения (elapsed - paused).
+- `capture_area_m2 double precision default 0 not null` — площадь, захваченная этой пробежкой.
+- `victims_count integer default 0 not null` — сколько пользователей потеряли территорию в этой пробежке.
 - `avg_pace_s_per_km integer` — темп, если нужен.
 - `points jsonb` — сырой трек точек (опционально).
 - `track_line geometry(LineString, 4326) not null` — нормализованный маршрут.

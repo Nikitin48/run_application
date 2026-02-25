@@ -14,6 +14,7 @@
   "loading": "Загрузка…",
 
   "mapTitle": "Карта",
+  "historiesTitle": "Истории",
   "profileTitle": "Профиль",
   "logout": "Выйти",
   "followOn": "Слежение",
@@ -78,7 +79,11 @@
   "profileStatsSection": "Статистика",
   "profileRunsCount": "Количество пробежек",
   "profileOwnedArea": "Текущая площадь",
-  "profileSaveSuccess": "Изменения сохранены"
+  "profileSaveSuccess": "Изменения сохранены",
+
+  "historiesEmpty": "Пока нет завершенных пробежек.",
+  "historiesStartedAt": "Начало",
+  "historiesEndedAt": "Завершение"
 }
 
 

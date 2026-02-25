@@ -69,6 +69,9 @@ CREATE TABLE IF NOT EXISTS runs (
   paused_s integer NOT NULL DEFAULT 0,
   -- Moving time = elapsed_s - paused_s (store for convenience / UI).
   moving_s integer,
+  -- Capture metrics for finished run (used in history UI).
+  capture_area_m2 double precision NOT NULL DEFAULT 0,
+  victims_count integer NOT NULL DEFAULT 0,
   avg_pace_s_per_km integer,
   -- Raw points (optional). In MVP you can store points here and/or compute LineString server-side.
   points jsonb,

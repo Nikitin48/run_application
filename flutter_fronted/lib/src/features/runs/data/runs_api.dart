@@ -14,6 +14,16 @@ class RunsApi {
     );
     return FinishRunResponse.fromJson(res.data!);
   }
+
+  Future<List<RunHistoryItem>> history({int limit = 50, int offset = 0}) async {
+    final res = await _dio.get<List<dynamic>>(
+      '/runs/history',
+      queryParameters: {'limit': limit, 'offset': offset},
+    );
+    final rows = res.data ?? const [];
+    return rows
+        .whereType<Map<String, dynamic>>()
+        .map((row) => RunHistoryItem.fromJson(row))
+        .toList(growable: false);
+  }
 }
-
-

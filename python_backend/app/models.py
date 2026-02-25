@@ -155,3 +155,17 @@ class RunFinishResponse(BaseModel):
     victims_count: int
 
 
+class RunHistoryItemOut(BaseModel):
+    run_id: str
+    status: str
+    started_at: datetime | None = None
+    ended_at: datetime | None = None
+    distance_m: float
+    elapsed_s: int
+    paused_s: int
+    moving_s: int
+    capture_area_m2: float
+    victims_count: int
+    created_at: datetime
+
+

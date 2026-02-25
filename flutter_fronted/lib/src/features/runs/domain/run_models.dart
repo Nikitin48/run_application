@@ -16,23 +16,19 @@ class RunPoint {
   final double? altitudeM;
 
   Map<String, Object?> toJson() => {
-        'lat': lat,
-        'lng': lng,
-        'ts': ts.toUtc().toIso8601String(),
-        if (accuracyM != null) 'accuracy_m': accuracyM,
-        if (speedMps != null) 'speed_mps': speedMps,
-        if (altitudeM != null) 'altitude_m': altitudeM,
-      };
+    'lat': lat,
+    'lng': lng,
+    'ts': ts.toUtc().toIso8601String(),
+    if (accuracyM != null) 'accuracy_m': accuracyM,
+    if (speedMps != null) 'speed_mps': speedMps,
+    if (altitudeM != null) 'altitude_m': altitudeM,
+  };
 }
 
 enum PauseReason { manual, gpsLost, internetLost }
 
 class RunPause {
-  const RunPause({
-    required this.startedAt,
-    required this.reason,
-    this.endedAt,
-  });
+  const RunPause({required this.startedAt, required this.reason, this.endedAt});
 
   final DateTime startedAt;
   final DateTime? endedAt;
@@ -40,17 +36,18 @@ class RunPause {
 
   bool get isOpen => endedAt == null;
 
-  RunPause close(DateTime endedAt) => RunPause(startedAt: startedAt, endedAt: endedAt, reason: reason);
+  RunPause close(DateTime endedAt) =>
+      RunPause(startedAt: startedAt, endedAt: endedAt, reason: reason);
 
   Map<String, Object?> toJson() => {
-        'started_at': startedAt.toUtc().toIso8601String(),
-        'ended_at': endedAt?.toUtc().toIso8601String(),
-        'reason': switch (reason) {
-          PauseReason.manual => 'manual',
-          PauseReason.gpsLost => 'gps_lost',
-          PauseReason.internetLost => 'internet_lost',
-        },
-      };
+    'started_at': startedAt.toUtc().toIso8601String(),
+    'ended_at': endedAt?.toUtc().toIso8601String(),
+    'reason': switch (reason) {
+      PauseReason.manual => 'manual',
+      PauseReason.gpsLost => 'gps_lost',
+      PauseReason.internetLost => 'internet_lost',
+    },
+  };
 }
 
 class FinishRunRequest {
@@ -67,11 +64,11 @@ class FinishRunRequest {
   final List<RunPause> pauses;
 
   Map<String, Object?> toJson() => {
-        'started_at': startedAt.toUtc().toIso8601String(),
-        'ended_at': endedAt.toUtc().toIso8601String(),
-        'points': points.map((p) => p.toJson()).toList(),
-        'pauses': pauses.map((p) => p.toJson()).toList(),
-      };
+    'started_at': startedAt.toUtc().toIso8601String(),
+    'ended_at': endedAt.toUtc().toIso8601String(),
+    'points': points.map((p) => p.toJson()).toList(),
+    'pauses': pauses.map((p) => p.toJson()).toList(),
+  };
 }
 
 class FinishRunResponse {
@@ -106,4 +103,54 @@ class FinishRunResponse {
   }
 }
 
+class RunHistoryItem {
+  const RunHistoryItem({
+    required this.runId,
+    required this.status,
+    required this.startedAt,
+    required this.endedAt,
+    required this.distanceM,
+    required this.elapsedS,
+    required this.pausedS,
+    required this.movingS,
+    required this.captureAreaM2,
+    required this.victimsCount,
+    required this.createdAt,
+  });
 
+  final String runId;
+  final String status;
+  final DateTime? startedAt;
+  final DateTime? endedAt;
+  final double distanceM;
+  final int elapsedS;
+  final int pausedS;
+  final int movingS;
+  final double captureAreaM2;
+  final int victimsCount;
+  final DateTime createdAt;
+
+  static RunHistoryItem fromJson(Map<String, Object?> json) {
+    final startedAtRaw = json['started_at'] as String?;
+    final endedAtRaw = json['ended_at'] as String?;
+    return RunHistoryItem(
+      runId: json['run_id'] as String,
+      status: (json['status'] as String?) ?? 'unknown',
+      startedAt: startedAtRaw == null
+          ? null
+          : DateTime.tryParse(startedAtRaw)?.toLocal(),
+      endedAt: endedAtRaw == null
+          ? null
+          : DateTime.tryParse(endedAtRaw)?.toLocal(),
+      distanceM: (json['distance_m'] as num?)?.toDouble() ?? 0,
+      elapsedS: (json['elapsed_s'] as num?)?.toInt() ?? 0,
+      pausedS: (json['paused_s'] as num?)?.toInt() ?? 0,
+      movingS: (json['moving_s'] as num?)?.toInt() ?? 0,
+      captureAreaM2: (json['capture_area_m2'] as num?)?.toDouble() ?? 0,
+      victimsCount: (json['victims_count'] as num?)?.toInt() ?? 0,
+      createdAt:
+          DateTime.tryParse((json['created_at'] as String?) ?? '')?.toLocal() ??
+          DateTime.now(),
+    );
+  }
+}

@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from psycopg.types.json import Jsonb
 
 from ..db import db_conn
 from ..geo import clip_interval, haversine_m, seconds_between, wkt_linestring
-from ..models import RunFinishRequest, RunFinishResponse
+from ..models import RunFinishRequest, RunFinishResponse, RunHistoryItemOut
 from .me import current_user_id
 
 
@@ -117,6 +117,16 @@ def finish_run(payload: RunFinishRequest, user_id: str = Depends(current_user_id
             # Finalize capture (repaint territories, stats, notifications).
             cur.execute("SELECT capture_area_m2, victims_count FROM finalize_run_capture(%s)", (run_id,))
             cap_area, victims = cur.fetchone()
+            cur.execute(
+                """
+                UPDATE runs
+                SET capture_area_m2 = %s,
+                    victims_count = %s,
+                    updated_at = now()
+                WHERE id = %s
+                """,
+                (float(cap_area), int(victims), run_id),
+            )
 
     return RunFinishResponse(
         run_id=str(run_id),
@@ -127,5 +137,52 @@ def finish_run(payload: RunFinishRequest, user_id: str = Depends(current_user_id
         capture_area_m2=float(cap_area),
         victims_count=int(victims),
     )
+
+
+@router.get("/history", response_model=list[RunHistoryItemOut])
+def runs_history(
+    user_id: str = Depends(current_user_id),
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+) -> list[RunHistoryItemOut]:
+    with db_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT
+                  r.id::text,
+                  r.status,
+                  r.started_at,
+                  r.ended_at,
+                  COALESCE(r.distance_m, 0),
+                  COALESCE(r.elapsed_s, 0),
+                  COALESCE(r.paused_s, 0),
+                  COALESCE(r.moving_s, 0),
+                  COALESCE(r.capture_area_m2, 0),
+                  COALESCE(r.victims_count, 0),
+                  r.created_at
+                FROM runs r
+                WHERE r.user_id = %s
+                ORDER BY COALESCE(r.ended_at, r.created_at) DESC
+                LIMIT %s OFFSET %s
+                """,
+                (user_id, limit, offset),
+            )
+            return [
+                RunHistoryItemOut(
+                    run_id=row[0],
+                    status=row[1],
+                    started_at=row[2],
+                    ended_at=row[3],
+                    distance_m=float(row[4]),
+                    elapsed_s=int(row[5]),
+                    paused_s=int(row[6]),
+                    moving_s=int(row[7]),
+                    capture_area_m2=float(row[8]),
+                    victims_count=int(row[9]),
+                    created_at=row[10],
+                )
+                for row in cur.fetchall()
+            ]
 
 

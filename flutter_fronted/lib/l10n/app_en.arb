@@ -14,6 +14,7 @@
   "loading": "Loading…",
 
   "mapTitle": "Map",
+  "historiesTitle": "History",
   "profileTitle": "Profile",
   "logout": "Logout",
   "followOn": "Following",
@@ -78,7 +79,11 @@
   "profileStatsSection": "Stats",
   "profileRunsCount": "Runs count",
   "profileOwnedArea": "Current owned area",
-  "profileSaveSuccess": "Changes saved"
+  "profileSaveSuccess": "Changes saved",
+
+  "historiesEmpty": "No finished runs yet.",
+  "historiesStartedAt": "Started",
+  "historiesEndedAt": "Finished"
 }
 
 

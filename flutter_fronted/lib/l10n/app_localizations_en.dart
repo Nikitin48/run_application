@@ -45,6 +45,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mapTitle => 'Map';
 
   @override
+  String get historiesTitle => 'History';
+
+  @override
   String get profileTitle => 'Profile';
 
   @override
@@ -226,4 +229,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profileSaveSuccess => 'Changes saved';
+
+  @override
+  String get historiesEmpty => 'No finished runs yet.';
+
+  @override
+  String get historiesStartedAt => 'Started';
+
+  @override
+  String get historiesEndedAt => 'Finished';
 }

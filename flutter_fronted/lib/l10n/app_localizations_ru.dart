@@ -45,6 +45,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get mapTitle => 'Карта';
 
   @override
+  String get historiesTitle => 'Истории';
+
+  @override
   String get profileTitle => 'Профиль';
 
   @override
@@ -226,4 +229,13 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get profileSaveSuccess => 'Изменения сохранены';
+
+  @override
+  String get historiesEmpty => 'Пока нет завершенных пробежек.';
+
+  @override
+  String get historiesStartedAt => 'Начало';
+
+  @override
+  String get historiesEndedAt => 'Завершение';
 }
