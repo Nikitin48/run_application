@@ -7,6 +7,7 @@ class NotificationsRepositoryImpl implements NotificationsRepository {
 
   final NotificationsApi _api;
 
+  @override
   Future<LastNotification?> last() async {
     final json = await _api.last();
     final has = json['has_notification'] as bool? ?? false;
@@ -17,7 +18,9 @@ class NotificationsRepositoryImpl implements NotificationsRepository {
     final runId = json['run_id'] as String?;
     final stolen = (json['stolen_area_m2'] as num?)?.toDouble() ?? 0.0;
     final createdAtRaw = json['created_at'] as String?;
-    final createdAt = createdAtRaw == null ? DateTime.now() : DateTime.parse(createdAtRaw);
+    final createdAt = createdAtRaw == null
+        ? DateTime.now()
+        : DateTime.parse(createdAtRaw);
 
     return LastNotification(
       kind: kind,
@@ -28,5 +31,3 @@ class NotificationsRepositoryImpl implements NotificationsRepository {
     );
   }
 }
-
-

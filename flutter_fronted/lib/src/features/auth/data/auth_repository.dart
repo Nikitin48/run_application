@@ -7,15 +7,24 @@ class AuthRepositoryImpl implements AuthRepository {
 
   final AuthApi _api;
 
+  @override
   Future<AuthTokens> login(String email, String password) {
     return _api.login(email: email, password: password);
   }
 
-  Future<AuthTokens> register(String email, String password, String displayName) {
-    return _api.register(email: email, password: password, displayName: displayName);
+  @override
+  Future<AuthTokens> register(
+    String email,
+    String password,
+    String displayName,
+  ) {
+    return _api.register(
+      email: email,
+      password: password,
+      displayName: displayName,
+    );
   }
 
+  @override
   Future<AuthTokens> refresh(String refreshToken) => _api.refresh(refreshToken);
 }
-
-

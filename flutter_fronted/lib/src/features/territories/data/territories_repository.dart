@@ -9,6 +9,7 @@ class TerritoriesRepositoryImpl implements TerritoriesRepository {
 
   final TerritoriesApi _api;
 
+  @override
   Future<List<Territory>> fetchByBbox({
     required double minLng,
     required double minLat,
