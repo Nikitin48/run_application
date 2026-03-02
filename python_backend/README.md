@@ -24,13 +24,26 @@ pip install -r requirements.txt
 
 3) Переменные окружения:
 
-Файл `env.example` — пример. Можно:
-- либо экспортировать переменные в shell,
-- либо (локально) скопировать в `.env`:
+**Разделение local / release (локальная БД vs облачная):**
+
+- `.env` — общие настройки (JWT, порт и т.п.)
+- `.env.local` — `DATABASE_URL` для разработки (локальный PostgreSQL)
+- `.env.release` — `DATABASE_URL` для релиза (Yandex Managed PostgreSQL)
 
 ```bash
 cp env.example .env
+cp env.example.local .env.local
+cp env.example.release .env.release   # заполни после создания облачной БД
 ```
+
+**Переключение:**
+
+| Режим | Команда | БД |
+|-------|---------|-----|
+| Разработка | `uvicorn app.main:app --reload` | ` .env.local` (по умолчанию) |
+| Релиз | `APP_ENV=release uvicorn app.main:app --reload` | `.env.release` |
+
+`GET /health` возвращает `env: "local"` или `env: "release"` — текущий режим.
 
 4) Запуск сервера:
 
