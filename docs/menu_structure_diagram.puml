@@ -1,0 +1,56 @@
+@startuml
+title Run Application 
+
+skinparam packageStyle rectangle
+skinparam shadowing false
+left to right direction
+
+package "Главное меню" as MainMenu {
+
+  package "Карта (Map)" as Map {
+    component "Мое местоположение (GPS)" as FollowMe
+    component "Тестовый режим" as TestMode
+
+    package "Управление забегом" as FabControl {
+      component "Старт забега" as StartRun
+      component "Пауза / Продолжить" as PauseResume
+      component "Стоп / Финиш" as StopFinish
+      component "Итоги забега" as RunSummary
+    }
+  }
+
+  package "История (Histories)" as Histories {
+    
+  }
+
+  package "Профиль (Profile)" as Profile {
+    component "Сохранить профиль" as SaveProfile
+    component "Выбор цвета территории\n(модальный диалог)" as PickColor
+    component "Сохранить цвет" as SaveColor
+    component "Изменить пароль" as ChangePassword
+    component "Выход" as Logout
+  }
+}
+
+MainMenu --> Map
+MainMenu --> Histories
+MainMenu --> Profile
+
+Map --> FollowMe
+Map --> TestMode
+Map --> FabControl
+
+FabControl --> StartRun
+FabControl --> PauseResume
+FabControl --> StopFinish
+StopFinish --> RunSummary
+
+
+
+Profile --> SaveProfile
+Profile --> PickColor
+Profile --> SaveColor
+Profile --> ChangePassword
+Profile --> Logout
+
+@enduml
