@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Лабораторная работа №3 — Таблицы</title>
+<style>
+  body { font-family: "Times New Roman", Times, serif; font-size: 14px; margin: 40px; line-height: 1.5; }
+  h1 { font-size: 16px; text-align: center; }
+  h2 { font-size: 15px; margin-top: 30px; }
+  h3 { font-size: 14px; margin-top: 20px; }
+  table { border-collapse: collapse; width: 100%; margin: 10px 0 20px 0; font-size: 12px; }
+  th, td { border: 1px solid #000; padding: 4px 6px; vertical-align: top; text-align: left; }
+  th { background-color: #f0f0f0; font-weight: bold; }
+  .caption { font-weight: bold; margin: 20px 0 5px 0; }
+  .metrics { margin: 10px 0; }
+  .metrics li { list-style: disc; margin-left: 20px; }
+  .section-break { page-break-before: always; }
+</style>
+</head>
+<body>
+
+<!-- ============================================================ -->
+<p class="caption">Таблица 1 — Спецификация пакетов</p>
+<table>
+<tr><th>Имя</th><th>Родительский пакет</th><th>Список классов</th><th>Список пакетов</th><th>Описание</th></tr>
+<tr><td>FlutterApp</td><td>RunApplication</td><td>—</td><td>App, Core, Auth, Runs, Territories, Profile, Notifications, Histories</td><td>Мобильное приложение Flutter — клиентская часть системы</td></tr>
+<tr><td>App</td><td>FlutterApp</td><td>RunApp, HomeShellPage</td><td>—</td><td>Корневой виджет приложения, навигационная оболочка (shell) с нижней панелью, GoRouter</td></tr>
+<tr><td>Core</td><td>FlutterApp</td><td>—</td><td>Config, Theme, Network, Storage, Utils</td><td>Общие инфраструктурные компоненты: конфигурация, тема, сетевой слой, хранилище, утилиты</td></tr>
+<tr><td>Config</td><td>Core</td><td>ApiConfig</td><td>—</td><td>Конфигурация API-сервера (базовый URL)</td></tr>
+<tr><td>Theme</td><td>Core</td><td>AppTheme</td><td>—</td><td>Тема оформления приложения (Material 3)</td></tr>
+<tr><td>Network</td><td>Core</td><td>TokenInterceptor, Dio</td><td>—</td><td>HTTP-клиент Dio с перехватчиком JWT-токенов</td></tr>
+<tr><td>Storage</td><td>Core</td><td>TokenStorage</td><td>—</td><td>Безопасное хранилище JWT-токенов на устройстве</td></tr>
+<tr><td>Utils</td><td>Core</td><td>— (утилитарные функции)</td><td>—</td><td>Вспомогательные функции: форматирование, цвета</td></tr>
+<tr><td>Auth</td><td>FlutterApp</td><td>AuthTokens, AuthRepository, AuthRepositoryImpl, AuthApi, LoginUseCase, RegisterUseCase, AuthStatus, AuthState, AuthController, LoginPage</td><td>Auth::Domain, Auth::Data, Auth::Application, Auth::Presentation</td><td>Аутентификация: вход, регистрация, управление JWT-сессией</td></tr>
+<tr><td>Runs</td><td>FlutterApp</td><td>RunPoint, PauseReason, RunPause, FinishRunRequest, FinishRunResponse, RunHistoryItem, RunsRepository, RunsRepositoryImpl, RunsApi, FinishRunUseCase, RunPhase, RunTrackerState, RunTrackerController, RunSummaryPage</td><td>Runs::Domain, Runs::Data, Runs::Application, Runs::Presentation</td><td>Пробежки: GPS-трекинг, паузы, завершение, отправка на сервер, отображение итогов</td></tr>
+<tr><td>Territories</td><td>FlutterApp</td><td>Territory, Bbox, TerritoriesRepository, TerritoriesRepositoryImpl, TerritoriesApi, GetTerritoriesForBboxUseCase, MapPage</td><td>Territories::Domain, Territories::Data, Territories::Application, Territories::Presentation</td><td>Территории: загрузка и отрисовка полигонов на карте по видимой области (bbox)</td></tr>
+<tr><td>Profile</td><td>FlutterApp</td><td>MeProfile, MeProfileStats, ProfileRepository, ProfileRepositoryImpl, ProfileApi, GetMeProfileUseCase, UpdateMeProfileUseCase, UpdateTerritoryColorUseCase, ChangePasswordUseCase, ProfileActionsController, ProfilePage</td><td>Profile::Domain, Profile::Data, Profile::Application, Profile::Presentation</td><td>Профиль: персональные данные, цвет территории, смена пароля, статистика</td></tr>
+<tr><td>Notifications</td><td>FlutterApp</td><td>LastNotification, NotificationsRepository, NotificationsRepositoryImpl, NotificationsApi, GetLastNotificationUseCase</td><td>Notifications::Domain, Notifications::Data, Notifications::Application</td><td>Уведомления: получение последнего уведомления о захвате территории</td></tr>
+<tr><td>Histories</td><td>FlutterApp</td><td>GetRunHistoryUseCase, HistoriesPage</td><td>Histories::Domain, Histories::Presentation</td><td>История забегов: просмотр списка прошлых пробежек</td></tr>
+<tr><td>PythonBackend</td><td>RunApplication</td><td>—</td><td>Routers, Models, Security, Settings, Geo</td><td>Серверная часть на FastAPI: REST API, бизнес-логика, база данных</td></tr>
+<tr><td>Routers</td><td>PythonBackend</td><td>AuthRouter, MeRouter, RunsRouter, TerritoriesRouter, NotificationsRouter</td><td>—</td><td>REST-контроллеры (роутеры FastAPI)</td></tr>
+<tr><td>Models</td><td>PythonBackend</td><td>RegisterRequest, LoginRequest, AuthResponse, RefreshRequest, RunFinishRequest, RunPointIn, RunPauseIn, RunFinishResponse, RunHistoryItemOut, MeProfileOut, UserStatsOut, UserOut, UpdateMeProfileRequest, UpdateTerritoryColorRequest, ChangePasswordRequest, TerritoryColorOut</td><td>—</td><td>Pydantic-модели для валидации запросов/ответов API</td></tr>
+<tr><td>Security</td><td>PythonBackend</td><td>AccessToken, SecurityModule</td><td>—</td><td>Хеширование паролей (argon2/bcrypt), создание и декодирование JWT, refresh-токены</td></tr>
+<tr><td>Settings</td><td>PythonBackend</td><td>Settings</td><td>—</td><td>Конфигурация сервера из переменных окружения</td></tr>
+<tr><td>Geo</td><td>PythonBackend</td><td>GeoModule</td><td>—</td><td>Геовычисления: расстояние Хаверсина, WKT LineString, работа с интервалами пауз</td></tr>
+<tr><td>External</td><td>RunApplication</td><td>GPS SDK, Connectivity SDK, OSM Tile Server, Flutter Secure Storage, PostgreSQL + PostGIS</td><td>—</td><td>Внешнее окружение системы: геолокация, сеть, картография, хранилище, СУБД</td></tr>
+</table>
+
+<p><b>Метрики диаграммы пакетов:</b></p>
+<ul class="metrics">
+<li>Количество пакетов: 24</li>
+<li>Количество уровней вложенности: 3</li>
+<li>Количество зависимостей между пакетами: 36</li>
+</ul>
+
+<!-- ============================================================ -->
+<p><b>Спецификация классовой диаграммы:</b></p>
+<ul class="metrics">
+<li>Количество классов: 62</li>
+<li>Количество интерфейсов: 5</li>
+<li>Количество перечислений (enum): 4</li>
+<li>Количество ассоциаций: 28</li>
+<li>Количество зависимостей: 30</li>
+<li>Количество реализаций (implements): 5</li>
+<li>Количество композиций: 7</li>
+<li>Количество агрегаций: 3</li>
+<li>Количество HTTP-зависимостей: 5</li>
+<li>Количество уровней наследования: 0</li>
+<li>Количество уровней реализации: 1</li>
+</ul>
+
+<!-- ============================================================ -->
+<p class="caption">Таблица 2 — Спецификация классов</p>
+<table>
+<tr><th>Имя класса</th><th>Пакет</th><th>Тип</th><th>Степень допуст.</th><th>Множеств.</th><th>Параллельность</th><th>Сохраняемость</th><th>Отношения</th></tr>
+<tr><td>RunApp</td><td>App</td><td>конечный</td><td>публичный</td><td>1/1</td><td>последовательные</td><td>не сохраняется</td><td>Ассоциирован с HomeShellPage</td></tr>
+<tr><td>HomeShellPage</td><td>App</td><td>конечный</td><td>публичный</td><td>1/1</td><td>последовательные</td><td>не сохраняется</td><td>Агрегирует MapPage, HistoriesPage, ProfilePage; Ассоциирован с RunTrackerController</td></tr>
+<tr><td>ApiConfig</td><td>Core::Config</td><td>конечный</td><td>публичный</td><td>1/1</td><td>последовательные</td><td>не сохраняется</td><td>—</td></tr>
+<tr><td>AppTheme</td><td>Core::Theme</td><td>конечный</td><td>публичный</td><td>1/1</td><td>последовательные</td><td>не сохраняется</td><td>—</td></tr>
+<tr><td>TokenStorage</td><td>Core::Storage</td><td>конечный</td><td>публичный</td><td>1/1</td><td>последовательные</td><td>не сохраняется</td><td>Ассоциирован с Flutter Secure Storage</td></tr>
+<tr><td>TokenInterceptor</td><td>Core::Network</td><td>конечный</td><td>публичный</td><td>1/1</td><td>последовательные</td><td>не сохраняется</td><td>Ассоциирован с TokenStorage</td></tr>
+<tr><td>Dio</td><td>Core::Network</td><td>конечный</td><td>публичный</td><td>1/1</td><td>последовательные</td><td>не сохраняется</td><td>Композиция с TokenInterceptor</td></tr>
+<tr><td>AuthTokens</td><td>Auth::Domain</td><td>конечный</td><td>публичный</td><td>N/1</td><td>последовательные</td><td>сохраняется</td><td>Ассоциирован с AuthState, TokenStorage</td></tr>
+<tr><td>AuthRepository</td><td>Auth::Domain</td><td>интерфейс</td><td>публичный</td><td>N/1</td><td>последовательные</td><td>не сохраняется</td><td>Реализуется AuthRepositoryImpl</td></tr>
+<tr><td>AuthRepositoryImpl</td><td>Auth::Data</td><td>конечный</td><td>публичный</td><td>1/1</td><td>последовательные</td><td>не сохраняется</td><td>Реализует AuthRepository; Ассоциирован с AuthApi</td></tr>
+<tr><td>AuthApi</td><td>Auth::Data</td><td>конечный</td><td>публичный</td><td>1/1</td><td>последовательные</td><td>не сохраняется</td><td>Ассоциирован с Dio; HTTP-зависимость от AuthRouter</td></tr>
+<tr><td>LoginUseCase</td><td>Auth::Domain</td><td>конечный</td><td>публичный</td><td>N/1</td><td>последовательные</td><td>не сохраняется</td><td>Ассоциирован с AuthRepository</td></tr>
+<tr><td>RegisterUseCase</td><td>Auth::Domain</td><td>конечный</td><td>публичный</td><td>N/1</td><td>последовательные</td><td>не сохраняется</td><td>Ассоциирован с AuthRepository</td></tr>
+<tr><td>AuthStatus</td><td>Auth::Application</td><td>перечисление</td><td>публичный</td><td>—</td><td>—</td><td>не сохраняется</td><td>—</td></tr>
+<tr><td>AuthState</td><td>Auth::Application</td><td>конечный</td><td>публичный</td><td>1/1</td><td>последовательные</td><td>не сохраняется</td><td>Ассоциирован с AuthStatus, AuthTokens</td></tr>
+<tr><td>AuthController</td><td>Auth::Application</td><td>конечный</td><td>публичный</td><td>1/1</td><td>последовательные</td><td>не сохраняется</td><td>Зависит от LoginUseCase, RegisterUseCase, TokenStorage</td></tr>
+<tr><td>LoginPage</td><td>Auth::Presentation</td><td>конечный</td><td>публичный</td><td>1/1</td><td>последовательные</td><td>не сохраняется</td><td>Зависит от AuthController</td></tr>
+<tr><td>RunPoint</td><td>Runs::Domain</td><td>конечный</td><td>публичный</td><td>N/1</td><td>последовательные</td><td>сохраняется</td><td>Композиция в FinishRunRequest, RunTrackerState</td></tr>
+<tr><td>PauseReason</td><td>Runs::Domain</td><td>перечисление</td><td>публичный</td><td>—</td><td>—</td><td>не сохраняется</td><td>—</td></tr>
+<tr><td>RunPause</td><td>Runs::Domain</td><td>конечный</td><td>публичный</td><td>N/1</td><td>последовательные</td><td>сохраняется</td><td>Композиция в FinishRunRequest, RunTrackerState</td></tr>
+<tr><td>FinishRunRequest</td><td>Runs::Domain</td><td>конечный</td><td>публичный</td><td>N/1</td><td>последовательные</td><td>не сохраняется</td><td>Композиция с RunPoint, RunPause</td></tr>
+<tr><td>FinishRunResponse</td><td>Runs::Domain</td><td>конечный</td><td>публичный</td><td>N/1</td><td>последовательные</td><td>не сохраняется</td><td>Ассоциирован с RunTrackerState</td></tr>
+<tr><td>RunHistoryItem</td><td>Runs::Domain</td><td>конечный</td><td>публичный</td><td>N/1</td><td>последовательные</td><td>не сохраняется</td><td>—</td></tr>
+<tr><td>RunsRepository</td><td>Runs::Domain</td><td>интерфейс</td><td>публичный</td><td>N/1</td><td>последовательные</td><td>не сохраняется</td><td>Реализуется RunsRepositoryImpl</td></tr>
+<tr><td>RunsRepositoryImpl</td><td>Runs::Data</td><td>конечный</td><td>публичный</td><td>1/1</td><td>последовательные</td><td>не сохраняется</td><td>Реализует RunsRepository; Ассоциирован с RunsApi</td></tr>
+<tr><td>RunsApi</td><td>Runs::Data</td><td>конечный</td><td>публичный</td><td>1/1</td><td>последовательные</td><td>не сохраняется</td><td>Ассоциирован с Dio; HTTP-зависимость от RunsRouter</td></tr>
+<tr><td>FinishRunUseCase</td><td>Runs::Domain</td><td>конечный</td><td>публичный</td><td>N/1</td><td>последовательные</td><td>не сохраняется</td><td>Ассоциирован с RunsRepository</td></tr>
+<tr><td>RunPhase</td><td>Runs::Application</td><td>перечисление</td><td>публичный</td><td>—</td><td>—</td><td>не сохраняется</td><td>—</td></tr>
+<tr><td>RunTrackerState</td><td>Runs::Application</td><td>конечный</td><td>публичный</td><td>1/1</td><td>последовательные</td><td>не сохраняется</td><td>Композиция с RunPoint, RunPause; Ассоциирован с FinishRunResponse</td></tr>
+<tr><td>RunTrackerController</td><td>Runs::Application</td><td>конечный</td><td>публичный</td><td>1/1</td><td>последовательные</td><td>не сохраняется</td><td>Зависит от FinishRunUseCase, GPS SDK, Connectivity SDK</td></tr>
+<tr><td>RunSummaryPage</td><td>Runs::Presentation</td><td>конечный</td><td>публичный</td><td>1/1</td><td>последовательные</td><td>не сохраняется</td><td>Зависит от RunTrackerController</td></tr>
+<tr><td>Territory</td><td>Territories::Domain</td><td>конечный</td><td>публичный</td><td>N/1</td><td>последовательные</td><td>не сохраняется</td><td>—</td></tr>
+<tr><td>Bbox</td><td>Territories::Domain</td><td>конечный</td><td>публичный</td><td>N/1</td><td>последовательные</td><td>не сохраняется</td><td>—</td></tr>
+<tr><td>TerritoriesRepository</td><td>Territories::Domain</td><td>интерфейс</td><td>публичный</td><td>N/1</td><td>последовательные</td><td>не сохраняется</td><td>Реализуется TerritoriesRepositoryImpl</td></tr>
+<tr><td>TerritoriesRepositoryImpl</td><td>Territories::Data</td><td>конечный</td><td>публичный</td><td>1/1</td><td>последовательные</td><td>не сохраняется</td><td>Реализует TerritoriesRepository; Ассоциирован с TerritoriesApi</td></tr>
+<tr><td>TerritoriesApi</td><td>Territories::Data</td><td>конечный</td><td>публичный</td><td>1/1</td><td>последовательные</td><td>не сохраняется</td><td>Ассоциирован с Dio; HTTP-зависимость от TerritoriesRouter</td></tr>
+<tr><td>GetTerritoriesForBboxUseCase</td><td>Territories::Domain</td><td>конечный</td><td>публичный</td><td>N/1</td><td>последовательные</td><td>не сохраняется</td><td>Ассоциирован с TerritoriesRepository</td></tr>
+<tr><td>MapPage</td><td>Territories::Presentation</td><td>конечный</td><td>публичный</td><td>1/1</td><td>последовательные</td><td>не сохраняется</td><td>Зависит от GetTerritoriesForBboxUseCase, RunTrackerController, GetLastNotificationUseCase; Зависит от OSM Tile Server</td></tr>
+<tr><td>MeProfileStats</td><td>Profile::Domain</td><td>конечный</td><td>публичный</td><td>1/1</td><td>последовательные</td><td>не сохраняется</td><td>Композиция в MeProfile</td></tr>
+<tr><td>MeProfile</td><td>Profile::Domain</td><td>конечный</td><td>публичный</td><td>1/1</td><td>последовательные</td><td>не сохраняется</td><td>Композиция с MeProfileStats</td></tr>
+<tr><td>ProfileRepository</td><td>Profile::Domain</td><td>интерфейс</td><td>публичный</td><td>N/1</td><td>последовательные</td><td>не сохраняется</td><td>Реализуется ProfileRepositoryImpl</td></tr>
+<tr><td>ProfileRepositoryImpl</td><td>Profile::Data</td><td>конечный</td><td>публичный</td><td>1/1</td><td>последовательные</td><td>не сохраняется</td><td>Реализует ProfileRepository; Ассоциирован с ProfileApi</td></tr>
+<tr><td>ProfileApi</td><td>Profile::Data</td><td>конечный</td><td>публичный</td><td>1/1</td><td>последовательные</td><td>не сохраняется</td><td>Ассоциирован с Dio; HTTP-зависимость от MeRouter</td></tr>
+<tr><td>GetMeProfileUseCase</td><td>Profile::Domain</td><td>конечный</td><td>публичный</td><td>N/1</td><td>последовательные</td><td>не сохраняется</td><td>Ассоциирован с ProfileRepository</td></tr>
+<tr><td>UpdateMeProfileUseCase</td><td>Profile::Domain</td><td>конечный</td><td>публичный</td><td>N/1</td><td>последовательные</td><td>не сохраняется</td><td>Ассоциирован с ProfileRepository</td></tr>
+<tr><td>UpdateTerritoryColorUseCase</td><td>Profile::Domain</td><td>конечный</td><td>публичный</td><td>N/1</td><td>последовательные</td><td>не сохраняется</td><td>Ассоциирован с ProfileRepository</td></tr>
+<tr><td>ChangePasswordUseCase</td><td>Profile::Domain</td><td>конечный</td><td>публичный</td><td>N/1</td><td>последовательные</td><td>не сохраняется</td><td>Ассоциирован с ProfileRepository</td></tr>
+<tr><td>ProfileActionsController</td><td>Profile::Application</td><td>конечный</td><td>публичный</td><td>1/1</td><td>последовательные</td><td>не сохраняется</td><td>Зависит от UpdateMeProfileUseCase, UpdateTerritoryColorUseCase, ChangePasswordUseCase</td></tr>
+<tr><td>ProfilePage</td><td>Profile::Presentation</td><td>конечный</td><td>публичный</td><td>1/1</td><td>последовательные</td><td>не сохраняется</td><td>Зависит от ProfileActionsController, GetMeProfileUseCase</td></tr>
+<tr><td>LastNotification</td><td>Notifications::Domain</td><td>конечный</td><td>публичный</td><td>1/1</td><td>последовательные</td><td>не сохраняется</td><td>—</td></tr>
+<tr><td>NotificationsRepository</td><td>Notifications::Domain</td><td>интерфейс</td><td>публичный</td><td>N/1</td><td>последовательные</td><td>не сохраняется</td><td>Реализуется NotificationsRepositoryImpl</td></tr>
+<tr><td>NotificationsRepositoryImpl</td><td>Notifications::Data</td><td>конечный</td><td>публичный</td><td>1/1</td><td>последовательные</td><td>не сохраняется</td><td>Реализует NotificationsRepository; Ассоциирован с NotificationsApi</td></tr>
+<tr><td>NotificationsApi</td><td>Notifications::Data</td><td>конечный</td><td>публичный</td><td>1/1</td><td>последовательные</td><td>не сохраняется</td><td>Ассоциирован с Dio; HTTP-зависимость от NotificationsRouter</td></tr>
+<tr><td>GetLastNotificationUseCase</td><td>Notifications::Domain</td><td>конечный</td><td>публичный</td><td>N/1</td><td>последовательные</td><td>не сохраняется</td><td>Ассоциирован с NotificationsRepository</td></tr>
+<tr><td>GetRunHistoryUseCase</td><td>Histories::Domain</td><td>конечный</td><td>публичный</td><td>N/1</td><td>последовательные</td><td>не сохраняется</td><td>Ассоциирован с RunsRepository</td></tr>
+<tr><td>HistoriesPage</td><td>Histories::Presentation</td><td>конечный</td><td>публичный</td><td>1/1</td><td>последовательные</td><td>не сохраняется</td><td>Зависит от GetRunHistoryUseCase</td></tr>
+<tr><td>AuthRouter</td><td>Routers</td><td>конечный</td><td>публичный</td><td>1/1</td><td>последовательные</td><td>не сохраняется</td><td>Зависит от SecurityModule, Settings; Ассоциирован с PostgreSQL</td></tr>
+<tr><td>MeRouter</td><td>Routers</td><td>конечный</td><td>публичный</td><td>1/1</td><td>последовательные</td><td>не сохраняется</td><td>Зависит от SecurityModule; Ассоциирован с PostgreSQL</td></tr>
+<tr><td>RunsRouter</td><td>Routers</td><td>конечный</td><td>публичный</td><td>1/1</td><td>последовательные</td><td>не сохраняется</td><td>Зависит от GeoModule; Ассоциирован с PostgreSQL</td></tr>
+<tr><td>TerritoriesRouter</td><td>Routers</td><td>конечный</td><td>публичный</td><td>1/1</td><td>последовательные</td><td>не сохраняется</td><td>Ассоциирован с PostgreSQL</td></tr>
+<tr><td>NotificationsRouter</td><td>Routers</td><td>конечный</td><td>публичный</td><td>1/1</td><td>последовательные</td><td>не сохраняется</td><td>Ассоциирован с PostgreSQL</td></tr>
+<tr><td>Settings</td><td>Settings</td><td>конечный</td><td>публичный</td><td>1/1</td><td>последовательные</td><td>не сохраняется</td><td>—</td></tr>
+<tr><td>AccessToken</td><td>Security</td><td>конечный</td><td>публичный</td><td>N/1</td><td>последовательные</td><td>не сохраняется</td><td>—</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<p class="caption">Таблица 3 — Спецификация атрибутов</p>
+
+<h3>Класс AuthTokens</h3>
+<table>
+<tr><th>Атрибут</th><th>Тип</th><th>Видимость</th><th>Начальное</th><th>Описание</th></tr>
+<tr><td>accessToken</td><td>String</td><td>public</td><td>null</td><td>JWT access-токен для авторизации запросов</td></tr>
+<tr><td>accessExpiresAt</td><td>int</td><td>public</td><td>null</td><td>UNIX-время истечения access-токена</td></tr>
+<tr><td>refreshToken</td><td>String</td><td>public</td><td>null</td><td>Токен обновления сессии</td></tr>
+</table>
+
+<h3>Класс RunPoint</h3>
+<table>
+<tr><th>Атрибут</th><th>Тип</th><th>Видимость</th><th>Начальное</th><th>Мин.</th><th>Макс.</th><th>Описание</th></tr>
+<tr><td>lat</td><td>double</td><td>public</td><td>null</td><td>−90.0</td><td>90.0</td><td>Широта GPS-точки</td></tr>
+<tr><td>lng</td><td>double</td><td>public</td><td>null</td><td>−180.0</td><td>180.0</td><td>Долгота GPS-точки</td></tr>
+<tr><td>ts</td><td>DateTime</td><td>public</td><td>null</td><td>—</td><td>—</td><td>Метка времени фиксации точки</td></tr>
+<tr><td>accuracyM</td><td>double?</td><td>public</td><td>null</td><td>0</td><td>—</td><td>Точность GPS в метрах</td></tr>
+<tr><td>speedMps</td><td>double?</td><td>public</td><td>null</td><td>0</td><td>—</td><td>Скорость в м/с</td></tr>
+<tr><td>altitudeM</td><td>double?</td><td>public</td><td>null</td><td>—</td><td>—</td><td>Высота над уровнем моря</td></tr>
+</table>
+
+<h3>Класс RunPause</h3>
+<table>
+<tr><th>Атрибут</th><th>Тип</th><th>Видимость</th><th>Начальное</th><th>Описание</th></tr>
+<tr><td>startedAt</td><td>DateTime</td><td>public</td><td>null</td><td>Время начала паузы</td></tr>
+<tr><td>endedAt</td><td>DateTime?</td><td>public</td><td>null</td><td>Время окончания паузы (null = пауза активна)</td></tr>
+<tr><td>reason</td><td>PauseReason</td><td>public</td><td>null</td><td>Причина паузы: manual, gpsLost, internetLost</td></tr>
+</table>
+
+<h3>Класс FinishRunRequest</h3>
+<table>
+<tr><th>Атрибут</th><th>Тип</th><th>Видимость</th><th>Начальное</th><th>Описание</th></tr>
+<tr><td>startedAt</td><td>DateTime</td><td>public</td><td>null</td><td>Время начала пробежки</td></tr>
+<tr><td>endedAt</td><td>DateTime</td><td>public</td><td>null</td><td>Время окончания пробежки</td></tr>
+<tr><td>points</td><td>List&lt;RunPoint&gt;</td><td>public</td><td>[]</td><td>Собранные GPS-точки маршрута</td></tr>
+<tr><td>pauses</td><td>List&lt;RunPause&gt;</td><td>public</td><td>[]</td><td>Интервалы пауз во время пробежки</td></tr>
+</table>
+
+<h3>Класс FinishRunResponse</h3>
+<table>
+<tr><th>Атрибут</th><th>Тип</th><th>Видимость</th><th>Начальное</th><th>Описание</th></tr>
+<tr><td>runId</td><td>String</td><td>public</td><td>null</td><td>UUID завершённой пробежки</td></tr>
+<tr><td>distanceM</td><td>double</td><td>public</td><td>0</td><td>Пройденная дистанция в метрах</td></tr>
+<tr><td>elapsedS</td><td>int</td><td>public</td><td>0</td><td>Общее время в секундах</td></tr>
+<tr><td>pausedS</td><td>int</td><td>public</td><td>0</td><td>Время на паузе в секундах</td></tr>
+<tr><td>movingS</td><td>int</td><td>public</td><td>0</td><td>Время в движении в секундах</td></tr>
+<tr><td>captureAreaM2</td><td>double</td><td>public</td><td>0</td><td>Захваченная площадь в м²</td></tr>
+<tr><td>victimsCount</td><td>int</td><td>public</td><td>0</td><td>Кол-во пользователей, чья территория захвачена</td></tr>
+</table>
+
+<h3>Класс RunHistoryItem</h3>
+<table>
+<tr><th>Атрибут</th><th>Тип</th><th>Видимость</th><th>Начальное</th><th>Описание</th></tr>
+<tr><td>runId</td><td>String</td><td>public</td><td>null</td><td>UUID пробежки</td></tr>
+<tr><td>status</td><td>String</td><td>public</td><td>null</td><td>Статус: draft, finished, processed, failed</td></tr>
+<tr><td>startedAt</td><td>DateTime?</td><td>public</td><td>null</td><td>Время начала</td></tr>
+<tr><td>endedAt</td><td>DateTime?</td><td>public</td><td>null</td><td>Время окончания</td></tr>
+<tr><td>distanceM</td><td>double</td><td>public</td><td>0</td><td>Дистанция (м)</td></tr>
+<tr><td>elapsedS</td><td>int</td><td>public</td><td>0</td><td>Общее время (с)</td></tr>
+<tr><td>pausedS</td><td>int</td><td>public</td><td>0</td><td>Время на паузе (с)</td></tr>
+<tr><td>movingS</td><td>int</td><td>public</td><td>0</td><td>Время в движении (с)</td></tr>
+<tr><td>captureAreaM2</td><td>double</td><td>public</td><td>0</td><td>Захваченная площадь (м²)</td></tr>
+<tr><td>victimsCount</td><td>int</td><td>public</td><td>0</td><td>Кол-во «жертв»</td></tr>
+<tr><td>createdAt</td><td>DateTime</td><td>public</td><td>null</td><td>Дата создания записи</td></tr>
+</table>
+
+<h3>Класс RunTrackerState</h3>
+<table>
+<tr><th>Атрибут</th><th>Тип</th><th>Видимость</th><th>Начальное</th><th>Описание</th></tr>
+<tr><td>phase</td><td>RunPhase</td><td>public</td><td>idle</td><td>Фаза трекера: idle, running, paused, finishing</td></tr>
+<tr><td>startedAt</td><td>DateTime?</td><td>public</td><td>null</td><td>Время старта пробежки</td></tr>
+<tr><td>points</td><td>List&lt;RunPoint&gt;</td><td>public</td><td>[]</td><td>Собранные точки</td></tr>
+<tr><td>pauses</td><td>List&lt;RunPause&gt;</td><td>public</td><td>[]</td><td>Паузы</td></tr>
+<tr><td>countdownSeconds</td><td>int?</td><td>public</td><td>null</td><td>Секунды обратного отсчёта</td></tr>
+<tr><td>lastFinish</td><td>FinishRunResponse?</td><td>public</td><td>null</td><td>Результат последней завершённой пробежки</td></tr>
+<tr><td>error</td><td>String?</td><td>public</td><td>null</td><td>Сообщение об ошибке</td></tr>
+</table>
+
+<h3>Класс Territory</h3>
+<table>
+<tr><th>Атрибут</th><th>Тип</th><th>Видимость</th><th>Начальное</th><th>Описание</th></tr>
+<tr><td>userId</td><td>String</td><td>public</td><td>null</td><td>UUID владельца территории</td></tr>
+<tr><td>areaM2</td><td>double</td><td>public</td><td>0</td><td>Площадь территории в м²</td></tr>
+<tr><td>territoryColorHex</td><td>String</td><td>public</td><td>"#3B82F6"</td><td>Цвет территории (hex)</td></tr>
+<tr><td>polygons</td><td>List&lt;List&lt;LatLng&gt;&gt;</td><td>public</td><td>[]</td><td>Список полигонов (координаты)</td></tr>
+</table>
+
+<h3>Класс Bbox</h3>
+<table>
+<tr><th>Атрибут</th><th>Тип</th><th>Видимость</th><th>Начальное</th><th>Описание</th></tr>
+<tr><td>minLng</td><td>double</td><td>public</td><td>null</td><td>Минимальная долгота</td></tr>
+<tr><td>minLat</td><td>double</td><td>public</td><td>null</td><td>Минимальная широта</td></tr>
+<tr><td>maxLng</td><td>double</td><td>public</td><td>null</td><td>Максимальная долгота</td></tr>
+<tr><td>maxLat</td><td>double</td><td>public</td><td>null</td><td>Максимальная широта</td></tr>
+</table>
+
+<h3>Класс MeProfile</h3>
+<table>
+<tr><th>Атрибут</th><th>Тип</th><th>Видимость</th><th>Начальное</th><th>Описание</th></tr>
+<tr><td>id</td><td>String</td><td>public</td><td>null</td><td>UUID пользователя</td></tr>
+<tr><td>username</td><td>String</td><td>public</td><td>null</td><td>Уникальный логин</td></tr>
+<tr><td>displayName</td><td>String</td><td>public</td><td>null</td><td>Отображаемое имя</td></tr>
+<tr><td>avatarUrl</td><td>String?</td><td>public</td><td>null</td><td>URL аватара</td></tr>
+<tr><td>email</td><td>String?</td><td>public</td><td>null</td><td>Email пользователя</td></tr>
+<tr><td>territoryColor</td><td>String</td><td>public</td><td>"#3B82F6"</td><td>Цвет территории</td></tr>
+<tr><td>createdAt</td><td>DateTime</td><td>public</td><td>null</td><td>Дата регистрации</td></tr>
+<tr><td>stats</td><td>MeProfileStats</td><td>public</td><td>null</td><td>Агрегированная статистика</td></tr>
+</table>
+
+<h3>Класс MeProfileStats</h3>
+<table>
+<tr><th>Атрибут</th><th>Тип</th><th>Видимость</th><th>Начальное</th><th>Описание</th></tr>
+<tr><td>runCount</td><td>int</td><td>public</td><td>0</td><td>Количество пробежек</td></tr>
+<tr><td>totalDistanceM</td><td>double</td><td>public</td><td>0</td><td>Общая дистанция (м)</td></tr>
+<tr><td>totalElapsedS</td><td>int</td><td>public</td><td>0</td><td>Общее время (с)</td></tr>
+<tr><td>totalPausedS</td><td>int</td><td>public</td><td>0</td><td>Общее время на паузе (с)</td></tr>
+<tr><td>totalMovingS</td><td>int</td><td>public</td><td>0</td><td>Общее время в движении (с)</td></tr>
+<tr><td>ownedAreaM2</td><td>double</td><td>public</td><td>0</td><td>Площадь собственной территории (м²)</td></tr>
+</table>
+
+<h3>Класс LastNotification</h3>
+<table>
+<tr><th>Атрибут</th><th>Тип</th><th>Видимость</th><th>Начальное</th><th>Описание</th></tr>
+<tr><td>kind</td><td>String</td><td>public</td><td>"territory_stolen"</td><td>Тип уведомления</td></tr>
+<tr><td>attackerUserId</td><td>String?</td><td>public</td><td>null</td><td>UUID атакующего пользователя</td></tr>
+<tr><td>runId</td><td>String?</td><td>public</td><td>null</td><td>UUID пробежки-атаки</td></tr>
+<tr><td>stolenAreaM2</td><td>double</td><td>public</td><td>0</td><td>Площадь украденной территории (м²)</td></tr>
+<tr><td>createdAt</td><td>DateTime</td><td>public</td><td>null</td><td>Время создания уведомления</td></tr>
+</table>
+
+<h3>Класс AuthState</h3>
+<table>
+<tr><th>Атрибут</th><th>Тип</th><th>Видимость</th><th>Начальное</th><th>Описание</th></tr>
+<tr><td>status</td><td>AuthStatus</td><td>public</td><td>unknown</td><td>Статус авторизации</td></tr>
+<tr><td>tokens</td><td>AuthTokens?</td><td>public</td><td>null</td><td>Текущие JWT-токены</td></tr>
+</table>
+
+<h3>Класс TokenStorage</h3>
+<table>
+<tr><th>Атрибут</th><th>Тип</th><th>Видимость</th><th>Начальное</th><th>Описание</th></tr>
+<tr><td>_key</td><td>String</td><td>private, static</td><td>"auth_tokens"</td><td>Ключ хранилища</td></tr>
+<tr><td>_storage</td><td>FlutterSecureStorage</td><td>private</td><td>—</td><td>Экземпляр безопасного хранилища</td></tr>
+</table>
+
+<h3>Класс Settings (Backend)</h3>
+<table>
+<tr><th>Атрибут</th><th>Тип</th><th>Видимость</th><th>Начальное</th><th>Описание</th></tr>
+<tr><td>app_env</td><td>str</td><td>public</td><td>"local"</td><td>Окружение (local/prod)</td></tr>
+<tr><td>app_host</td><td>str</td><td>public</td><td>"127.0.0.1"</td><td>Хост сервера</td></tr>
+<tr><td>app_port</td><td>int</td><td>public</td><td>8000</td><td>Порт сервера</td></tr>
+<tr><td>database_url</td><td>str</td><td>public</td><td>"postgresql://…"</td><td>Строка подключения к PostgreSQL</td></tr>
+<tr><td>jwt_secret</td><td>str</td><td>public</td><td>"change_me"</td><td>Секрет подписи JWT</td></tr>
+<tr><td>jwt_issuer</td><td>str</td><td>public</td><td>"run-application"</td><td>Issuer JWT-токена</td></tr>
+<tr><td>access_token_ttl_seconds</td><td>int</td><td>public</td><td>900</td><td>Время жизни access-токена (15 мин)</td></tr>
+<tr><td>refresh_token_ttl_seconds</td><td>int</td><td>public</td><td>2592000</td><td>Время жизни refresh-токена (30 дней)</td></tr>
+</table>
+
+<h3>Класс AccessToken (Backend)</h3>
+<table>
+<tr><th>Атрибут</th><th>Тип</th><th>Видимость</th><th>Начальное</th><th>Описание</th></tr>
+<tr><td>token</td><td>str</td><td>public</td><td>null</td><td>Сгенерированный JWT-токен</td></tr>
+<tr><td>expires_at</td><td>int</td><td>public</td><td>null</td><td>UNIX-время истечения</td></tr>
+</table>
+
+<h3>Класс RegisterRequest (Backend)</h3>
+<table>
+<tr><th>Атрибут</th><th>Тип</th><th>Видимость</th><th>Начальное</th><th>Описание</th></tr>
+<tr><td>email</td><td>EmailStr</td><td>public</td><td>null</td><td>Email для регистрации</td></tr>
+<tr><td>password</td><td>str</td><td>public</td><td>null</td><td>Пароль (8–200 символов)</td></tr>
+<tr><td>display_name</td><td>str?</td><td>public</td><td>null</td><td>Отображаемое имя (до 80 символов)</td></tr>
+</table>
+
+<h3>Класс LoginRequest (Backend)</h3>
+<table>
+<tr><th>Атрибут</th><th>Тип</th><th>Видимость</th><th>Начальное</th><th>Описание</th></tr>
+<tr><td>email</td><td>EmailStr</td><td>public</td><td>null</td><td>Email для входа</td></tr>
+<tr><td>password</td><td>str</td><td>public</td><td>null</td><td>Пароль (1–200 символов)</td></tr>
+</table>
+
+<h3>Класс AuthResponse (Backend)</h3>
+<table>
+<tr><th>Атрибут</th><th>Тип</th><th>Видимость</th><th>Начальное</th><th>Описание</th></tr>
+<tr><td>access_token</td><td>str</td><td>public</td><td>null</td><td>JWT access-токен</td></tr>
+<tr><td>access_expires_at</td><td>int</td><td>public</td><td>null</td><td>UNIX-время истечения</td></tr>
+<tr><td>refresh_token</td><td>str</td><td>public</td><td>null</td><td>Refresh-токен</td></tr>
+</table>
+
+<h3>Класс RunPointIn (Backend)</h3>
+<table>
+<tr><th>Атрибут</th><th>Тип</th><th>Видимость</th><th>Начальное</th><th>Описание</th></tr>
+<tr><td>lat</td><td>float</td><td>public</td><td>null</td><td>Широта</td></tr>
+<tr><td>lng</td><td>float</td><td>public</td><td>null</td><td>Долгота</td></tr>
+<tr><td>ts</td><td>datetime</td><td>public</td><td>null</td><td>Метка времени</td></tr>
+<tr><td>accuracy_m</td><td>float?</td><td>public</td><td>null</td><td>Точность GPS</td></tr>
+<tr><td>speed_mps</td><td>float?</td><td>public</td><td>null</td><td>Скорость</td></tr>
+<tr><td>altitude_m</td><td>float?</td><td>public</td><td>null</td><td>Высота</td></tr>
+</table>
+
+<h3>Класс RunPauseIn (Backend)</h3>
+<table>
+<tr><th>Атрибут</th><th>Тип</th><th>Видимость</th><th>Начальное</th><th>Описание</th></tr>
+<tr><td>started_at</td><td>datetime</td><td>public</td><td>null</td><td>Начало паузы</td></tr>
+<tr><td>ended_at</td><td>datetime?</td><td>public</td><td>null</td><td>Конец паузы</td></tr>
+<tr><td>reason</td><td>str</td><td>public</td><td>null</td><td>Причина: manual/gps_lost/internet_lost</td></tr>
+</table>
+
+<h3>Класс MeProfileOut (Backend)</h3>
+<table>
+<tr><th>Атрибут</th><th>Тип</th><th>Видимость</th><th>Начальное</th><th>Описание</th></tr>
+<tr><td>id</td><td>str</td><td>public</td><td>null</td><td>UUID пользователя</td></tr>
+<tr><td>username</td><td>str</td><td>public</td><td>null</td><td>Логин</td></tr>
+<tr><td>display_name</td><td>str</td><td>public</td><td>null</td><td>Отображаемое имя</td></tr>
+<tr><td>avatar_url</td><td>str?</td><td>public</td><td>null</td><td>URL аватара</td></tr>
+<tr><td>email</td><td>EmailStr?</td><td>public</td><td>null</td><td>Email</td></tr>
+<tr><td>territory_color</td><td>str</td><td>public</td><td>null</td><td>Цвет территории (hex)</td></tr>
+<tr><td>created_at</td><td>datetime</td><td>public</td><td>null</td><td>Дата регистрации</td></tr>
+<tr><td>stats</td><td>UserStatsOut</td><td>public</td><td>null</td><td>Статистика</td></tr>
+</table>
+
+<h3>Класс UserStatsOut (Backend)</h3>
+<table>
+<tr><th>Атрибут</th><th>Тип</th><th>Видимость</th><th>Начальное</th><th>Описание</th></tr>
+<tr><td>run_count</td><td>int</td><td>public</td><td>null</td><td>Количество пробежек</td></tr>
+<tr><td>total_distance_m</td><td>float</td><td>public</td><td>null</td><td>Общая дистанция</td></tr>
+<tr><td>total_elapsed_s</td><td>int</td><td>public</td><td>null</td><td>Общее время</td></tr>
+<tr><td>total_paused_s</td><td>int</td><td>public</td><td>null</td><td>Время на паузе</td></tr>
+<tr><td>total_moving_s</td><td>int</td><td>public</td><td>null</td><td>Время в движении</td></tr>
+<tr><td>owned_area_m2</td><td>float</td><td>public</td><td>null</td><td>Площадь территории</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<p class="caption">Таблица 4 — Спецификация операций</p>
+
+<h3>Класс AuthController</h3>
+<table>
+<tr><th>Операция</th><th>Возвращает</th><th>Параметры</th><th>Видимость</th><th>Классификация</th><th>Описание</th></tr>
+<tr><td>build()</td><td>AuthState</td><td>—</td><td>public</td><td>Конструктор</td><td>Инициализация состояния авторизации</td></tr>
+<tr><td>login(email, password)</td><td>Future&lt;void&gt;</td><td>email: String, password: String</td><td>public</td><td>Модификатор</td><td>Выполнить вход пользователя</td></tr>
+<tr><td>register(email, password, displayName)</td><td>Future&lt;void&gt;</td><td>email: String, password: String, displayName: String</td><td>public</td><td>Модификатор</td><td>Зарегистрировать нового пользователя</td></tr>
+<tr><td>logout()</td><td>Future&lt;void&gt;</td><td>—</td><td>public</td><td>Модификатор</td><td>Выйти из системы, очистить токены</td></tr>
+</table>
+
+<h3>Класс RunTrackerController</h3>
+<table>
+<tr><th>Операция</th><th>Возвращает</th><th>Параметры</th><th>Видимость</th><th>Классификация</th><th>Описание</th></tr>
+<tr><td>build()</td><td>RunTrackerState</td><td>—</td><td>public</td><td>Конструктор</td><td>Инициализация состояния трекера</td></tr>
+<tr><td>start()</td><td>Future&lt;void&gt;</td><td>—</td><td>public</td><td>Модификатор</td><td>Запуск обратного отсчёта и начало записи GPS</td></tr>
+<tr><td>pauseManual()</td><td>void</td><td>—</td><td>public</td><td>Модификатор</td><td>Ручная пауза пробежки</td></tr>
+<tr><td>resume()</td><td>void</td><td>—</td><td>public</td><td>Модификатор</td><td>Возобновление пробежки</td></tr>
+<tr><td>finish()</td><td>Future&lt;void&gt;</td><td>—</td><td>public</td><td>Модификатор</td><td>Завершить пробежку и отправить на сервер</td></tr>
+<tr><td>clearLastFinish()</td><td>void</td><td>—</td><td>public</td><td>Модификатор</td><td>Сбросить результат последней пробежки</td></tr>
+<tr><td>addSimulatedPoint(lat, lng)</td><td>void</td><td>lat: double, lng: double</td><td>public</td><td>Модификатор</td><td>Добавить точку в тестовом режиме</td></tr>
+</table>
+
+<h3>Класс ProfileActionsController</h3>
+<table>
+<tr><th>Операция</th><th>Возвращает</th><th>Параметры</th><th>Видимость</th><th>Классификация</th><th>Описание</th></tr>
+<tr><td>build()</td><td>AsyncValue&lt;void&gt;</td><td>—</td><td>public</td><td>Конструктор</td><td>Инициализация</td></tr>
+<tr><td>saveProfile(displayName, avatarUrl?)</td><td>Future&lt;void&gt;</td><td>displayName: String, avatarUrl: String?</td><td>public</td><td>Модификатор</td><td>Сохранить данные профиля</td></tr>
+<tr><td>saveTerritoryColor(color)</td><td>Future&lt;void&gt;</td><td>territoryColor: String</td><td>public</td><td>Модификатор</td><td>Сохранить цвет территории</td></tr>
+<tr><td>changePassword(currentPwd, newPwd)</td><td>Future&lt;void&gt;</td><td>currentPassword: String, newPassword: String</td><td>public</td><td>Модификатор</td><td>Сменить пароль</td></tr>
+</table>
+
+<h3>Интерфейс AuthRepository</h3>
+<table>
+<tr><th>Операция</th><th>Возвращает</th><th>Параметры</th><th>Видимость</th><th>Классификация</th><th>Описание</th></tr>
+<tr><td>login(email, password)</td><td>Future&lt;AuthTokens&gt;</td><td>email: String, password: String</td><td>public</td><td>Селектор</td><td>Вход</td></tr>
+<tr><td>register(email, password, displayName)</td><td>Future&lt;AuthTokens&gt;</td><td>email: String, password: String, displayName: String</td><td>public</td><td>Модификатор</td><td>Регистрация</td></tr>
+<tr><td>refresh(refreshToken)</td><td>Future&lt;AuthTokens&gt;</td><td>refreshToken: String</td><td>public</td><td>Модификатор</td><td>Обновление токенов</td></tr>
+</table>
+
+<h3>Интерфейс RunsRepository</h3>
+<table>
+<tr><th>Операция</th><th>Возвращает</th><th>Параметры</th><th>Видимость</th><th>Классификация</th><th>Описание</th></tr>
+<tr><td>finish(request)</td><td>Future&lt;FinishRunResponse&gt;</td><td>request: FinishRunRequest</td><td>public</td><td>Модификатор</td><td>Отправить результат пробежки</td></tr>
+<tr><td>history(limit, offset)</td><td>Future&lt;List&lt;RunHistoryItem&gt;&gt;</td><td>limit: int, offset: int</td><td>public</td><td>Селектор</td><td>Получить историю пробежек</td></tr>
+</table>
+
+<h3>Интерфейс TerritoriesRepository</h3>
+<table>
+<tr><th>Операция</th><th>Возвращает</th><th>Параметры</th><th>Видимость</th><th>Классификация</th><th>Описание</th></tr>
+<tr><td>fetchByBbox(...)</td><td>Future&lt;List&lt;Territory&gt;&gt;</td><td>minLng, minLat, maxLng, maxLat: double</td><td>public</td><td>Селектор</td><td>Получить территории в видимой области</td></tr>
+</table>
+
+<h3>Интерфейс ProfileRepository</h3>
+<table>
+<tr><th>Операция</th><th>Возвращает</th><th>Параметры</th><th>Видимость</th><th>Классификация</th><th>Описание</th></tr>
+<tr><td>getMeProfile()</td><td>Future&lt;MeProfile&gt;</td><td>—</td><td>public</td><td>Селектор</td><td>Получить профиль пользователя</td></tr>
+<tr><td>updateMeProfile(displayName?, avatarUrl?)</td><td>Future&lt;MeProfile&gt;</td><td>displayName: String?, avatarUrl: String?</td><td>public</td><td>Модификатор</td><td>Обновить профиль</td></tr>
+<tr><td>updateTerritoryColor(color)</td><td>Future&lt;String&gt;</td><td>color: String</td><td>public</td><td>Модификатор</td><td>Обновить цвет территории</td></tr>
+<tr><td>changePassword(currentPwd, newPwd)</td><td>Future&lt;void&gt;</td><td>currentPassword, newPassword: String</td><td>public</td><td>Модификатор</td><td>Сменить пароль</td></tr>
+</table>
+
+<h3>Интерфейс NotificationsRepository</h3>
+<table>
+<tr><th>Операция</th><th>Возвращает</th><th>Параметры</th><th>Видимость</th><th>Классификация</th><th>Описание</th></tr>
+<tr><td>last()</td><td>Future&lt;LastNotification?&gt;</td><td>—</td><td>public</td><td>Селектор</td><td>Последнее уведомление</td></tr>
+</table>
+
+<h3>Класс TokenInterceptor</h3>
+<table>
+<tr><th>Операция</th><th>Возвращает</th><th>Параметры</th><th>Видимость</th><th>Классификация</th><th>Описание</th></tr>
+<tr><td>onRequest(options, handler)</td><td>void</td><td>options: RequestOptions, handler</td><td>public</td><td>Модификатор</td><td>Подставить access-токен в заголовок</td></tr>
+<tr><td>onError(err, handler)</td><td>void</td><td>err: DioException, handler</td><td>public</td><td>Модификатор</td><td>При 401 обновить токен и повторить запрос</td></tr>
+</table>
+
+<h3>Класс TokenStorage</h3>
+<table>
+<tr><th>Операция</th><th>Возвращает</th><th>Параметры</th><th>Видимость</th><th>Классификация</th><th>Описание</th></tr>
+<tr><td>read()</td><td>Future&lt;AuthTokens?&gt;</td><td>—</td><td>public</td><td>Селектор</td><td>Прочитать токены из хранилища</td></tr>
+<tr><td>write(tokens)</td><td>Future&lt;void&gt;</td><td>tokens: AuthTokens</td><td>public</td><td>Модификатор</td><td>Сохранить токены</td></tr>
+<tr><td>clear()</td><td>Future&lt;void&gt;</td><td>—</td><td>public</td><td>Модификатор</td><td>Удалить токены</td></tr>
+</table>
+
+<h3>Класс AuthRouter (Backend)</h3>
+<table>
+<tr><th>Операция</th><th>Возвращает</th><th>Параметры</th><th>Видимость</th><th>Классификация</th><th>Описание</th></tr>
+<tr><td>register(payload)</td><td>AuthResponse</td><td>payload: RegisterRequest</td><td>public</td><td>Модификатор</td><td>Зарегистрировать пользователя в БД</td></tr>
+<tr><td>login(payload)</td><td>AuthResponse</td><td>payload: LoginRequest</td><td>public</td><td>Селектор</td><td>Авторизовать и выдать токены</td></tr>
+<tr><td>refresh(payload)</td><td>AuthResponse</td><td>payload: RefreshRequest</td><td>public</td><td>Модификатор</td><td>Обновить пару токенов</td></tr>
+</table>
+
+<h3>Класс MeRouter (Backend)</h3>
+<table>
+<tr><th>Операция</th><th>Возвращает</th><th>Параметры</th><th>Видимость</th><th>Классификация</th><th>Описание</th></tr>
+<tr><td>me(userId)</td><td>UserOut</td><td>userId: str</td><td>public</td><td>Селектор</td><td>Получить базовые данные пользователя</td></tr>
+<tr><td>meProfile(userId)</td><td>MeProfileOut</td><td>userId: str</td><td>public</td><td>Селектор</td><td>Получить профиль со статистикой</td></tr>
+<tr><td>updateTerritoryColor(payload, userId)</td><td>TerritoryColorOut</td><td>payload: UpdateTerritoryColorRequest, userId: str</td><td>public</td><td>Модификатор</td><td>Обновить цвет территории</td></tr>
+<tr><td>updateMeProfile(payload, userId)</td><td>MeProfileOut</td><td>payload: UpdateMeProfileRequest, userId: str</td><td>public</td><td>Модификатор</td><td>Обновить профиль</td></tr>
+<tr><td>changePassword(payload, userId)</td><td>dict</td><td>payload: ChangePasswordRequest, userId: str</td><td>public</td><td>Модификатор</td><td>Сменить пароль</td></tr>
+</table>
+
+<h3>Класс RunsRouter (Backend)</h3>
+<table>
+<tr><th>Операция</th><th>Возвращает</th><th>Параметры</th><th>Видимость</th><th>Классификация</th><th>Описание</th></tr>
+<tr><td>finishRun(payload, userId)</td><td>RunFinishResponse</td><td>payload: RunFinishRequest, userId: str</td><td>public</td><td>Модификатор</td><td>Обработать завершённую пробежку, вычислить захват территорий</td></tr>
+<tr><td>runsHistory(userId, limit, offset)</td><td>list[RunHistoryItemOut]</td><td>userId: str, limit: int, offset: int</td><td>public</td><td>Селектор</td><td>Получить историю пробежек</td></tr>
+</table>
+
+<h3>Класс TerritoriesRouter (Backend)</h3>
+<table>
+<tr><th>Операция</th><th>Возвращает</th><th>Параметры</th><th>Видимость</th><th>Классификация</th><th>Описание</th></tr>
+<tr><td>getTerritories(minLng, minLat, maxLng, maxLat)</td><td>dict (GeoJSON)</td><td>minLng, minLat, maxLng, maxLat: float</td><td>public</td><td>Селектор</td><td>Получить территории в bounding box</td></tr>
+</table>
+
+<h3>Класс NotificationsRouter (Backend)</h3>
+<table>
+<tr><th>Операция</th><th>Возвращает</th><th>Параметры</th><th>Видимость</th><th>Классификация</th><th>Описание</th></tr>
+<tr><td>lastNotification(userId)</td><td>dict</td><td>userId: str</td><td>public</td><td>Селектор</td><td>Получить последнее уведомление</td></tr>
+</table>
+
+<h3>Класс SecurityModule (Backend)</h3>
+<table>
+<tr><th>Операция</th><th>Возвращает</th><th>Параметры</th><th>Видимость</th><th>Классификация</th><th>Описание</th></tr>
+<tr><td>hash_password(password)</td><td>str</td><td>password: str</td><td>public</td><td>Модификатор</td><td>Хеширование пароля (argon2)</td></tr>
+<tr><td>verify_password(password, hash)</td><td>bool</td><td>password: str, hash: str</td><td>public</td><td>Селектор</td><td>Проверка пароля по хешу</td></tr>
+<tr><td>new_refresh_token()</td><td>str</td><td>—</td><td>public</td><td>Модификатор</td><td>Генерация refresh-токена</td></tr>
+<tr><td>refresh_token_hash(token)</td><td>str</td><td>token: str</td><td>public</td><td>Селектор</td><td>Хеш refresh-токена (SHA-256)</td></tr>
+<tr><td>create_access_token(user_id)</td><td>AccessToken</td><td>user_id: str</td><td>public</td><td>Модификатор</td><td>Создание JWT access-токена</td></tr>
+<tr><td>decode_access_token(token)</td><td>dict</td><td>token: str</td><td>public</td><td>Селектор</td><td>Декодирование и валидация JWT</td></tr>
+</table>
+
+<h3>Класс GeoModule (Backend)</h3>
+<table>
+<tr><th>Операция</th><th>Возвращает</th><th>Параметры</th><th>Видимость</th><th>Классификация</th><th>Описание</th></tr>
+<tr><td>haversine_m(lat1, lng1, lat2, lng2)</td><td>float</td><td>lat1, lng1, lat2, lng2: float</td><td>public</td><td>Селектор</td><td>Расстояние между двумя координатами (м)</td></tr>
+<tr><td>wkt_linestring(points)</td><td>str</td><td>points: list[tuple]</td><td>public</td><td>Селектор</td><td>Формирование WKT LineString из точек</td></tr>
+<tr><td>clip_interval(a_start, a_end, b_start, b_end)</td><td>float</td><td>a_start, a_end, b_start, b_end: datetime</td><td>public</td><td>Селектор</td><td>Пересечение временных интервалов (с)</td></tr>
+<tr><td>seconds_between(started_at, ended_at)</td><td>int</td><td>started_at, ended_at: datetime</td><td>public</td><td>Селектор</td><td>Разница во времени в секундах</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<p class="caption">Таблица 5 — Спецификация отношений между классами</p>
+<table>
+<tr><th>№</th><th>Тип</th><th>Класс-источник</th><th>Класс-цель</th><th>Описание</th></tr>
+<tr><td>1</td><td>Ассоциация</td><td>RunApp</td><td>HomeShellPage</td><td>Корневой виджет содержит оболочку навигации</td></tr>
+<tr><td>2</td><td>Агрегация</td><td>HomeShellPage</td><td>MapPage</td><td>Оболочка включает экран карты (вкладка)</td></tr>
+<tr><td>3</td><td>Агрегация</td><td>HomeShellPage</td><td>HistoriesPage</td><td>Оболочка включает экран истории (вкладка)</td></tr>
+<tr><td>4</td><td>Агрегация</td><td>HomeShellPage</td><td>ProfilePage</td><td>Оболочка включает экран профиля (вкладка)</td></tr>
+<tr><td>5</td><td>Ассоциация</td><td>HomeShellPage</td><td>RunTrackerController</td><td>Оболочка управляет FAB через контроллер трекера</td></tr>
+<tr><td>6</td><td>Зависимость</td><td>AuthController</td><td>LoginUseCase</td><td>Контроллер вызывает use case входа</td></tr>
+<tr><td>7</td><td>Зависимость</td><td>AuthController</td><td>RegisterUseCase</td><td>Контроллер вызывает use case регистрации</td></tr>
+<tr><td>8</td><td>Зависимость</td><td>AuthController</td><td>TokenStorage</td><td>Контроллер сохраняет/удаляет токены</td></tr>
+<tr><td>9</td><td>Ассоциация</td><td>LoginUseCase</td><td>AuthRepository</td><td>Use case использует репозиторий</td></tr>
+<tr><td>10</td><td>Ассоциация</td><td>RegisterUseCase</td><td>AuthRepository</td><td>Use case использует репозиторий</td></tr>
+<tr><td>11</td><td>Реализация</td><td>AuthRepositoryImpl</td><td>AuthRepository</td><td>Реализует интерфейс</td></tr>
+<tr><td>12</td><td>Ассоциация</td><td>AuthRepositoryImpl</td><td>AuthApi</td><td>Реализация делегирует вызовы API-клиенту</td></tr>
+<tr><td>13</td><td>Ассоциация</td><td>AuthApi</td><td>Dio</td><td>API использует HTTP-клиент</td></tr>
+<tr><td>14</td><td>Зависимость</td><td>LoginPage</td><td>AuthController</td><td>UI зависит от контроллера</td></tr>
+<tr><td>15</td><td>Зависимость</td><td>RunTrackerController</td><td>FinishRunUseCase</td><td>Контроллер вызывает use case завершения</td></tr>
+<tr><td>16</td><td>Зависимость</td><td>RunTrackerController</td><td>GPS SDK</td><td>Контроллер получает GPS-позиции</td></tr>
+<tr><td>17</td><td>Зависимость</td><td>RunTrackerController</td><td>Connectivity SDK</td><td>Контроллер проверяет интернет-соединение</td></tr>
+<tr><td>18</td><td>Ассоциация</td><td>FinishRunUseCase</td><td>RunsRepository</td><td>Use case использует репозиторий</td></tr>
+<tr><td>19</td><td>Реализация</td><td>RunsRepositoryImpl</td><td>RunsRepository</td><td>Реализует интерфейс</td></tr>
+<tr><td>20</td><td>Ассоциация</td><td>RunsRepositoryImpl</td><td>RunsApi</td><td>Делегирует API-клиенту</td></tr>
+<tr><td>21</td><td>Ассоциация</td><td>RunsApi</td><td>Dio</td><td>Использует HTTP-клиент</td></tr>
+<tr><td>22</td><td>Зависимость</td><td>RunSummaryPage</td><td>RunTrackerController</td><td>UI зависит от контроллера</td></tr>
+<tr><td>23</td><td>Композиция</td><td>FinishRunRequest</td><td>RunPoint</td><td>Запрос содержит точки</td></tr>
+<tr><td>24</td><td>Композиция</td><td>FinishRunRequest</td><td>RunPause</td><td>Запрос содержит паузы</td></tr>
+<tr><td>25</td><td>Композиция</td><td>RunTrackerState</td><td>RunPoint</td><td>Состояние содержит точки</td></tr>
+<tr><td>26</td><td>Композиция</td><td>RunTrackerState</td><td>RunPause</td><td>Состояние содержит паузы</td></tr>
+<tr><td>27</td><td>Ассоциация</td><td>GetTerritoriesForBboxUseCase</td><td>TerritoriesRepository</td><td>Use case использует репозиторий</td></tr>
+<tr><td>28</td><td>Реализация</td><td>TerritoriesRepositoryImpl</td><td>TerritoriesRepository</td><td>Реализует интерфейс</td></tr>
+<tr><td>29</td><td>Ассоциация</td><td>TerritoriesRepositoryImpl</td><td>TerritoriesApi</td><td>Делегирует API-клиенту</td></tr>
+<tr><td>30</td><td>Ассоциация</td><td>TerritoriesApi</td><td>Dio</td><td>Использует HTTP-клиент</td></tr>
+<tr><td>31</td><td>Зависимость</td><td>MapPage</td><td>GetTerritoriesForBboxUseCase</td><td>Экран запрашивает территории</td></tr>
+<tr><td>32</td><td>Зависимость</td><td>MapPage</td><td>RunTrackerController</td><td>Экран отрисовывает трек пробежки</td></tr>
+<tr><td>33</td><td>Зависимость</td><td>MapPage</td><td>GetLastNotificationUseCase</td><td>Экран запрашивает уведомления</td></tr>
+<tr><td>34</td><td>Зависимость</td><td>MapPage</td><td>OSM Tile Server</td><td>Экран загружает тайлы карты</td></tr>
+<tr><td>35</td><td>Ассоциация</td><td>GetMeProfileUseCase</td><td>ProfileRepository</td><td>Use case использует репозиторий</td></tr>
+<tr><td>36</td><td>Ассоциация</td><td>UpdateMeProfileUseCase</td><td>ProfileRepository</td><td>Use case использует репозиторий</td></tr>
+<tr><td>37</td><td>Ассоциация</td><td>UpdateTerritoryColorUseCase</td><td>ProfileRepository</td><td>Use case использует репозиторий</td></tr>
+<tr><td>38</td><td>Ассоциация</td><td>ChangePasswordUseCase</td><td>ProfileRepository</td><td>Use case использует репозиторий</td></tr>
+<tr><td>39</td><td>Реализация</td><td>ProfileRepositoryImpl</td><td>ProfileRepository</td><td>Реализует интерфейс</td></tr>
+<tr><td>40</td><td>Ассоциация</td><td>ProfileRepositoryImpl</td><td>ProfileApi</td><td>Делегирует API-клиенту</td></tr>
+<tr><td>41</td><td>Ассоциация</td><td>ProfileApi</td><td>Dio</td><td>Использует HTTP-клиент</td></tr>
+<tr><td>42</td><td>Зависимость</td><td>ProfileActionsController</td><td>UpdateMeProfileUseCase</td><td>Контроллер вызывает use case</td></tr>
+<tr><td>43</td><td>Зависимость</td><td>ProfileActionsController</td><td>UpdateTerritoryColorUseCase</td><td>Контроллер вызывает use case</td></tr>
+<tr><td>44</td><td>Зависимость</td><td>ProfileActionsController</td><td>ChangePasswordUseCase</td><td>Контроллер вызывает use case</td></tr>
+<tr><td>45</td><td>Зависимость</td><td>ProfilePage</td><td>ProfileActionsController</td><td>UI зависит от контроллера</td></tr>
+<tr><td>46</td><td>Зависимость</td><td>ProfilePage</td><td>GetMeProfileUseCase</td><td>UI зависит от use case профиля</td></tr>
+<tr><td>47</td><td>Ассоциация</td><td>GetLastNotificationUseCase</td><td>NotificationsRepository</td><td>Use case использует репозиторий</td></tr>
+<tr><td>48</td><td>Реализация</td><td>NotificationsRepositoryImpl</td><td>NotificationsRepository</td><td>Реализует интерфейс</td></tr>
+<tr><td>49</td><td>Ассоциация</td><td>NotificationsRepositoryImpl</td><td>NotificationsApi</td><td>Делегирует API-клиенту</td></tr>
+<tr><td>50</td><td>Ассоциация</td><td>NotificationsApi</td><td>Dio</td><td>Использует HTTP-клиент</td></tr>
+<tr><td>51</td><td>Ассоциация</td><td>GetRunHistoryUseCase</td><td>RunsRepository</td><td>Use case использует репозиторий</td></tr>
+<tr><td>52</td><td>Зависимость</td><td>HistoriesPage</td><td>GetRunHistoryUseCase</td><td>UI зависит от use case</td></tr>
+<tr><td>53</td><td>Ассоциация</td><td>TokenInterceptor</td><td>TokenStorage</td><td>Перехватчик читает/пишет токены</td></tr>
+<tr><td>54</td><td>Композиция</td><td>Dio</td><td>TokenInterceptor</td><td>HTTP-клиент содержит перехватчик</td></tr>
+<tr><td>55</td><td>Ассоциация</td><td>TokenStorage</td><td>Flutter Secure Storage</td><td>Хранилище использует платформенный API</td></tr>
+<tr><td>56</td><td>Композиция</td><td>MeProfile</td><td>MeProfileStats</td><td>Профиль содержит статистику</td></tr>
+<tr><td>57</td><td>HTTP-зависимость</td><td>AuthApi</td><td>AuthRouter</td><td>REST: POST /auth/register, POST /auth/login, POST /auth/refresh</td></tr>
+<tr><td>58</td><td>HTTP-зависимость</td><td>RunsApi</td><td>RunsRouter</td><td>REST: POST /runs/finish, GET /runs/history</td></tr>
+<tr><td>59</td><td>HTTP-зависимость</td><td>TerritoriesApi</td><td>TerritoriesRouter</td><td>REST: GET /territories</td></tr>
+<tr><td>60</td><td>HTTP-зависимость</td><td>NotificationsApi</td><td>NotificationsRouter</td><td>REST: GET /notifications/last</td></tr>
+<tr><td>61</td><td>HTTP-зависимость</td><td>ProfileApi</td><td>MeRouter</td><td>REST: GET /me/profile, PATCH /me/profile, PATCH /me/territory-color, PATCH /me/password</td></tr>
+<tr><td>62</td><td>Ассоциация</td><td>AuthRouter</td><td>PostgreSQL + PostGIS</td><td>Роутер читает/пишет в БД</td></tr>
+<tr><td>63</td><td>Ассоциация</td><td>MeRouter</td><td>PostgreSQL + PostGIS</td><td>Роутер читает/пишет в БД</td></tr>
+<tr><td>64</td><td>Ассоциация</td><td>RunsRouter</td><td>PostgreSQL + PostGIS</td><td>Роутер читает/пишет в БД</td></tr>
+<tr><td>65</td><td>Ассоциация</td><td>TerritoriesRouter</td><td>PostgreSQL + PostGIS</td><td>Роутер читает из БД</td></tr>
+<tr><td>66</td><td>Ассоциация</td><td>NotificationsRouter</td><td>PostgreSQL + PostGIS</td><td>Роутер читает из БД</td></tr>
+<tr><td>67</td><td>Зависимость</td><td>AuthRouter</td><td>SecurityModule</td><td>Роутер использует хеширование и JWT</td></tr>
+<tr><td>68</td><td>Зависимость</td><td>MeRouter</td><td>SecurityModule</td><td>Роутер использует проверку пароля</td></tr>
+<tr><td>69</td><td>Зависимость</td><td>RunsRouter</td><td>GeoModule</td><td>Роутер использует геовычисления</td></tr>
+<tr><td>70</td><td>Зависимость</td><td>AuthRouter</td><td>Settings</td><td>Конфигурация JWT</td></tr>
+<tr><td>71</td><td>Композиция</td><td>RunFinishRequest (BE)</td><td>RunPointIn</td><td>Запрос содержит точки</td></tr>
+<tr><td>72</td><td>Композиция</td><td>RunFinishRequest (BE)</td><td>RunPauseIn</td><td>Запрос содержит паузы</td></tr>
+<tr><td>73</td><td>Композиция</td><td>MeProfileOut</td><td>UserStatsOut</td><td>Ответ содержит статистику</td></tr>
+</table>
+
+<p><b>Итого:</b></p>
+<ul class="metrics">
+<li>Ассоциаций: 28</li>
+<li>Зависимостей: 22</li>
+<li>Реализаций: 5</li>
+<li>Композиций: 8</li>
+<li>Агрегаций: 3</li>
+<li>HTTP-зависимостей: 5</li>
+<li><b>Всего отношений: 73</b></li>
+</ul>
+
+</body>
+</html>

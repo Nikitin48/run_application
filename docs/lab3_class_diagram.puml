@@ -1,0 +1,361 @@
+@startuml
+title Run Application — Классовая диаграмма
+top to bottom direction
+scale max 1100 width
+
+skinparam classAttributeIconSize 0
+skinparam classFontSize 10
+skinparam classAttributeFontSize 9
+skinparam packageFontSize 11
+skinparam packageStyle rectangle
+skinparam nodesep 6
+skinparam ranksep 8
+skinparam padding 2
+
+' ===================== EXTERNAL =====================
+package "External" #EEE {
+  class GPS <<external>> {
+    +streamPosition(): Stream
+  }
+  class ConnSDK <<external>> {
+    +onConnectivityChanged: Stream
+  }
+  class OSM <<external>> {
+    +getTile(z, x, y): Image
+  }
+  class SecStorage <<external>> {
+    +read(key): String?
+    +write(key, value): void
+  }
+  class PgDB <<external>> {
+    +query(sql): ResultSet
+    +execute(sql): int
+  }
+}
+
+' ===================== CORE =====================
+package "Core" {
+  class TokenStorage {
+    -_storage: SecureStorage
+    +read(): AuthTokens?
+    +write(tokens): void
+    +clear(): void
+  }
+  class TokenInterceptor {
+    -tokenStorage: TokenStorage
+    +onRequest(opt, h): void
+    +onError(err, h): void
+  }
+  class Dio <<lib>> {
+    +get(path): Response
+    +post(path, data): Response
+  }
+}
+
+' ===================== AUTH =====================
+package "Auth" {
+  class AuthTokens {
+    +accessToken: String
+    +accessExpiresAt: int
+    +refreshToken: String
+  }
+  interface AuthRepository {
+    +login(email, pwd): AuthTokens
+    +register(email, pwd, name): AuthTokens
+    +refresh(token): AuthTokens
+  }
+  class AuthRepositoryImpl
+  class AuthApi {
+    -_dio: Dio
+  }
+  class LoginUseCase {
+    -_repo: AuthRepository
+    +call(email, pwd): AuthTokens
+  }
+  class RegisterUseCase {
+    -_repo: AuthRepository
+    +call(email, pwd, name): AuthTokens
+  }
+  class AuthController {
+    +login(email, pwd): void
+    +register(email, pwd, name): void
+    +logout(): void
+  }
+  class LoginPage <<UI>>
+}
+
+' ===================== RUNS =====================
+package "Runs" {
+  class RunPoint {
+    +lat: double
+    +lng: double
+    +ts: DateTime
+    +accuracyM: double?
+  }
+  class RunPause {
+    +startedAt: DateTime
+    +endedAt: DateTime?
+    +reason: PauseReason
+  }
+  class FinishRunRequest <<DTO>> {
+    +startedAt: DateTime
+    +endedAt: DateTime
+    +points: List<RunPoint>
+    +pauses: List<RunPause>
+  }
+  class FinishRunResponse <<DTO>> {
+    +runId: String
+    +distanceM: double
+    +elapsedS: int
+    +captureAreaM2: double
+    +victimsCount: int
+  }
+  class RunHistoryItem <<DTO>> {
+    +runId: String
+    +status: String
+    +distanceM: double
+    +elapsedS: int
+    +captureAreaM2: double
+  }
+  interface RunsRepository {
+    +finish(req): FinishRunResponse
+    +history(limit, offset): List
+  }
+  class RunsRepositoryImpl
+  class RunsApi {
+    -_dio: Dio
+  }
+  class FinishRunUseCase {
+    -_repo: RunsRepository
+    +call(req): FinishRunResponse
+  }
+  class RunTrackerState {
+    +phase: RunPhase
+    +startedAt: DateTime?
+    +points: List<RunPoint>
+    +pauses: List<RunPause>
+  }
+  class RunTrackerController {
+    +start(): void
+    +pauseManual(): void
+    +resume(): void
+    +finish(): void
+  }
+  class RunSummaryPage <<UI>>
+}
+
+' ===================== TERRITORIES =====================
+package "Territories" {
+  class Territory {
+    +userId: String
+    +areaM2: double
+    +territoryColorHex: String
+    +polygons: List
+  }
+  class Bbox {
+    +minLng: double
+    +minLat: double
+    +maxLng: double
+    +maxLat: double
+  }
+  interface TerritoriesRepository {
+    +fetchByBbox(...): List<Territory>
+  }
+  class TerritoriesRepositoryImpl
+  class TerritoriesApi {
+    -_dio: Dio
+  }
+  class GetTerrBboxUC {
+    -_repo: TerritoriesRepository
+    +call(bbox): List<Territory>
+  }
+  class MapPage <<UI>>
+}
+
+' ===================== PROFILE =====================
+package "Profile" {
+  class MeProfile {
+    +id: String
+    +displayName: String
+    +territoryColor: String
+    +stats: MeProfileStats
+  }
+  class MeProfileStats {
+    +runCount: int
+    +totalDistanceM: double
+    +ownedAreaM2: double
+  }
+  interface ProfileRepository {
+    +getMeProfile(): MeProfile
+    +updateMeProfile(...): MeProfile
+    +updateTerritoryColor(c): String
+    +changePassword(cur, new): void
+  }
+  class ProfileRepositoryImpl
+  class ProfileApi {
+    -_dio: Dio
+  }
+  class ProfileActionsCtrl {
+    +saveProfile(name, url?): void
+    +saveTerritoryColor(c): void
+    +changePassword(cur, new): void
+  }
+  class ProfilePage <<UI>>
+}
+
+' ===================== NOTIFICATIONS =====================
+package "Notifications" {
+  class LastNotification {
+    +kind: String
+    +attackerUserId: String?
+    +stolenAreaM2: double
+    +createdAt: DateTime
+  }
+  interface NotificationsRepository {
+    +last(): LastNotification?
+  }
+  class NotifRepoImpl
+  class NotificationsApi {
+    -_dio: Dio
+  }
+  class GetLastNotifUC {
+    -_repo: NotificationsRepository
+    +call(): LastNotification?
+  }
+}
+
+' ===================== HISTORIES =====================
+package "Histories" {
+  class GetRunHistoryUC {
+    -_repo: RunsRepository
+    +call(limit, offset): List
+  }
+  class HistoriesPage <<UI>>
+}
+
+' ===================== APP =====================
+package "App" {
+  class RunApp <<UI>>
+  class HomeShellPage <<UI>> {
+    +navigationShell
+  }
+}
+
+' ===================== BACKEND =====================
+package "Backend" {
+  class AuthRouter <<router>> {
+    +register(payload): AuthResponse
+    +login(payload): AuthResponse
+    +refresh(payload): AuthResponse
+  }
+  class MeRouter <<router>> {
+    +meProfile(uid): MeProfileOut
+    +updateProfile(p, uid): MeProfileOut
+    +changePassword(p, uid): dict
+  }
+  class RunsRouter <<router>> {
+    +finishRun(p, uid): RunFinishResp
+    +history(uid, lim, off): List
+  }
+  class TerrRouter <<router>> {
+    +getTerritories(bbox): dict
+  }
+  class NotifRouter <<router>> {
+    +lastNotification(uid): dict
+  }
+  class SecurityModule <<module>> {
+    +hash_password(pwd): str
+    +verify_password(pwd, h): bool
+    +create_access_token(uid): AccessToken
+    +decode_access_token(t): dict
+  }
+  class Settings <<config>> {
+    +database_url: str
+    +jwt_secret: str
+    +access_token_ttl_seconds: int
+  }
+}
+
+' ===================== RELATIONS =====================
+' Core
+Dio *-- TokenInterceptor
+TokenInterceptor --> TokenStorage
+TokenStorage --> SecStorage
+
+' App
+RunApp --> HomeShellPage
+HomeShellPage o-- MapPage
+HomeShellPage o-- HistoriesPage
+HomeShellPage o-- ProfilePage
+
+' Auth
+AuthController ..> LoginUseCase
+AuthController ..> RegisterUseCase
+AuthController ..> TokenStorage
+LoginUseCase --> AuthRepository
+RegisterUseCase --> AuthRepository
+AuthRepositoryImpl ..|> AuthRepository
+AuthRepositoryImpl --> AuthApi
+AuthApi --> Dio
+LoginPage ..> AuthController
+
+' Runs
+RunTrackerController ..> FinishRunUseCase
+RunTrackerController ..> GPS
+RunTrackerController ..> ConnSDK
+FinishRunUseCase --> RunsRepository
+RunsRepositoryImpl ..|> RunsRepository
+RunsRepositoryImpl --> RunsApi
+RunsApi --> Dio
+RunSummaryPage ..> RunTrackerController
+FinishRunRequest *-- RunPoint
+FinishRunRequest *-- RunPause
+RunTrackerState *-- RunPoint
+RunTrackerState *-- RunPause
+
+' Territories
+GetTerrBboxUC --> TerritoriesRepository
+TerritoriesRepositoryImpl ..|> TerritoriesRepository
+TerritoriesRepositoryImpl --> TerritoriesApi
+TerritoriesApi --> Dio
+MapPage ..> GetTerrBboxUC
+MapPage ..> RunTrackerController
+MapPage ..> GetLastNotifUC
+MapPage ..> OSM
+
+' Profile
+ProfileRepositoryImpl ..|> ProfileRepository
+ProfileRepositoryImpl --> ProfileApi
+ProfileApi --> Dio
+ProfileActionsCtrl ..> ProfileRepository
+ProfilePage ..> ProfileActionsCtrl
+MeProfile *-- MeProfileStats
+
+' Notifications
+NotifRepoImpl ..|> NotificationsRepository
+NotifRepoImpl --> NotificationsApi
+NotificationsApi --> Dio
+GetLastNotifUC --> NotificationsRepository
+
+' Histories
+GetRunHistoryUC --> RunsRepository
+HistoriesPage ..> GetRunHistoryUC
+
+' Backend
+AuthRouter --> PgDB
+MeRouter --> PgDB
+RunsRouter --> PgDB
+TerrRouter --> PgDB
+NotifRouter --> PgDB
+AuthRouter ..> SecurityModule
+MeRouter ..> SecurityModule
+SecurityModule --> Settings
+
+' HTTP cross-boundary
+AuthApi ..> AuthRouter : HTTP
+RunsApi ..> RunsRouter : HTTP
+TerritoriesApi ..> TerrRouter : HTTP
+NotificationsApi ..> NotifRouter : HTTP
+ProfileApi ..> MeRouter : HTTP
+
+@enduml
