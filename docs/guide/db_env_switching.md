@@ -23,13 +23,26 @@ cp env.example.release .env.release
 
 ## Запуск
 
+Удобнее всего выбирать БД при запуске скриптом `run.sh`:
+
 **Разработка (локальная БД):**
 ```bash
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+./run.sh
+# или явно
+./run.sh local
 ```
 
 **Релиз (облачная БД):**
 ```bash
+./run.sh release
+```
+
+Через uvicorn напрямую:
+```bash
+# локальная (по умолчанию)
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+
+# облачная
 APP_ENV=release uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 

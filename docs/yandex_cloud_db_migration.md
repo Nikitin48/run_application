@@ -138,19 +138,32 @@ UNION ALL SELECT 'user_last_notification', COUNT(*) FROM user_last_notification;
 
 ## Шаг 8. Настроить проект для переключения
 
-1. В `python_backend/` создай `.env.release` (если ещё нет):
+Параметры **удалённой (облачной) БД** настраиваются в файле **`python_backend/.env.release`**.
+
+1. Создай файл (в каталоге `python_backend/`):
 
 ```bash
 cp env.example.release .env.release
 ```
 
-2. Отредактируй `.env.release`:
+2. Отредактируй `.env.release` — можно одним из двух способов.
 
+**Способ A — одна строка `DATABASE_URL`:**
 ```env
 DATABASE_URL=postgresql://run_app_user:ТВОЙ_ПАРОЛЬ@c-xxx.rw.mdb.yandexcloud.net:6432/run_app?sslmode=require
 ```
 
-Подставь хост, логин, пароль из консоли Yandex Cloud.
+**Способ B — отдельные параметры (host, port, database, user, password):**
+```env
+DB_HOST=c-xxx.rw.mdb.yandexcloud.net
+DB_PORT=6432
+DB_NAME=run_app
+DB_USER=run_app_user
+DB_PASSWORD=твой_пароль
+DB_SSLMODE=sslmode=require
+```
+
+Подставь свои значения из консоли Yandex Cloud (хост, порт обычно 6432, пользователь, пароль). Если задан и `DATABASE_URL`, и отдельные параметры, используется `DATABASE_URL`.
 
 3. Убедись, что `.env.local` указывает на локальную БД:
 
@@ -164,18 +177,32 @@ DATABASE_URL=postgresql://clausss@127.0.0.1:5432/run_app
 
 ## Шаг 9. Переключение и проверка
 
+При запуске бекенда можно явно выбрать БД:
+
 **Локальная БД (разработка):**
 ```bash
 cd python_backend
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+./run.sh          # по умолчанию local
+# или
+./run.sh local
 ```
 
 **Облачная БД (релиз):**
 ```bash
+cd python_backend
+./run.sh release
+```
+
+Через uvicorn напрямую:
+```bash
+# локальная
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+
+# облачная
 APP_ENV=release uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-Проверка: `GET /health` → `"env": "local"` или `"env": "release"`.
+Проверка: `GET /health` → `"env": "local"` или `"env": "release"`. В логах при старте выводится выбранный env и хост БД.
 
 ---
 

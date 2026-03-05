@@ -32,6 +32,22 @@ app.include_router(territories_router.router)
 app.include_router(notifications_router.router)
 
 
+@app.on_event("startup")
+def startup_log() -> None:
+    """При старте выводим, с какой БД работаем."""
+    import logging
+    log = logging.getLogger("uvicorn.error")
+    # Показываем только хост из DATABASE_URL (без пароля)
+    db_url = settings.database_url_resolved
+    if "@" in db_url and "?" in db_url:
+        host_part = db_url.split("@", 1)[1].split("?", 1)[0]
+    elif "@" in db_url:
+        host_part = db_url.split("@", 1)[1]
+    else:
+        host_part = db_url
+    log.info("Backend started | env=%s | database=%s", settings.app_env, host_part)
+
+
 @app.get("/health")
 def health() -> dict:
     return {"ok": True, "env": settings.app_env}
