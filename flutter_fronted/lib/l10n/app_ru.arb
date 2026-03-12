@@ -13,6 +13,9 @@
   "switchToRegister": "Нет аккаунта? Зарегистрироваться",
   "loading": "Загрузка…",
 
+  "authValidationEmailInvalid": "Введите корректный email.",
+  "authValidationPasswordMinLength": "Пароль должен быть не короче 8 символов.",
+
   "mapTitle": "Карта",
   "historiesTitle": "Истории",
   "profileTitle": "Профиль",

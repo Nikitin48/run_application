@@ -164,6 +164,18 @@ abstract class AppLocalizations {
   /// **'Loading…'**
   String get loading;
 
+  /// No description provided for @authValidationEmailInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid email address.'**
+  String get authValidationEmailInvalid;
+
+  /// No description provided for @authValidationPasswordMinLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Password must be at least 8 characters.'**
+  String get authValidationPasswordMinLength;
+
   /// No description provided for @mapTitle.
   ///
   /// In en, this message translates to:

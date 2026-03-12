@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:run_application/l10n/app_localizations.dart';
 
 import '../application/auth_controller.dart';
+import '../domain/validation/auth_form_validation.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -16,18 +17,69 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   final _email = TextEditingController();
   final _password = TextEditingController();
   final _displayName = TextEditingController();
+  final _emailFocus = FocusNode();
+  final _passwordFocus = FocusNode();
   bool _isRegister = false;
   bool _loading = false;
   String? _error;
   bool _passwordVisible = false;
+  /// Ключи ошибок валидации (из [AuthFormValidation]) для отображения под полями.
+  String? _emailValidationError;
+  String? _passwordValidationError;
+
+  @override
+  void initState() {
+    super.initState();
+    _email.addListener(_validateEmailField);
+    _password.addListener(_validatePasswordField);
+    _emailFocus.addListener(_onEmailFocusChange);
+    _passwordFocus.addListener(_onPasswordFocusChange);
+  }
 
   @override
   void dispose() {
+    _email.removeListener(_validateEmailField);
+    _password.removeListener(_validatePasswordField);
+    _emailFocus.removeListener(_onEmailFocusChange);
+    _passwordFocus.removeListener(_onPasswordFocusChange);
     _email.dispose();
     _password.dispose();
     _displayName.dispose();
+    _emailFocus.dispose();
+    _passwordFocus.dispose();
     super.dispose();
   }
+
+  void _onEmailFocusChange() {
+    if (!_emailFocus.hasFocus) _validateEmailField();
+  }
+
+  void _onPasswordFocusChange() {
+    if (!_passwordFocus.hasFocus) _validatePasswordField();
+  }
+
+  void _validateEmailField() {
+    final key = AuthFormValidation.validateEmail(_email.text);
+    if (key != _emailValidationError) {
+      setState(() => _emailValidationError = key);
+    }
+  }
+
+  void _validatePasswordField() {
+    // Длину пароля проверяем только при регистрации.
+    final key = _isRegister
+        ? AuthFormValidation.validatePassword(_password.text)
+        : null;
+    if (key != _passwordValidationError) {
+      setState(() => _passwordValidationError = key);
+    }
+  }
+
+  bool get _isFormValid => AuthFormValidation.isFormValid(
+        email: _email.text,
+        password: _password.text,
+        isRegister: _isRegister,
+      );
 
   String _prettyError(Object e) {
     if (e is DioException) {
@@ -165,17 +217,30 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                     : (s) => setState(() {
                                         _isRegister = s.first;
                                         _error = null;
+                                        // При переключении на вход убираем ошибку пароля; при регистрации — перепроверяем.
+                                        _passwordValidationError =
+                                            _isRegister
+                                                ? AuthFormValidation
+                                                    .validatePassword(
+                                                        _password.text)
+                                                : null;
                                       }),
                               ),
                               const SizedBox(height: 14),
                               TextField(
                                 controller: _email,
+                                focusNode: _emailFocus,
                                 keyboardType: TextInputType.emailAddress,
                                 autocorrect: false,
                                 textInputAction: TextInputAction.next,
+                                onChanged: (_) => _validateEmailField(),
                                 decoration: InputDecoration(
                                   labelText: l10n.emailLabel,
                                   prefixIcon: const Icon(Icons.alternate_email),
+                                  errorText: _emailValidationError ==
+                                          AuthFormValidation.emailInvalid
+                                      ? l10n.authValidationEmailInvalid
+                                      : null,
                                 ),
                               ),
                               const SizedBox(height: 12),
@@ -194,10 +259,18 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               ],
                               TextField(
                                 controller: _password,
+                                focusNode: _passwordFocus,
                                 obscureText: !_passwordVisible,
+                                onChanged: (_) => _validatePasswordField(),
                                 decoration: InputDecoration(
                                   labelText: l10n.passwordLabel,
                                   prefixIcon: const Icon(Icons.lock_outline),
+                                  errorText: _isRegister &&
+                                          _passwordValidationError ==
+                                              AuthFormValidation
+                                                  .passwordMinLengthError
+                                      ? l10n.authValidationPasswordMinLength
+                                      : null,
                                   suffixIcon: IconButton(
                                     onPressed: () => setState(
                                       () =>
@@ -235,7 +308,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                 const SizedBox(height: 12),
                               ],
                               FilledButton(
-                                onPressed: _loading ? null : _submit,
+                                onPressed: (_loading || !_isFormValid)
+                                    ? null
+                                    : _submit,
                                 child: Text(
                                   _loading
                                       ? l10n.loading

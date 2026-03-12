@@ -42,6 +42,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loading => 'Loading…';
 
   @override
+  String get authValidationEmailInvalid => 'Enter a valid email address.';
+
+  @override
+  String get authValidationPasswordMinLength =>
+      'Password must be at least 8 characters.';
+
+  @override
   String get mapTitle => 'Map';
 
   @override

@@ -42,6 +42,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get loading => 'Загрузка…';
 
   @override
+  String get authValidationEmailInvalid => 'Введите корректный email.';
+
+  @override
+  String get authValidationPasswordMinLength =>
+      'Пароль должен быть не короче 8 символов.';
+
+  @override
   String get mapTitle => 'Карта';
 
   @override

@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 
 import '../../features/auth/domain/auth_tokens.dart';
 import '../storage/token_storage.dart';
+import 'session_expired_listener.dart';
 
 typedef RefreshTokensFn = Future<AuthTokens> Function(String refreshToken);
 
@@ -9,10 +10,12 @@ class TokenInterceptor extends QueuedInterceptorsWrapper {
   TokenInterceptor({
     required this.tokenStorage,
     required this.refreshTokens,
+    this.sessionExpiredListener,
   });
 
   final TokenStorage tokenStorage;
   final RefreshTokensFn refreshTokens;
+  final SessionExpiredListener? sessionExpiredListener;
 
   Future<AuthTokens?> _cachedTokens() => tokenStorage.read();
 
@@ -51,7 +54,7 @@ class TokenInterceptor extends QueuedInterceptorsWrapper {
 
       final dio = err.requestOptions.cancelToken == null
           ? Dio()
-          : Dio(); // plain dio for retry; baseUrl is in requestOptions already
+          : Dio(); // чистый Dio для повтора запроса; baseUrl уже в requestOptions
 
       final retryOptions = request.copyWith(
         extra: {...request.extra, '__retried': true},
@@ -65,6 +68,7 @@ class TokenInterceptor extends QueuedInterceptorsWrapper {
       handler.resolve(retryResponse);
     } catch (_) {
       await tokenStorage.clear();
+      sessionExpiredListener?.onSessionExpired();
       handler.next(err);
     }
   }

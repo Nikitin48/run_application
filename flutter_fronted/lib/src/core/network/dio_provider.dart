@@ -4,8 +4,10 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../config/api_config.dart';
 import '../storage/token_storage.dart';
+import '../../features/auth/application/auth_controller.dart';
 import '../../features/auth/data/auth_api.dart';
 import '../../features/auth/domain/auth_tokens.dart';
+import 'session_expired_listener.dart';
 import 'token_interceptor.dart';
 
 final dioProvider = Provider<Dio>((ref) {
@@ -23,12 +25,15 @@ final dioProvider = Provider<Dio>((ref) {
     TokenInterceptor(
       tokenStorage: ref.read(tokenStorageProvider),
       refreshTokens: (refreshToken) async {
-        // Use a separate Dio instance without interceptors to avoid recursion.
+        // Отдельный экземпляр Dio без интерцепторов, чтобы избежать рекурсии при refresh.
         final refreshDio = Dio(BaseOptions(baseUrl: ApiConfig.baseUrl));
         final api = AuthApi(refreshDio);
         final tokens = await api.refresh(refreshToken);
         return tokens;
       },
+      sessionExpiredListener: SessionExpiredCallback(() {
+        ref.read(authControllerProvider.notifier).logout();
+      }),
     ),
   );
 
@@ -36,12 +41,12 @@ final dioProvider = Provider<Dio>((ref) {
 });
 
 final tokenStorageProvider = Provider<TokenStorage>((ref) {
-  // Use default options; can be customized for iOS accessibility later.
+  // Опции по умолчанию; при необходимости можно настроить под iOS accessibility.
   final storage = FlutterSecureStorage();
   return TokenStorage(storage);
 });
 
-// Convenience providers
+// Вспомогательные провайдеры
 final authApiProvider = Provider<AuthApi>((ref) {
   return AuthApi(ref.watch(dioProvider));
 });
