@@ -24,22 +24,51 @@ pip install -r requirements.txt
 
 3) Переменные окружения:
 
-Файл `env.example` — пример. Можно:
-- либо экспортировать переменные в shell,
-- либо (локально) скопировать в `.env`:
+- `.env` — общие настройки (JWT, порт и т.п.)
+- `.env.local` — параметры БД для разработки (локальный PostgreSQL): `DATABASE_URL` или `DB_HOST`/`DB_PORT`/`DB_NAME`/`DB_USER`/`DB_PASSWORD`
+- `.env.release` — параметры БД для релиза (Yandex Managed PostgreSQL): то же формат
 
 ```bash
 cp env.example .env
+cp env.example.local .env.local
+cp env.example.release .env.release   # заполни после создания облачной БД
 ```
+
+### Смена БД при запуске
+
+Какую базу использовать, выбирается **при запуске** бекенда.
+
+**Удобный способ — скрипт `run.sh`:**
+
+| БД | Команда |
+|----|--------|
+| Локальная (разработка) | `./run.sh` или `./run.sh local` |
+| Облачная (релиз, Yandex Cloud) | `./run.sh release` |
+
+Скрипт выводит в консоль выбранный режим и передаёт его в uvicorn. В логах при старте видно, с каким хостом БД подключились.
+
+**Через uvicorn напрямую:**
+
+```bash
+# локальная БД (по умолчанию)
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+
+# облачная БД
+APP_ENV=release uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+**Проверка:** `GET /health` → в ответе `"env": "local"` или `"env": "release"` — текущий режим и используемый файл (`.env.local` или `.env.release`).
 
 4) Запуск сервера:
 
 ```bash
+./run.sh
+# или
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 Проверка:
-- `GET /health` → `{"ok": true}`
+- `GET /health` → `{"ok": true, "env": "local"}` (или `"env": "release"`)
 
 Если Flutter запускается на **физическом устройстве**, используйте IP вашего Mac в `API_BASE_URL` (см. ниже).
 
