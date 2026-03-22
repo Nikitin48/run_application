@@ -45,6 +45,9 @@ class Settings(BaseSettings):
     access_token_ttl_seconds: int = 900
     refresh_token_ttl_seconds: int = 60 * 60 * 24 * 30
 
+    fcm_enabled: bool = False
+    fcm_service_account_json_path: str = ""
+
 
 settings = Settings()
 

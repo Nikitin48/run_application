@@ -34,6 +34,13 @@ cp env.example.local .env.local
 cp env.example.release .env.release   # заполни после создания облачной БД
 ```
 
+Для server-side push через Firebase Cloud Messaging добавьте в `.env`:
+
+```bash
+FCM_ENABLED=true
+FCM_SERVICE_ACCOUNT_JSON_PATH=/absolute/path/to/firebase-service-account.json
+```
+
 ### Смена БД при запуске
 
 Какую базу использовать, выбирается **при запуске** бекенда.
@@ -92,6 +99,9 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 - `GET /runs/history?limit&offset` — история пробежек текущего пользователя.
 - `GET /territories?minLng&minLat&maxLng&maxLat` — получить территории в bbox (GeoJSON FeatureCollection, включая `territory_color` владельца).
 - `GET /notifications/last` — последнее уведомление “у вас отжали” (для текущего пользователя).
+- `GET /notifications?limit=10` — история уведомлений (до 10 последних) для текущего пользователя.
+- `POST /push-tokens` — зарегистрировать/обновить push-токен устройства.
+- `DELETE /push-tokens` — удалить push-токен устройства (например, при logout).
 
 Пример (после логина, с `ACCESS_TOKEN`):
 

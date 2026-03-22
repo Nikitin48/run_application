@@ -27,7 +27,7 @@ class _HomeShellPageState extends ConsumerState<HomeShellPage> {
       setState(() => _fabExpanded = false);
     }
     await ref.read(runTrackerProvider.notifier).finish();
-    ref.invalidate(lastNotificationProvider);
+    ref.invalidate(notificationsHistoryProvider);
     ref.invalidate(runHistoryProvider);
     ref.invalidate(territoriesForBboxProvider);
     if (!mounted) return;

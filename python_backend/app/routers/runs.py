@@ -8,10 +8,38 @@ from psycopg.types.json import Jsonb
 from ..db import db_conn
 from ..geo import clip_interval, haversine_m, seconds_between, wkt_linestring
 from ..models import RunFinishRequest, RunFinishResponse, RunHistoryItemOut
+from ..push import send_territory_attacked_pushes
 from .me import current_user_id
 
 
 router = APIRouter(prefix="/runs", tags=["runs"])
+
+
+def _collect_push_targets_for_run(run_id: str) -> list[tuple[str, str]]:
+    with db_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT DISTINCT
+                  upt.token,
+                  COALESCE(att.display_name, 'Игрок') AS attacker_name
+                FROM user_notifications un
+                JOIN user_push_tokens upt ON upt.user_id = un.user_id
+                LEFT JOIN users att ON att.id = un.attacker_user_id
+                WHERE un.run_id = %s
+                """,
+                (run_id,),
+            )
+            rows = cur.fetchall()
+            return [(str(row[0]), str(row[1])) for row in rows]
+
+
+def _delete_invalid_tokens(tokens: list[str]) -> None:
+    if not tokens:
+        return
+    with db_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM user_push_tokens WHERE token = ANY(%s)", (tokens,))
 
 
 def _calc_paused_s(
@@ -141,6 +169,16 @@ def finish_run(payload: RunFinishRequest, user_id: str = Depends(current_user_id
                 """,
                 (float(cap_area), int(victims), run_id),
             )
+
+    push_targets = _collect_push_targets_for_run(str(run_id))
+    by_attacker: dict[str, list[str]] = {}
+    for token, attacker_name in push_targets:
+        by_attacker.setdefault(attacker_name, []).append(token)
+    invalid_tokens: list[str] = []
+    for attacker_name, tokens in by_attacker.items():
+        result = send_territory_attacked_pushes(tokens=tokens, attacker_name=attacker_name)
+        invalid_tokens.extend(result.invalid_tokens)
+    _delete_invalid_tokens(invalid_tokens)
 
     return RunFinishResponse(
         run_id=str(run_id),

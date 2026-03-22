@@ -1,4 +1,4 @@
-package com.example.run_application
+package com.claus.run_application
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'home_shell_page.dart';
 import '../features/auth/presentation/login_page.dart';
 import '../features/histories/presentation/histories_page.dart';
+import '../features/notifications/presentation/notifications_page.dart';
 import '../features/profile/presentation/profile_page.dart';
 import '../features/territories/presentation/map_page.dart';
 import '../features/auth/application/auth_controller.dart';
@@ -59,6 +60,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/run-summary',
         builder: (context, state) => const RunSummaryPage(),
+      ),
+      GoRoute(
+        path: '/notifications',
+        builder: (context, state) => const NotificationsPage(),
       ),
     ],
   );

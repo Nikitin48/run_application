@@ -5,16 +5,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:run_application/l10n/app_localizations.dart';
 
-import '../../notifications/application/last_notification_provider.dart';
+import '../../notifications/application/notification_read_state_provider.dart';
 import '../../profile/application/profile_controller.dart';
 import '../application/territories_controller.dart';
 import '../domain/territory.dart';
 import '../../runs/application/run_tracker_controller.dart';
 import '../../../core/utils/color_utils.dart';
-import '../../../core/utils/formatters.dart';
 import '../domain/value_objects/bbox.dart';
 
 class MapPage extends ConsumerWidget {
@@ -37,7 +37,6 @@ class _MapPageBodyState extends ConsumerState<_MapPageBody> {
   final _mapController = MapController();
   Timer? _debounce;
   Bbox? _bbox;
-  DateTime? _dismissedAt;
   bool _followMe = true;
   bool _testMode = false;
   bool _mapReady = false;
@@ -193,7 +192,7 @@ class _MapPageBodyState extends ConsumerState<_MapPageBody> {
         : ref.watch(territoriesForBboxProvider(bbox));
 
     final meProfileAsync = ref.watch(meProfileProvider);
-    final lastNotifAsync = ref.watch(lastNotificationProvider);
+    final hasUnread = ref.watch(hasUnreadNotificationsProvider);
     final runState = ref.watch(runTrackerProvider);
     final bottomBarInset = 52.0 + 10.0;
     final myTrackColor = meProfileAsync.maybeWhen(
@@ -212,6 +211,33 @@ class _MapPageBodyState extends ConsumerState<_MapPageBody> {
       appBar: AppBar(
         title: Text(l10n.mapTitle),
         actions: [
+          IconButton(
+            tooltip: 'Уведомления',
+            onPressed: () => context.push('/notifications'),
+            icon: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                const Icon(Icons.notifications_outlined),
+                if (hasUnread)
+                  Positioned(
+                    right: -1,
+                    top: -1,
+                    child: Container(
+                      width: 9,
+                      height: 9,
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(
+                          color: Theme.of(context).colorScheme.surface,
+                          width: 1.3,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
           IconButton(
             tooltip: _testMode ? l10n.testModeOn : l10n.testModeOff,
             onPressed: () async {
@@ -322,33 +348,9 @@ class _MapPageBodyState extends ConsumerState<_MapPageBody> {
                   return PolygonLayer(polygons: polygons);
                 },
                 loading: () => const SizedBox.shrink(),
-                error: (_, __) => const SizedBox.shrink(),
+                error: (_, stackTrace) => const SizedBox.shrink(),
               ),
             ],
-          ),
-          Positioned(
-            left: 12,
-            right: 12,
-            top: 12,
-            child: lastNotifAsync.when(
-              data: (notif) {
-                if (notif == null) return const SizedBox.shrink();
-                if (_dismissedAt != null &&
-                    !_dismissedAt!.isBefore(notif.createdAt)) {
-                  return const SizedBox.shrink();
-                }
-
-                final area = formatAreaM2(notif.stolenAreaM2);
-                return _NotificationBanner(
-                  title: l10n.territoryStolenTitle,
-                  message: l10n.territoryStolenMessage(area),
-                  onClose: () => setState(() => _dismissedAt = DateTime.now()),
-                  onRefresh: () => ref.invalidate(lastNotificationProvider),
-                );
-              },
-              loading: () => const SizedBox.shrink(),
-              error: (_, __) => const SizedBox.shrink(),
-            ),
           ),
           if (_testMode)
             Positioned(
@@ -397,70 +399,6 @@ class _MapPageBodyState extends ConsumerState<_MapPageBody> {
               ),
             ),
         ],
-      ),
-    );
-  }
-}
-
-class _NotificationBanner extends StatelessWidget {
-  const _NotificationBanner({
-    required this.title,
-    required this.message,
-    required this.onClose,
-    required this.onRefresh,
-  });
-
-  final String title;
-  final String message;
-  final VoidCallback onClose;
-  final VoidCallback onRefresh;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      elevation: 2,
-      borderRadius: BorderRadius.circular(12),
-      color: Theme.of(context).colorScheme.surface,
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          children: [
-            DecoratedBox(
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.errorContainer,
-                shape: BoxShape.circle,
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(8),
-                child: Icon(
-                  Icons.warning_amber,
-                  color: Theme.of(context).colorScheme.onErrorContainer,
-                ),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: Theme.of(context).textTheme.titleMedium),
-                  const SizedBox(height: 4),
-                  Text(message),
-                ],
-              ),
-            ),
-            IconButton(
-              tooltip: AppLocalizations.of(context)!.refresh,
-              onPressed: onRefresh,
-              icon: const Icon(Icons.refresh),
-            ),
-            IconButton(
-              tooltip: AppLocalizations.of(context)!.close,
-              onPressed: onClose,
-              icon: const Icon(Icons.close),
-            ),
-          ],
-        ),
       ),
     );
   }

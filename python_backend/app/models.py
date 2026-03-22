@@ -169,3 +169,13 @@ class RunHistoryItemOut(BaseModel):
     created_at: datetime
 
 
+class PushTokenUpsertRequest(BaseModel):
+    platform: str = Field(pattern="^(android|ios)$")
+    token: str = Field(min_length=16, max_length=4096)
+    app_version: str | None = Field(default=None, max_length=64)
+    device_id: str | None = Field(default=None, max_length=255)
+
+
+class PushTokenDeleteRequest(BaseModel):
+    token: str = Field(min_length=16, max_length=4096)
+

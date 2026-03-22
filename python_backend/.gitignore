@@ -10,3 +10,7 @@ build/
 .env
 .env.local
 .env.release
+
+# Firebase server credentials
+secrets/
+*firebase-adminsdk*.json

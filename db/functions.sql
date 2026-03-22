@@ -6,7 +6,7 @@
 -- 2) finalize_run_capture(run_id, tol_m, min_area_m2)
 --    - computes capture polygons for the run
 --    - repaints ownership: victims lose intersection, runner gains the capture
---    - writes ONLY last notification to each victim (upsert)
+--    - writes notification history for victims
 --    - updates user_stats for runner and victims touched
 --
 -- Requires:
@@ -232,8 +232,8 @@ BEGIN
       updated_at = v_now
   WHERE id = p_run_id;
 
-  -- Upsert last notification for each victim (ONLY last, overwrite).
-  INSERT INTO user_last_notification(
+  -- Append notification history for victims.
+  INSERT INTO user_notifications(
     user_id, kind, attacker_user_id, run_id, stolen_area_m2, payload, created_at
   )
   SELECT
@@ -244,15 +244,25 @@ BEGIN
     tvs.stolen_area_m2,
     jsonb_build_object('stolen_area_m2', tvs.stolen_area_m2),
     v_now
-  FROM tmp_victim_stolen tvs
-  ON CONFLICT (user_id)
-  DO UPDATE SET
-    kind = EXCLUDED.kind,
-    attacker_user_id = EXCLUDED.attacker_user_id,
-    run_id = EXCLUDED.run_id,
-    stolen_area_m2 = EXCLUDED.stolen_area_m2,
-    payload = EXCLUDED.payload,
-    created_at = EXCLUDED.created_at;
+  FROM tmp_victim_stolen tvs;
+
+  -- Keep only the latest 10 notifications per affected user.
+  DELETE FROM user_notifications un
+  USING (
+    SELECT id
+    FROM (
+      SELECT
+        n.id,
+        ROW_NUMBER() OVER (
+          PARTITION BY n.user_id
+          ORDER BY n.created_at DESC, n.id DESC
+        ) AS rn
+      FROM user_notifications n
+      WHERE n.user_id IN (SELECT victim_user_id FROM tmp_victim_stolen)
+    ) ranked
+    WHERE ranked.rn > 10
+  ) old
+  WHERE un.id = old.id;
 
   -- Update stats (runner + victims touched)
   -- Runner: increment run_count + distance, recompute owned area from territories.

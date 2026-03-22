@@ -3,7 +3,7 @@
 -- - runs (track line + optional points)
 -- - territories (ONE MultiPolygon per user)
 -- - user_stats (aggregates)
--- - user_last_notification (ONLY last notification per user)
+-- - user_notifications (history up to last N notifications per user)
 --
 -- This script enables required extensions automatically (recommended for local dev).
 
@@ -133,17 +133,37 @@ CREATE TABLE IF NOT EXISTS user_stats (
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 
--- Only last notification per user (victim).
--- Payload stored as typed columns for easy UI + optional JSON payload.
-CREATE TABLE IF NOT EXISTS user_last_notification (
-  user_id uuid PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+-- Notifications history (victim-facing feed).
+-- We keep full rows and trim to last N entries in business logic.
+CREATE TABLE IF NOT EXISTS user_notifications (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   kind text NOT NULL DEFAULT 'territory_stolen',
   attacker_user_id uuid REFERENCES users(id) ON DELETE SET NULL,
   run_id uuid REFERENCES runs(id) ON DELETE SET NULL,
-  stolen_area_m2 double precision NOT NULL DEFAULT 0,
+  stolen_area_m2 float8 NOT NULL DEFAULT 0,
   payload jsonb NOT NULL DEFAULT '{}'::jsonb,
   created_at timestamptz NOT NULL DEFAULT now()
 );
+
+CREATE INDEX IF NOT EXISTS user_notifications_user_created_ix
+  ON user_notifications(user_id, created_at DESC);
+
+-- Push tokens per user-device.
+CREATE TABLE IF NOT EXISTS user_push_tokens (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  platform text NOT NULL CHECK (platform IN ('android', 'ios')),
+  token text NOT NULL UNIQUE,
+  app_version text,
+  device_id text,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (user_id, token)
+);
+
+CREATE INDEX IF NOT EXISTS user_push_tokens_user_ix
+  ON user_push_tokens(user_id, updated_at DESC);
 
 COMMIT;
 
