@@ -1,5 +1,5 @@
 @startuml
-title Sequence - Регистрация нового пользователя
+title Регистрация нового пользователя
 
 actor User as "Пользователь"
 participant UI as "LoginPage (Flutter UI)"

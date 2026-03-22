@@ -1,0 +1,52 @@
+@startuml component_diagram
+
+package "Mobile Client (Flutter)" {
+  [Auth Feature] as c_auth
+  [Map & Territories Feature] as c_map
+  [Runs Feature] as c_runs
+  [Histories Feature] as c_hist
+  [Profile Feature] as c_profile
+  [Notifications Feature] as c_notif
+  [Dio API Client] as c_api
+
+  c_auth --> c_api
+  c_map --> c_api
+  c_runs --> c_api
+  c_hist --> c_api
+  c_profile --> c_api
+  c_notif --> c_api
+}
+
+package "Backend API (FastAPI)" {
+  [Auth Router] as b_auth
+  [Me Router] as b_me
+  [Runs Router] as b_runs
+  [Territories Router] as b_terr
+  [Notifications Router] as b_notif
+  [Security Module] as b_sec
+  [Geo Module] as b_geo
+  [DB Module] as b_db
+
+  b_auth --> b_sec
+  b_me --> b_sec
+  b_runs --> b_geo
+  b_auth --> b_db
+  b_me --> b_db
+  b_runs --> b_db
+  b_terr --> b_db
+  b_notif --> b_db
+}
+
+database "PostgreSQL + PostGIS" as db
+component "FaaS token_cleanup" as faas
+
+c_api --> b_auth
+c_api --> b_me
+c_api --> b_runs
+c_api --> b_terr
+c_api --> b_notif
+
+b_db --> db
+faas --> db
+
+@enduml

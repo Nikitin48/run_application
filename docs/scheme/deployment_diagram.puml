@@ -1,0 +1,22 @@
+@startuml deployment_diagram
+
+node "Клиентское устройство\n(iOS / Android)" as client {
+  component "Flutter приложение" as flutter
+  component "GPS / Геолокация" as gps
+}
+
+node "Backend host\n(Python FastAPI)" as backend {
+  component "Run Application API\n(Uvicorn + FastAPI)" as api
+}
+
+cloud "Yandex Cloud" as yc {
+  database "Managed PostgreSQL\n+ PostGIS" as pg
+  component "Cloud Function\n(token cleanup)" as faas
+}
+
+flutter --> api : HTTPS REST (JSON)
+gps --> flutter : координаты / точность / время
+api --> pg : SQL (psycopg)
+faas --> pg : SQL cleanup refresh_tokens
+
+@enduml

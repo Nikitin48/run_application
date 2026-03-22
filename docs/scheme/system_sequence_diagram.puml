@@ -1,5 +1,5 @@
 @startuml
-title Run Application - sequence diagram (system + environment)
+title Завершение пробежки и захват территорий
 
 actor User as "Пользователь"
 participant App as "Flutter приложение\n(MapPage + RunTrackerController)"

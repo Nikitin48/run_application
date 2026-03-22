@@ -1,5 +1,5 @@
 @startuml
-title Sequence - Просмотр карты с территориями
+title Просмотр карты с территориями
 
 actor User as "Пользователь"
 participant MapUI as "MapPage (Flutter UI)"

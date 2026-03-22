@@ -1,0 +1,36 @@
+@startuml use_case_diagram
+left to right direction
+
+actor "Гость" as Guest
+actor "Авторизованный пользователь" as User
+actor "Администратор/оператор" as Admin
+
+rectangle "Run Application" {
+  usecase "Регистрация" as UC_Register
+  usecase "Вход в систему" as UC_Login
+  usecase "Просмотр карты территорий" as UC_ViewMap
+  usecase "Получение текущей геопозиции" as UC_GetLocation
+  usecase "Запуск/завершение пробежки" as UC_Run
+  usecase "Отправка трека и захват\nтерриторий" as UC_Capture
+  usecase "Просмотр истории пробежек" as UC_History
+  usecase "Просмотр/редактирование\nпрофиля" as UC_Profile
+  usecase "Получение уведомления\nо потере территории" as UC_Notification
+  usecase "Очистка просроченных\nrefresh-токенов" as UC_TokenCleanup
+}
+
+Guest --> UC_Register
+Guest --> UC_Login
+
+User --> UC_ViewMap
+User --> UC_Run
+User --> UC_History
+User --> UC_Profile
+User --> UC_Notification
+
+UC_ViewMap .> UC_GetLocation : <<include>>
+UC_Run .> UC_GetLocation : <<include>>
+UC_Run .> UC_Capture : <<include>>
+
+Admin --> UC_TokenCleanup
+
+@enduml
