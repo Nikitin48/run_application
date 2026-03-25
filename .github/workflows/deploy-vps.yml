@@ -1,0 +1,44 @@
+name: Deploy to VPS
+
+# Запускайте вручную, когда на сервере уже лежат docker-compose.prod.yml, deploy/, .env
+# и настроен доступ к GHCR (для приватных образов).
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "Тег образа (например sha-<полный SHA коммита> или latest)"
+        required: true
+        default: "latest"
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Image name (GHCR must be lowercase)
+        id: image
+        run: |
+          owner=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          repo=$(echo "${{ github.event.repository.name }}" | tr '[:upper:]' '[:lower:]')
+          echo "name=ghcr.io/${owner}/${repo}-backend" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        env:
+          BACKEND_IMAGE: ${{ steps.image.outputs.name }}:${{ github.event.inputs.image_tag }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          envs: BACKEND_IMAGE,DEPLOY_PATH
+          script_stop: true
+          script: |
+            set -euo pipefail
+            cd "$DEPLOY_PATH"
+            export BACKEND_IMAGE="$BACKEND_IMAGE"
+            docker compose -f docker-compose.prod.yml pull backend
+            docker compose -f docker-compose.prod.yml up -d --remove-orphans
+            curl -sf "http://127.0.0.1/health"
