@@ -42,13 +42,7 @@ docker compose -f docker-compose.prod.yml restart backend
 
 ## 3. Домен и HTTPS
 
-1. DNS: **A**-запись `api.<домен>` → IP VPS (у Beget — в панели DNS).
-2. Получить сертификат Let's Encrypt. Проще всего один раз вручную на сервере (пока Nginx отдаёт порт 80):
-
-   - Либо `certbot certonly --webroot -w /var/lib/docker/volumes/run-application_certbot-www/_data -d api.example.com` после первого `docker compose up` (путь к volume может отличаться — проверьте `docker volume inspect`).
-   - Либо временно остановить nginx-контейнер и `certbot certonly --standalone`.
-
-3. Добавить в конфиг Nginx `server { listen 443 ssl; ... }`, смонтировать `fullchain.pem` и `privkey.pem` из `/etc/letsencrypt` в том же compose-томе `certbot-conf`, перезапустить `nginx`.
+Пошагово с командами: **[deploy/HTTPS_LETSENCRYPT.md](HTTPS_LETSENCRYPT.md)** (DNS, `certbot`, правка `docker-compose.prod.yml` для монтирования `/etc/letsencrypt`, пример конфига **`deploy/nginx/default-ssl.example.conf`**).
 
 Для Flutter в проде используйте `API_BASE_URL=https://api.<домен>` (`--dart-define` или flavor).
 
