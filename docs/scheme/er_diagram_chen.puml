@@ -1,0 +1,159 @@
+@startchen er_diagram_chen
+left to right direction
+
+' =========================
+' Сущности
+' =========================
+entity "Пользователь" as USER {
+  идентификатор
+  имя_пользователя
+  отображаемое_имя
+  адрес_аватара
+  цвет_территории
+  признак_блокировки
+  создано_в
+  обновлено_в
+}
+
+entity "Учетные данные" as AUTH_IDENTITY {
+  идентификатор
+  провайдер
+  идентификатор_учетной_записи
+  хеш_пароля
+  подтверждено_в
+}
+
+entity "Токен обновления" as REFRESH_TOKEN {
+  идентификатор
+  хеш_токена
+  истекает_в
+  отозвано_в
+  заменен_хешем_токена
+}
+
+entity "Пробежка" as RUN {
+  идентификатор
+  статус
+  начато_в
+  завершено_в
+  дистанция_м
+  общее_время_с
+  время_паузы_с
+  время_движения_с
+  площадь_захвата_м2
+  количество_пострадавших
+  точки_трека_json
+  линия_трека
+}
+
+entity "Точка трека" as RUN_POINT {
+  идентификатор_пробежки
+  порядковый_номер
+  временная_метка
+  широта
+  долгота
+  точность_м
+  скорость_м_с
+}
+
+entity "Пауза пробежки" as RUN_PAUSE {
+  идентификатор
+  начато_в
+  завершено_в
+  причина
+}
+
+entity "Территория" as TERRITORY {
+  идентификатор_пользователя
+  геометрия
+  обновлено_в
+}
+
+entity "Статистика пользователя" as USER_STATS {
+  идентификатор_пользователя
+  количество_пробежек
+  общая_дистанция_м
+  общее_время_с
+  общее_время_паузы_с
+  общее_время_движения_с
+  площадь_владения_м2
+}
+
+entity "Уведомление пользователя" as USER_NOTIFICATION {
+  идентификатор
+  тип
+  идентификатор_атакующего_пользователя
+  идентификатор_пробежки
+  площадь_потери_м2
+  дополнительные_данные
+  создано_в
+}
+
+entity "Push-токен устройства" as USER_PUSH_TOKEN {
+  идентификатор
+  пуш_токен
+  платформа
+  создано_в
+  обновлено_в
+}
+
+' =========================
+' Связи Чена
+' =========================
+relationship "имеет учетные данные" as REL_HAS_AUTH_IDENTITY {
+}
+relationship "имеет токены обновления" as REL_HAS_REFRESH_TOKEN {
+}
+relationship "выполняет" as REL_HAS_RUN {
+}
+relationship "содержит точки трека" as REL_HAS_RUN_POINT {
+}
+relationship "содержит паузы" as REL_HAS_RUN_PAUSE {
+}
+relationship "владеет" as REL_OWNS_TERRITORY {
+}
+relationship "имеет статистику" as REL_HAS_STATS {
+}
+relationship "получает" as REL_RECEIVES_NOTIFICATION {
+}
+relationship "формируется по результату" as REL_GENERATED_FROM_RUN {
+}
+relationship "инициируется атакующим" as REL_INITIATED_BY_ATTACKER {
+}
+relationship "имеет push-токены" as REL_HAS_PUSH_TOKEN {
+}
+
+REL_HAS_AUTH_IDENTITY -1- USER
+REL_HAS_AUTH_IDENTITY -N- AUTH_IDENTITY
+
+REL_HAS_REFRESH_TOKEN -1- USER
+REL_HAS_REFRESH_TOKEN -N- REFRESH_TOKEN
+
+REL_HAS_RUN -1- USER
+REL_HAS_RUN -N- RUN
+
+REL_HAS_RUN_POINT -1- RUN
+REL_HAS_RUN_POINT -N- RUN_POINT
+
+REL_HAS_RUN_PAUSE -1- RUN
+REL_HAS_RUN_PAUSE -N- RUN_PAUSE
+
+REL_OWNS_TERRITORY -1- USER
+REL_OWNS_TERRITORY -1- TERRITORY
+
+REL_HAS_STATS -1- USER
+REL_HAS_STATS -1- USER_STATS
+
+REL_RECEIVES_NOTIFICATION -1- USER
+REL_RECEIVES_NOTIFICATION -N- USER_NOTIFICATION
+
+REL_GENERATED_FROM_RUN -1- RUN
+REL_GENERATED_FROM_RUN -N- USER_NOTIFICATION
+
+REL_INITIATED_BY_ATTACKER -1- USER
+REL_INITIATED_BY_ATTACKER -N- USER_NOTIFICATION
+
+REL_HAS_PUSH_TOKEN -1- USER
+REL_HAS_PUSH_TOKEN -N- USER_PUSH_TOKEN
+
+@endchen
