@@ -20,17 +20,15 @@
 - Домен `georunapp.ru` активен, DNS зона в Beget настроена.
 - В зоне есть `A` для `api` на IP VPS по данным панели.
 - Публичный DNS для **`api.georunapp.ru`** подтверждён: `dig @8.8.8.8` и `dig @1.1.1.1` → **185.225.34.208** (2026-03-25).
+- **HTTPS включён:** `curl https://api.georunapp.ru/health` → `{"ok":true,"env":"release"}` (Let's Encrypt + Nginx SSL-конфиг).
 
 ## Что осталось сделать
 
-1. Проверить HTTP по имени: `curl -sS http://api.georunapp.ru/health`.
-2. Выпустить сертификат Let's Encrypt для `api.georunapp.ru` (см. блок HTTPS ниже и `deploy/HTTPS_LETSENCRYPT.md`).
-3. В `docker-compose.prod.yml` у `nginx` заменить том сертификатов на `/etc/letsencrypt:/etc/letsencrypt:ro`.
-4. Перевести Nginx на HTTPS-конфиг (`deploy/nginx/default-ssl.example.conf` → `default.conf`, домен `api.georunapp.ru`).
-5. Проверить `https://api.georunapp.ru/health`.
-6. Зафиксировать `API_BASE_URL=https://api.georunapp.ru` для Flutter release.
-7. Настроить GitHub Secrets и запуск CD workflow (деплой на VPS).
-8. (Опционально) убрать лишнюю запись `www.api` из DNS, чтобы не путала.
+1. Зафиксировать в Flutter релизе: `API_BASE_URL=https://api.georunapp.ru` (`--dart-define` или flavor).
+2. Настроить GitHub Secrets (`VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY`, `DEPLOY_PATH`) и при необходимости **`docker login ghcr.io`** на VPS для приватного образа.
+3. Деплой через **Actions → Deploy to VPS** после появления образа в GHCR.
+4. Настроить **автообновление** сертификата (`certbot renew` + `nginx -s reload` в контейнере) — см. `deploy/HTTPS_LETSENCRYPT.md`.
+5. (Опционально) убрать лишнюю DNS-запись `www.api`, если мешает.
 
 ## Ключевые команды, которые использовали
 

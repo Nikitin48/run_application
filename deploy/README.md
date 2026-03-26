@@ -46,6 +46,10 @@ docker compose -f docker-compose.prod.yml restart backend
 
 Для Flutter в проде используйте `API_BASE_URL=https://api.<домен>` (`--dart-define` или flavor).
 
+## 3.1. Push (FCM)
+
+Серверные пуши: **[deploy/FCM_PRODUCTION.md](FCM_PRODUCTION.md)** (файл `docker-compose.fcm.yml`, ключ в `secrets/`).
+
 ## 4. CI/CD (GitHub Actions)
 
 - **`.github/workflows/backend-docker.yml`**: при push в `main` (если менялись пути из списка в файле) собирает образ и пушит в **ghcr.io** с тегами `latest` и `sha-<полный_commit_sha>` (имя образа в нижнем регистре).

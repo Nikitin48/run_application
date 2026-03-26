@@ -1,0 +1,10 @@
+# Опционально: монтирование ключа Firebase Admin для FCM.
+# Запуск вместе с основным compose:
+#   docker compose -f docker-compose.prod.yml -f docker-compose.fcm.yml up -d
+#
+# Перед первым запуском положите JSON в ./secrets/firebase-adminsdk.json (не коммитьте).
+
+services:
+  backend:
+    volumes:
+      - ./secrets/firebase-adminsdk.json:/secrets/firebase-adminsdk.json:ro

@@ -29,6 +29,13 @@
 
 Важно: для Android разрешён HTTP (`usesCleartextTraffic=true`), для iOS включён ATS allow (dev).
 
+### Продакшен (store / реальный backend)
+
+- Файл **`config/dart_define.prod.json`**: `API_BASE_URL` → `https://api.georunapp.ru`.
+- Команда из корня фронта: **`./build_release.sh`** (по умолчанию **App Bundle** для Google Play).
+- Вручную то же самое:  
+  `flutter build appbundle --release --dart-define-from-file=config/dart_define.prod.json`
+
 ## Авторизация (flow)
 
 1) Пользователь открывает экран **Вход/Регистрация**.

@@ -39,6 +39,11 @@ jobs:
             set -euo pipefail
             cd "$DEPLOY_PATH"
             export BACKEND_IMAGE="$BACKEND_IMAGE"
-            docker compose -f docker-compose.prod.yml pull backend
-            docker compose -f docker-compose.prod.yml up -d --remove-orphans
+            if [ -f docker-compose.fcm.yml ]; then
+              DC=(docker compose -f docker-compose.prod.yml -f docker-compose.fcm.yml)
+            else
+              DC=(docker compose -f docker-compose.prod.yml)
+            fi
+            "${DC[@]}" pull backend
+            "${DC[@]}" up -d --remove-orphans
             curl -sf "http://127.0.0.1/health"

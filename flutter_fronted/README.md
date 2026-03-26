@@ -11,6 +11,18 @@ The app uses `API_BASE_URL` (dart define) with platform defaults:
 - Physical device: set your Mac IP:
   - `--dart-define=API_BASE_URL=http://<MAC_IP>:8000`
 
+## Production release (Play Store / prod API)
+
+Продакшен API задаётся в `config/dart_define.prod.json`. Сборка одной командой из каталога `flutter_fronted`:
+
+```bash
+./build_release.sh
+```
+
+По умолчанию: **`flutter build appbundle --release`** с `API_BASE_URL=https://api.georunapp.ru`.
+
+Другие цели: `./build_release.sh apk`, `./build_release.sh ipa`, `./build_release.sh ios`.
+
 ## Location permissions
 
 This project uses `geolocator` for GPS tracking.
