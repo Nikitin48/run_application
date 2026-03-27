@@ -12,6 +12,7 @@
   "switchToLogin": "Already have an account? Login",
   "switchToRegister": "No account? Register",
   "loading": "Loading…",
+  "appBootstrapping": "Preparing app…",
 
   "authValidationEmailInvalid": "Enter a valid email address.",
   "authValidationPasswordMinLength": "Password must be at least 8 characters.",

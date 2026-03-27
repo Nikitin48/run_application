@@ -33,6 +33,8 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
+  flutter_native_splash: ^2.4.6
   build_runner: ^2.4.13
   freezed: ^2.5.7
   json_serializable: ^6.8.0
@@ -41,3 +43,25 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   generate: true
+  assets:
+    - assets/icon/
+    - assets/splash/
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: assets/icon/app_icon.png
+  remove_alpha_ios: true
+  adaptive_icon_foreground: assets/icon/app_icon.png
+  adaptive_icon_background: "#020817"
+  adaptive_icon_foreground_inset: 16
+
+flutter_native_splash:
+  color: "#020817"
+  image: assets/icon/app_icon.png
+  android: true
+  ios: true
+  fullscreen: true
+  android_12:
+    color: "#020817"
+    image: assets/icon/app_icon.png

@@ -42,6 +42,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get loading => 'Загрузка…';
 
   @override
+  String get appBootstrapping => 'Подготовка приложения…';
+
+  @override
   String get authValidationEmailInvalid => 'Введите корректный email.';
 
   @override

@@ -42,6 +42,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loading => 'Loading…';
 
   @override
+  String get appBootstrapping => 'Preparing app…';
+
+  @override
   String get authValidationEmailInvalid => 'Enter a valid email address.';
 
   @override

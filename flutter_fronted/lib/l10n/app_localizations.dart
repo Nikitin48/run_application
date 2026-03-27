@@ -164,6 +164,12 @@ abstract class AppLocalizations {
   /// **'Loading…'**
   String get loading;
 
+  /// No description provided for @appBootstrapping.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing app…'**
+  String get appBootstrapping;
+
   /// No description provided for @authValidationEmailInvalid.
   ///
   /// In en, this message translates to:

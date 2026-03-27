@@ -12,6 +12,7 @@
   "switchToLogin": "Уже есть аккаунт? Войти",
   "switchToRegister": "Нет аккаунта? Зарегистрироваться",
   "loading": "Загрузка…",
+  "appBootstrapping": "Подготовка приложения…",
 
   "authValidationEmailInvalid": "Введите корректный email.",
   "authValidationPasswordMinLength": "Пароль должен быть не короче 8 символов.",
