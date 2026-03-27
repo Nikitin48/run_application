@@ -36,6 +36,7 @@ class _MapPageBody extends ConsumerStatefulWidget {
 class _MapPageBodyState extends ConsumerState<_MapPageBody> {
   final _mapController = MapController();
   Timer? _debounce;
+  Timer? _testMoveTimer;
   Bbox? _bbox;
   bool _followMe = true;
   bool _testMode = false;
@@ -124,6 +125,7 @@ class _MapPageBodyState extends ConsumerState<_MapPageBody> {
   @override
   void dispose() {
     _debounce?.cancel();
+    _testMoveTimer?.cancel();
     _mapPosSub?.cancel();
     super.dispose();
   }
@@ -181,6 +183,19 @@ class _MapPageBodyState extends ConsumerState<_MapPageBody> {
     ref
         .read(runTrackerProvider.notifier)
         .addSimulatedPoint(lat: next.latitude, lng: next.longitude);
+  }
+
+  void _startSimulatedMove({required double northM, required double eastM}) {
+    _testMoveTimer?.cancel();
+    _simulateStep(northM: northM, eastM: eastM);
+    _testMoveTimer = Timer.periodic(const Duration(milliseconds: 140), (_) {
+      _simulateStep(northM: northM, eastM: eastM);
+    });
+  }
+
+  void _stopSimulatedMove() {
+    _testMoveTimer?.cancel();
+    _testMoveTimer = null;
   }
 
   @override
@@ -357,10 +372,10 @@ class _MapPageBodyState extends ConsumerState<_MapPageBody> {
               right: 12,
               bottom: 170 + bottomBarInset,
               child: _TestPad(
-                onUp: () => _simulateStep(northM: 5, eastM: 0),
-                onDown: () => _simulateStep(northM: -5, eastM: 0),
-                onLeft: () => _simulateStep(northM: 0, eastM: -5),
-                onRight: () => _simulateStep(northM: 0, eastM: 5),
+                onMoveStart: ({required northM, required eastM}) {
+                  _startSimulatedMove(northM: northM, eastM: eastM);
+                },
+                onMoveStop: _stopSimulatedMove,
               ),
             ),
           if (runState.phase == RunPhase.finishing)
@@ -406,16 +421,13 @@ class _MapPageBodyState extends ConsumerState<_MapPageBody> {
 
 class _TestPad extends StatelessWidget {
   const _TestPad({
-    required this.onUp,
-    required this.onDown,
-    required this.onLeft,
-    required this.onRight,
+    required this.onMoveStart,
+    required this.onMoveStop,
   });
 
-  final VoidCallback onUp;
-  final VoidCallback onDown;
-  final VoidCallback onLeft;
-  final VoidCallback onRight;
+  final void Function({required double northM, required double eastM})
+  onMoveStart;
+  final VoidCallback onMoveStop;
 
   @override
   Widget build(BuildContext context) {
@@ -433,32 +445,96 @@ class _TestPad extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            IconButton(
-              onPressed: onUp,
-              icon: const Icon(Icons.keyboard_arrow_up),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _HoldMoveButton(
+                  icon: Icons.north_west,
+                  onStart: () => onMoveStart(northM: 10, eastM: -10),
+                  onStop: onMoveStop,
+                ),
+                _HoldMoveButton(
+                  icon: Icons.keyboard_arrow_up,
+                  onStart: () => onMoveStart(northM: 10, eastM: 0),
+                  onStop: onMoveStop,
+                ),
+                _HoldMoveButton(
+                  icon: Icons.north_east,
+                  onStart: () => onMoveStart(northM: 10, eastM: 10),
+                  onStop: onMoveStop,
+                ),
+              ],
             ),
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                IconButton(
-                  onPressed: onLeft,
-                  icon: const Icon(Icons.keyboard_arrow_left),
+                _HoldMoveButton(
+                  icon: Icons.keyboard_arrow_left,
+                  onStart: () => onMoveStart(northM: 0, eastM: -10),
+                  onStop: onMoveStop,
                 ),
-                const SizedBox(width: 6),
-                IconButton(
-                  onPressed: onRight,
-                  icon: const Icon(Icons.keyboard_arrow_right),
+                SizedBox(
+                  width: 40,
+                  child: Center(
+                    child: Text('10m', style: Theme.of(context).textTheme.bodySmall),
+                  ),
+                ),
+                _HoldMoveButton(
+                  icon: Icons.keyboard_arrow_right,
+                  onStart: () => onMoveStart(northM: 0, eastM: 10),
+                  onStop: onMoveStop,
                 ),
               ],
             ),
-            IconButton(
-              onPressed: onDown,
-              icon: const Icon(Icons.keyboard_arrow_down),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _HoldMoveButton(
+                  icon: Icons.south_west,
+                  onStart: () => onMoveStart(northM: -10, eastM: -10),
+                  onStop: onMoveStop,
+                ),
+                _HoldMoveButton(
+                  icon: Icons.keyboard_arrow_down,
+                  onStart: () => onMoveStart(northM: -10, eastM: 0),
+                  onStop: onMoveStop,
+                ),
+                _HoldMoveButton(
+                  icon: Icons.south_east,
+                  onStart: () => onMoveStart(northM: -10, eastM: 10),
+                  onStop: onMoveStop,
+                ),
+              ],
             ),
-            const SizedBox(height: 2),
-            Text('5m', style: Theme.of(context).textTheme.bodySmall),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _HoldMoveButton extends StatelessWidget {
+  const _HoldMoveButton({
+    required this.icon,
+    required this.onStart,
+    required this.onStop,
+  });
+
+  final IconData icon;
+  final VoidCallback onStart;
+  final VoidCallback onStop;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTapDown: (_) => onStart(),
+      onTapUp: (_) => onStop(),
+      onTapCancel: onStop,
+      child: SizedBox(
+        width: 40,
+        height: 40,
+        child: Icon(icon),
       ),
     );
   }
