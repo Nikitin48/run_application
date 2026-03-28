@@ -19,18 +19,57 @@ class PushDeliveryResult:
     invalid_tokens: list[str]
 
 
+def _resolve_credentials_path() -> str:
+    configured = (settings.fcm_service_account_json_path or "").strip()
+    candidates: list[str] = []
+    if configured:
+        candidates.append(configured)
+        # Common production mismatch: host path in env, but container mount is /secrets/<file>.
+        candidates.append(os.path.join("/secrets", os.path.basename(configured)))
+    candidates.extend(
+        [
+            "/secrets/firebase-adminsdk.json",
+            "/secrets/firebase-service-account.json",
+        ]
+    )
+
+    seen: set[str] = set()
+    unique_candidates: list[str] = []
+    for path in candidates:
+        path = path.strip()
+        if not path or path in seen:
+            continue
+        seen.add(path)
+        unique_candidates.append(path)
+
+    for path in unique_candidates:
+        if os.path.isfile(path):
+            if configured and path != configured:
+                log.warning(
+                    "Configured FCM_SERVICE_ACCOUNT_JSON_PATH does not exist; using fallback: %s",
+                    path,
+                )
+            return path
+    return ""
+
+
 def _ensure_firebase_ready() -> bool:
     global _APP_READY
     if _APP_READY:
         return True
     if not settings.fcm_enabled:
         return False
-    creds_path = (settings.fcm_service_account_json_path or "").strip()
+    creds_path = _resolve_credentials_path()
     if not creds_path:
-        log.warning("FCM is enabled, but FCM_SERVICE_ACCOUNT_JSON_PATH is empty")
-        return False
-    if not os.path.isfile(creds_path):
-        log.warning("FCM credentials file not found: %s", creds_path)
+        configured = (settings.fcm_service_account_json_path or "").strip()
+        log.warning(
+            "FCM credentials file not found. configured_path=%r checked_fallbacks=%s",
+            configured,
+            [
+                "/secrets/firebase-adminsdk.json",
+                "/secrets/firebase-service-account.json",
+            ],
+        )
         return False
 
     try:

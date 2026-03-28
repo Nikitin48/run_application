@@ -30,6 +30,26 @@
 4. Настроить **автообновление** сертификата (`certbot renew` + `nginx -s reload` в контейнере) — см. `deploy/HTTPS_LETSENCRYPT.md`.
 5. (Опционально) убрать лишнюю DNS-запись `www.api`, если мешает.
 
+## Починка push на VPS (март 2026)
+
+Если in-app уведомления есть, а push не приходит, пройдите чеклист:
+
+1. На сервере есть ключ: `/opt/run_application/secrets/firebase-adminsdk.json`.
+2. В `/opt/run_application/.env`:
+   - `FCM_ENABLED=true`
+   - `FCM_SERVICE_ACCOUNT_JSON_PATH=/secrets/firebase-adminsdk.json`
+3. Поднимать backend с FCM-override:
+   - `docker compose -f docker-compose.prod.yml -f docker-compose.fcm.yml up -d --remove-orphans`
+4. Проверить внутри контейнера:
+   - `python -c "from app.settings import settings; print(settings.fcm_enabled, settings.fcm_service_account_json_path)"`
+   - `ls -la /secrets/firebase-adminsdk.json`
+5. Проверить логи backend после `POST /runs/finish`:
+   - `Push targets loaded for run ...`
+   - `Sending territory attacked push ...`
+   - `Deleted invalid push tokens ...`
+
+В коде добавлен fallback для частого мисконфига: если `FCM_SERVICE_ACCOUNT_JSON_PATH` указывает на локальный путь хоста, backend дополнительно проверяет `/secrets/<basename>` и стандартные пути в `/secrets/`.
+
 ## Ключевые команды, которые использовали
 
 ### SSH и доступ

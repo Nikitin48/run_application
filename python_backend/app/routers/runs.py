@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from psycopg.types.json import Jsonb
@@ -13,6 +14,7 @@ from .me import current_user_id
 
 
 router = APIRouter(prefix="/runs", tags=["runs"])
+log = logging.getLogger(__name__)
 
 
 def _collect_push_targets_for_run(run_id: str) -> list[tuple[str, str]]:
@@ -31,6 +33,7 @@ def _collect_push_targets_for_run(run_id: str) -> list[tuple[str, str]]:
                 (run_id,),
             )
             rows = cur.fetchall()
+            log.info("Push targets loaded for run %s: %d rows", run_id, len(rows))
             return [(str(row[0]), str(row[1])) for row in rows]
 
 
@@ -40,6 +43,7 @@ def _delete_invalid_tokens(tokens: list[str]) -> None:
     with db_conn() as conn:
         with conn.cursor() as cur:
             cur.execute("DELETE FROM user_push_tokens WHERE token = ANY(%s)", (tokens,))
+    log.info("Deleted invalid push tokens: %d", len(tokens))
 
 
 def _calc_paused_s(
@@ -171,13 +175,28 @@ def finish_run(payload: RunFinishRequest, user_id: str = Depends(current_user_id
             )
 
     push_targets = _collect_push_targets_for_run(str(run_id))
+    if not push_targets:
+        log.info("No push targets for run %s", run_id)
     by_attacker: dict[str, list[str]] = {}
     for token, attacker_name in push_targets:
         by_attacker.setdefault(attacker_name, []).append(token)
     invalid_tokens: list[str] = []
     for attacker_name, tokens in by_attacker.items():
+        log.info(
+            "Sending territory attacked push for run %s attacker=%s tokens=%d",
+            run_id,
+            attacker_name,
+            len(tokens),
+        )
         result = send_territory_attacked_pushes(tokens=tokens, attacker_name=attacker_name)
         invalid_tokens.extend(result.invalid_tokens)
+        if result.invalid_tokens:
+            log.warning(
+                "Push send reported invalid tokens for run %s attacker=%s invalid=%d",
+                run_id,
+                attacker_name,
+                len(result.invalid_tokens),
+            )
     _delete_invalid_tokens(invalid_tokens)
 
     return RunFinishResponse(

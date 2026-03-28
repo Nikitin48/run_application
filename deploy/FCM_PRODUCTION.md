@@ -67,7 +67,18 @@ docker compose -f docker-compose.prod.yml -f docker-compose.fcm.yml exec backend
 
 Ожидается: `True`, путь `/secrets/...`, файл существует.
 
+Важно: если в `.env` случайно остался локальный путь (например с Mac), backend теперь пробует fallback в `/secrets/<basename>`, но правильнее всё равно держать:
+
+```env
+FCM_SERVICE_ACCOUNT_JSON_PATH=/secrets/firebase-adminsdk.json
+```
+
 В логах при первой отправке пуша не должно быть `Failed to initialize Firebase`.
+Дополнительно ищите строки:
+
+- `Push targets loaded for run ...`
+- `Sending territory attacked push ...`
+- `Deleted invalid push tokens ...`
 
 ## 6. Мобильное приложение
 
