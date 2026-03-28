@@ -34,6 +34,28 @@ class _MapPageBody extends ConsumerStatefulWidget {
 }
 
 class _MapPageBodyState extends ConsumerState<_MapPageBody> {
+  static const _tileStyles = <_TileStyle>[
+    _TileStyle(
+      id: 'osm',
+      title: 'OpenStreetMap',
+      urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+    ),
+    _TileStyle(
+      id: 'carto_voyager',
+      title: 'Carto Voyager',
+      urlTemplate:
+          'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+      subdomains: ['a', 'b', 'c', 'd'],
+      supportsRetina: true,
+    ),
+    _TileStyle(
+      id: 'esri_dark_gray',
+      title: 'Esri Dark Gray',
+      urlTemplate:
+          'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+    ),
+  ];
+
   final _mapController = MapController();
   Timer? _debounce;
   Timer? _testMoveTimer;
@@ -43,6 +65,7 @@ class _MapPageBodyState extends ConsumerState<_MapPageBody> {
   bool _mapReady = false;
   LatLng? _currentLocation;
   StreamSubscription<Position>? _mapPosSub;
+  _TileStyle _selectedTileStyle = _tileStyles[2];
 
   @override
   void initState() {
@@ -226,6 +249,35 @@ class _MapPageBodyState extends ConsumerState<_MapPageBody> {
       appBar: AppBar(
         title: Text(l10n.mapTitle),
         actions: [
+          PopupMenuButton<_TileStyle>(
+            tooltip: 'Стиль карты',
+            initialValue: _selectedTileStyle,
+            onSelected: (style) => setState(() => _selectedTileStyle = style),
+            itemBuilder: (context) {
+              return _tileStyles
+                  .map(
+                    (style) => PopupMenuItem<_TileStyle>(
+                      value: style,
+                      child: Row(
+                        children: [
+                          if (style == _selectedTileStyle)
+                            Icon(
+                              Icons.check,
+                              size: 18,
+                              color: Theme.of(context).colorScheme.primary,
+                            )
+                          else
+                            const SizedBox(width: 18),
+                          const SizedBox(width: 8),
+                          Text(style.title),
+                        ],
+                      ),
+                    ),
+                  )
+                  .toList(growable: false);
+            },
+            icon: const Icon(Icons.layers_outlined),
+          ),
           IconButton(
             tooltip: 'Уведомления',
             onPressed: () => context.push('/notifications'),
@@ -310,7 +362,11 @@ class _MapPageBodyState extends ConsumerState<_MapPageBody> {
             ),
             children: [
               TileLayer(
-                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                urlTemplate: _selectedTileStyle.urlTemplate,
+                subdomains: _selectedTileStyle.subdomains,
+                retinaMode:
+                    _selectedTileStyle.supportsRetina &&
+                    MediaQuery.devicePixelRatioOf(context) > 1.0,
                 userAgentPackageName: 'run_application',
               ),
               if (trackPoints.length >= 2)
@@ -538,4 +594,27 @@ class _HoldMoveButton extends StatelessWidget {
       ),
     );
   }
+}
+
+class _TileStyle {
+  const _TileStyle({
+    required this.id,
+    required this.title,
+    required this.urlTemplate,
+    this.subdomains = const [],
+    this.supportsRetina = false,
+  });
+
+  final String id;
+  final String title;
+  final String urlTemplate;
+  final List<String> subdomains;
+  final bool supportsRetina;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is _TileStyle && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }
