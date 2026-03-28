@@ -9,6 +9,7 @@ import '../features/histories/application/run_history_provider.dart';
 import '../features/notifications/application/last_notification_provider.dart';
 import '../features/runs/application/run_tracker_controller.dart';
 import '../features/territories/application/territories_controller.dart';
+import '../core/theme/app_colors.dart';
 
 class HomeShellPage extends ConsumerStatefulWidget {
   const HomeShellPage({super.key, required this.navigationShell});
@@ -180,10 +181,10 @@ class _HomeShellPageState extends ConsumerState<HomeShellPage> {
           filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
           child: DecoratedBox(
             decoration: BoxDecoration(
-              color: colors.surface.withValues(alpha: 0.86),
+              color: AppColors.background.withValues(alpha: 0.94),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.08),
+                  color: Colors.black.withValues(alpha: 0.25),
                   blurRadius: 14,
                   offset: const Offset(0, -1),
                 ),
@@ -316,9 +317,7 @@ class _ActionCircleButton extends StatelessWidget {
           height: 46,
           child: Icon(
             icon,
-            color: enabled
-                ? colors.onPrimaryContainer
-                : colors.onSurfaceVariant,
+            color: enabled ? AppColors.secondPrimary : AppColors.text,
           ),
         ),
       ),
@@ -343,14 +342,13 @@ class _SideNavButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
     return Center(
       child: IconButton(
         tooltip: tooltip,
         onPressed: onTap,
         icon: Icon(
           selected ? activeIcon : icon,
-          color: selected ? colors.primary : colors.onSurfaceVariant,
+          color: selected ? AppColors.secondPrimary : AppColors.text,
         ),
       ),
     );

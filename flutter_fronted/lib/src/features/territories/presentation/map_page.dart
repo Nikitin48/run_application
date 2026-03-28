@@ -14,8 +14,11 @@ import '../../profile/application/profile_controller.dart';
 import '../application/territories_controller.dart';
 import '../domain/territory.dart';
 import '../../runs/application/run_tracker_controller.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/color_utils.dart';
 import '../domain/value_objects/bbox.dart';
+import 'neon_map_layers.dart';
+import 'territory_map_label.dart';
 
 class MapPage extends ConsumerWidget {
   const MapPage({super.key});
@@ -34,6 +37,10 @@ class _MapPageBody extends ConsumerStatefulWidget {
 }
 
 class _MapPageBodyState extends ConsumerState<_MapPageBody> {
+  /// Starting zoom; [maxZoom] allows exactly one double-click step above this.
+  static const double _mapInitialZoom = 15;
+  static const double _mapMaxZoom = _mapInitialZoom + 1;
+
   static const _tileStyles = <_TileStyle>[
     _TileStyle(
       id: 'osm',
@@ -264,7 +271,7 @@ class _MapPageBodyState extends ConsumerState<_MapPageBody> {
                             Icon(
                               Icons.check,
                               size: 18,
-                              color: Theme.of(context).colorScheme.primary,
+                              color: Theme.of(context).colorScheme.secondary,
                             )
                           else
                             const SizedBox(width: 18),
@@ -293,7 +300,7 @@ class _MapPageBodyState extends ConsumerState<_MapPageBody> {
                       width: 9,
                       height: 9,
                       decoration: BoxDecoration(
-                        color: Colors.red,
+                        color: Theme.of(context).colorScheme.error,
                         borderRadius: BorderRadius.circular(999),
                         border: Border.all(
                           color: Theme.of(context).colorScheme.surface,
@@ -318,7 +325,10 @@ class _MapPageBodyState extends ConsumerState<_MapPageBody> {
               }
               setState(() => _testMode = !_testMode);
             },
-            icon: Icon(_testMode ? Icons.gamepad : Icons.gamepad_outlined),
+            icon: Icon(
+              _testMode ? Icons.gamepad : Icons.gamepad_outlined,
+              color: _testMode ? AppColors.secondPrimary : AppColors.text,
+            ),
           ),
           IconButton(
             tooltip: _followMe ? l10n.followOn : l10n.followOff,
@@ -332,7 +342,10 @@ class _MapPageBodyState extends ConsumerState<_MapPageBody> {
                 _mapController.move(lastPoint, _mapController.camera.zoom);
               }
             },
-            icon: Icon(_followMe ? Icons.gps_fixed : Icons.gps_not_fixed),
+            icon: Icon(
+              _followMe ? Icons.gps_fixed : Icons.gps_not_fixed,
+              color: _followMe ? AppColors.secondPrimary : AppColors.text,
+            ),
           ),
         ],
       ),
@@ -344,7 +357,8 @@ class _MapPageBodyState extends ConsumerState<_MapPageBody> {
               // Fallback: Moscow. We replace it with current GPS location when available.
               initialCenter:
                   _currentLocation ?? const LatLng(55.75396, 37.620393),
-              initialZoom: 15,
+              initialZoom: _mapInitialZoom,
+              maxZoom: _mapMaxZoom,
               onMapReady: () {
                 _mapReady = true;
                 _scheduleBboxUpdate();
@@ -371,55 +385,67 @@ class _MapPageBodyState extends ConsumerState<_MapPageBody> {
               ),
               if (trackPoints.length >= 2)
                 PolylineLayer(
-                  polylines: [
-                    Polyline(
-                      points: trackPoints,
-                      strokeWidth: 4,
-                      color: myTrackColor.withValues(alpha: 0.9),
-                    ),
-                  ],
+                  polylines: buildNeonTrackPolylines(
+                    points: trackPoints,
+                    baseColor: myTrackColor,
+                  ),
                 ),
               if (lastPoint != null)
                 MarkerLayer(
                   markers: [
                     Marker(
                       point: lastPoint,
-                      width: 18,
-                      height: 18,
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          color: myTrackColor,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 2),
-                        ),
-                      ),
+                      width: 40,
+                      height: 40,
+                      alignment: Alignment.center,
+                      child: _NeonUserMarker(color: myTrackColor),
                     ),
                   ],
                 ),
-              territoriesAsync.when(
+              ...territoriesAsync.when(
                 data: (territories) {
                   final polygons = <Polygon>[];
+                  final labelMarkers = <Marker>[];
                   for (final t in territories) {
                     final baseColor = colorFromHexOrDefault(
                       t.territoryColorHex,
                     );
-                    final fill = baseColor.withValues(alpha: 0.25);
-                    final border = baseColor.withValues(alpha: 0.9);
-                    for (final ring in t.polygons) {
-                      polygons.add(
-                        Polygon(
-                          points: ring,
-                          color: fill,
-                          borderColor: border,
-                          borderStrokeWidth: 2,
-                        ),
+                    for (var i = 0; i < t.polygons.length; i++) {
+                      final ring = t.polygons[i];
+                      appendNeonTerritoryRing(
+                        polygons,
+                        ring: ring,
+                        baseColor: baseColor,
                       );
+                      final anchor = polygonRingCentroid(ring);
+                      if (anchor != null && t.displayName.isNotEmpty) {
+                        labelMarkers.add(
+                          Marker(
+                            key: ValueKey(
+                              'territory-label-${t.userId}-$i',
+                            ),
+                            point: anchor,
+                            width: 132,
+                            height: 28,
+                            alignment: Alignment.center,
+                            rotate: true,
+                            child: TerritoryDisplayNameMapLabel(
+                              displayName: t.displayName,
+                              territoryColorHex: t.territoryColorHex,
+                            ),
+                          ),
+                        );
+                      }
                     }
                   }
-                  return PolygonLayer(polygons: polygons);
+                  return <Widget>[
+                    PolygonLayer(polygons: polygons),
+                    if (labelMarkers.isNotEmpty)
+                      MarkerLayer(markers: labelMarkers),
+                  ];
                 },
-                loading: () => const SizedBox.shrink(),
-                error: (_, stackTrace) => const SizedBox.shrink(),
+                loading: () => const <Widget>[],
+                error: (error, stackTrace) => const <Widget>[],
               ),
             ],
           ),
@@ -453,7 +479,7 @@ class _MapPageBodyState extends ConsumerState<_MapPageBody> {
                         '${runState.countdownSeconds}',
                         style: Theme.of(context).textTheme.displayLarge
                             ?.copyWith(
-                              color: Colors.white,
+                              color: AppColors.text,
                               fontWeight: FontWeight.w800,
                             ),
                       ),
@@ -462,7 +488,7 @@ class _MapPageBodyState extends ConsumerState<_MapPageBody> {
                         l10n.runStartingSoon,
                         style: Theme.of(
                           context,
-                        ).textTheme.titleMedium?.copyWith(color: Colors.white),
+                        ).textTheme.titleMedium?.copyWith(color: AppColors.text),
                       ),
                     ],
                   ),
@@ -561,6 +587,43 @@ class _TestPad extends StatelessWidget {
                   onStop: onMoveStop,
                 ),
               ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _NeonUserMarker extends StatelessWidget {
+  const _NeonUserMarker({required this.color});
+
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = neonAccent(color);
+    return Center(
+      child: Container(
+        width: 18,
+        height: 18,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: color,
+          border: Border.all(
+            color: AppColors.text.withValues(alpha: 0.92),
+            width: 2,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: accent.withValues(alpha: 0.75),
+              blurRadius: 14,
+              spreadRadius: 1,
+            ),
+            BoxShadow(
+              color: accent.withValues(alpha: 0.35),
+              blurRadius: 22,
+              spreadRadius: 0,
             ),
           ],
         ),

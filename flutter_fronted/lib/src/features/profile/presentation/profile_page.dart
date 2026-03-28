@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:run_application/l10n/app_localizations.dart';
 
 import '../../../core/utils/color_utils.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/formatters.dart';
 import '../../auth/application/auth_controller.dart';
 import '../application/profile_controller.dart';
@@ -170,15 +171,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                           ),
                         ),
                         const SizedBox(height: 10),
-                        TextField(
-                          controller: _avatarUrlController,
-                          enabled: !isSaving,
-                          decoration: InputDecoration(
-                            labelText: l10n.profileAvatarUrlLabel,
-                            prefixIcon: const Icon(Icons.image_outlined),
-                          ),
-                        ),
-                        const SizedBox(height: 10),
+
                         TextField(
                           readOnly: true,
                           enabled: false,
@@ -189,10 +182,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        Text(
-                          l10n.profileEmailReadonlyHint,
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
+
                         const SizedBox(height: 14),
                         FilledButton(
                           onPressed: isSaving
@@ -242,7 +232,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                                 color: colorFromHexOrDefault(currentColor),
                                 shape: BoxShape.circle,
                                 border: Border.all(
-                                  color: Colors.white,
+                                  color: AppColors.text,
                                   width: 2,
                                 ),
                               ),

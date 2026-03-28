@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_colors.dart';
+
 Color colorFromHexOrDefault(
   String? hex, {
-  Color fallback = const Color(0xFF3B82F6),
+  Color fallback = AppColors.blue3399,
 }) {
   if (hex == null || !RegExp(r'^#[0-9A-Fa-f]{6}$').hasMatch(hex)) {
     return fallback;

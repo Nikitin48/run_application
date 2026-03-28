@@ -17,7 +17,7 @@ class RunApp extends ConsumerWidget {
       locale: const Locale('ru'),
       supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
-      theme: AppTheme.light(),
+      theme: AppTheme.theme(),
       routerConfig: router,
     );
   }

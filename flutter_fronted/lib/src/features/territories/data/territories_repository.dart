@@ -31,6 +31,7 @@ class TerritoriesRepositoryImpl implements TerritoriesRepository {
       final props =
           (f['properties'] as Map?)?.cast<String, dynamic>() ?? const {};
       final userId = (props['user_id'] ?? '') as String;
+      final displayName = (props['display_name'] as String?) ?? '';
       final areaM2 = (props['area_m2'] as num?)?.toDouble() ?? 0.0;
       final territoryColorHex =
           (props['territory_color'] as String?) ?? '#3B82F6';
@@ -65,6 +66,7 @@ class TerritoriesRepositoryImpl implements TerritoriesRepository {
       out.add(
         Territory(
           userId: userId,
+          displayName: displayName,
           areaM2: areaM2,
           territoryColorHex: territoryColorHex,
           polygons: polygons,

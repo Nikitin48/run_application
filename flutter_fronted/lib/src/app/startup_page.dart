@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:run_application/l10n/app_localizations.dart';
 
 import 'router.dart';
+import '../core/theme/app_colors.dart';
 import '../features/notifications/application/last_notification_provider.dart';
 import '../features/notifications/application/push_messaging_provider.dart';
 
@@ -30,7 +31,7 @@ class _StartupPageState extends ConsumerState<StartupPage> {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF020817),
+      backgroundColor: AppColors.background,
       body: Stack(
         children: [
           Center(
@@ -51,7 +52,7 @@ class _StartupPageState extends ConsumerState<StartupPage> {
                 const SizedBox(height: 12),
                 Text(
                   l10n.appBootstrapping,
-                  style: const TextStyle(color: Colors.white70),
+                  style: const TextStyle(color: AppColors.text),
                 ),
               ],
             ),

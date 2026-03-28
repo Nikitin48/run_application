@@ -23,6 +23,7 @@ def get_territories(
                 """
                 SELECT
                   t.user_id::text,
+                  u.display_name,
                   u.territory_color,
                   ST_AsGeoJSON(t.geom)::text AS geojson,
                   ST_Area(ST_Transform(t.geom, 3857))::double precision AS area_m2
@@ -36,13 +37,20 @@ def get_territories(
                 (min_lng, min_lat, max_lng, max_lat),
             )
             features = []
-            for user_id, territory_color, geojson_text, area_m2 in cur.fetchall():
+            for (
+                user_id,
+                display_name,
+                territory_color,
+                geojson_text,
+                area_m2,
+            ) in cur.fetchall():
                 features.append(
                     {
                         "type": "Feature",
                         "geometry": json.loads(geojson_text),
                         "properties": {
                             "user_id": user_id,
+                            "display_name": display_name or "",
                             "territory_color": territory_color or "#3B82F6",
                             "area_m2": area_m2,
                         },

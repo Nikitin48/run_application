@@ -5,6 +5,7 @@ import 'package:run_application/l10n/app_localizations.dart';
 
 import '../application/auth_controller.dart';
 import '../domain/validation/auth_form_validation.dart';
+import '../../../core/theme/app_colors.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -129,19 +130,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           Positioned.fill(
             child: DecoratedBox(
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Theme.of(
-                      context,
-                    ).colorScheme.primary.withValues(alpha: 0.10),
-                    Theme.of(
-                      context,
-                    ).colorScheme.secondary.withValues(alpha: 0.06),
-                    Theme.of(context).colorScheme.surface,
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+                color: AppColors.background,
               ),
             ),
           ),
