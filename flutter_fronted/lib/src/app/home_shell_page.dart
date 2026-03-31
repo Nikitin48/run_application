@@ -40,6 +40,16 @@ class _HomeShellPageState extends ConsumerState<HomeShellPage> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<RunTrackerState>(runTrackerProvider, (previous, next) {
+      final hadNoResult = previous?.lastFinish == null;
+      final hasResult = next.lastFinish != null;
+      if (!hadNoResult || !hasResult || !mounted) return;
+      ref.invalidate(notificationsHistoryProvider);
+      ref.invalidate(runHistoryProvider);
+      ref.invalidate(territoriesForBboxProvider);
+      context.push('/run-summary');
+    });
+
     final l10n = AppLocalizations.of(context)!;
     final colors = Theme.of(context).colorScheme;
     final navigationShell = widget.navigationShell;
