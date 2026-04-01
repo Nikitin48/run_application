@@ -7,6 +7,7 @@ import 'package:geolocator/geolocator.dart';
 
 import '../../../core/notifications/local_notifications_service.dart';
 import '../../../core/network/dio_provider.dart';
+import '../../../core/services/background_location_service.dart';
 import '../../runs/data/runs_api.dart';
 import '../../runs/data/runs_repository.dart';
 import '../domain/repositories/runs_repository.dart';
@@ -86,8 +87,12 @@ final runTrackerProvider =
 
 class RunTrackerController extends Notifier<RunTrackerState> {
   StreamSubscription<Position>? _posSub;
+  StreamSubscription<BgLocationPoint>? _bgSub;
   StreamSubscription<RunNotificationAction>? _runActionSub;
   AppLifecycleListener? _lifecycleListener;
+
+  bool get _useBackgroundService =>
+      !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
 
   @override
   RunTrackerState build() {
@@ -99,6 +104,8 @@ class RunTrackerController extends Notifier<RunTrackerState> {
     ref.onDispose(_dispose);
     return const RunTrackerState.idle();
   }
+
+  // ── Notifications ────────────────────────────────────────────────────────
 
   Future<void> _bootstrapNotifications() async {
     final notifications = ref.read(localNotificationsServiceProvider);
@@ -133,6 +140,8 @@ class RunTrackerController extends Notifier<RunTrackerState> {
     }
   }
 
+  // ── Lifecycle ────────────────────────────────────────────────────────────
+
   void _onAppResumed() {
     unawaited(_refreshAfterResume());
   }
@@ -141,6 +150,11 @@ class RunTrackerController extends Notifier<RunTrackerState> {
     if (state.phase != RunPhase.running && state.phase != RunPhase.paused) {
       return;
     }
+
+    if (_useBackgroundService) {
+      BackgroundLocationService.instance.flushBuffer();
+    }
+
     try {
       final pos = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
@@ -148,10 +162,10 @@ class RunTrackerController extends Notifier<RunTrackerState> {
         ),
       );
       _appendPointIfNeeded(pos, allowWhenPaused: false);
-    } catch (_) {
-      // Ignore lifecycle refresh failures; stream keeps running.
-    }
+    } catch (_) {}
   }
+
+  // ── Start / Stop ─────────────────────────────────────────────────────────
 
   Future<void> start() async {
     if (state.phase != RunPhase.idle) return;
@@ -173,17 +187,6 @@ class RunTrackerController extends Notifier<RunTrackerState> {
         perm == LocationPermission.deniedForever) {
       state = state.copyWith(error: 'Location permission denied');
       return;
-    }
-    if (defaultTargetPlatform == TargetPlatform.iOS &&
-        perm != LocationPermission.always) {
-      perm = await Geolocator.requestPermission();
-      if (perm != LocationPermission.always) {
-        state = state.copyWith(
-          error:
-              'Background tracking on iOS requires "Always" location permission',
-        );
-        return;
-      }
     }
 
     state = const RunTrackerState.idle().copyWith(
@@ -209,16 +212,39 @@ class RunTrackerController extends Notifier<RunTrackerState> {
     );
 
     await _posSub?.cancel();
+    await _bgSub?.cancel();
 
-    _posSub =
-        Geolocator.getPositionStream(
-          locationSettings: _buildLocationSettings(),
-        ).listen(
-          (pos) => _appendPointIfNeeded(pos),
-          onError: (error) {
-            state = state.copyWith(error: 'Location stream error: $error');
-          },
-        );
+    if (_useBackgroundService) {
+      await _startAndroidBackgroundTracking();
+    } else {
+      _startDirectTracking();
+    }
+  }
+
+  /// Android: GPS runs in a background-isolate foreground service so that
+  /// points keep recording when the app is minimised or the screen is off.
+  Future<void> _startAndroidBackgroundTracking() async {
+    final bg = BackgroundLocationService.instance;
+    await bg.startTracking();
+    _bgSub = bg.points.listen(
+      _onBackgroundPoint,
+      onError: (e) {
+        state = state.copyWith(error: 'Background location error: $e');
+      },
+    );
+  }
+
+  /// iOS / Web: geolocator stream in the main isolate.
+  /// On iOS `allowBackgroundLocationUpdates: true` keeps the stream alive.
+  void _startDirectTracking() {
+    _posSub = Geolocator.getPositionStream(
+      locationSettings: _buildLocationSettings(),
+    ).listen(
+      (pos) => _appendPointIfNeeded(pos),
+      onError: (error) {
+        state = state.copyWith(error: 'Location stream error: $error');
+      },
+    );
   }
 
   LocationSettings _buildLocationSettings() {
@@ -228,31 +254,50 @@ class RunTrackerController extends Notifier<RunTrackerState> {
         distanceFilter: 5,
       );
     }
-    if (defaultTargetPlatform == TargetPlatform.android) {
-      return AndroidSettings(
-        accuracy: LocationAccuracy.bestForNavigation,
-        distanceFilter: 5,
-        intervalDuration: Duration(seconds: 2),
-        foregroundNotificationConfig: ForegroundNotificationConfig(
-          notificationTitle: 'Идет пробежка',
-          notificationText: 'Маршрут записывается в фоне',
-          enableWakeLock: true,
-        ),
-      );
-    }
     if (defaultTargetPlatform == TargetPlatform.iOS) {
       return AppleSettings(
         accuracy: LocationAccuracy.bestForNavigation,
-        distanceFilter: 5,
+        distanceFilter: 3,
         activityType: ActivityType.fitness,
         pauseLocationUpdatesAutomatically: false,
         showBackgroundLocationIndicator: true,
+        allowBackgroundLocationUpdates: true,
       );
     }
     return const LocationSettings(
       accuracy: LocationAccuracy.best,
-      distanceFilter: 5,
+      distanceFilter: 3,
     );
+  }
+
+  // ── Point processing ─────────────────────────────────────────────────────
+
+  void _onBackgroundPoint(BgLocationPoint pt) {
+    if (state.phase != RunPhase.running) return;
+
+    final accuracy = pt.accuracy;
+    if (accuracy.isFinite && accuracy > 65) return;
+
+    final ts = DateTime.fromMillisecondsSinceEpoch(pt.timestampMs, isUtc: true);
+    final last = state.points.isEmpty ? null : state.points.last;
+    if (last != null) {
+      final dtMs = ts.difference(last.ts).inMilliseconds.abs();
+      if (dtMs < 800) return;
+      final distanceM = Geolocator.distanceBetween(
+        last.lat, last.lng, pt.lat, pt.lng,
+      );
+      if (distanceM < 1.5 && accuracy > 25) return;
+    }
+
+    final point = RunPoint(
+      lat: pt.lat,
+      lng: pt.lng,
+      ts: ts,
+      accuracyM: pt.accuracy,
+      speedMps: pt.speed,
+      altitudeM: pt.altitude,
+    );
+    state = state.copyWith(points: [...state.points, point], error: null);
   }
 
   void _appendPointIfNeeded(Position pos, {bool allowWhenPaused = false}) {
@@ -290,6 +335,8 @@ class RunTrackerController extends Notifier<RunTrackerState> {
     );
     state = state.copyWith(points: [...state.points, point], error: null);
   }
+
+  // ── Pause / Resume / Finish ──────────────────────────────────────────────
 
   void pauseManual() {
     if (state.phase == RunPhase.running) _openPause(PauseReason.manual);
@@ -360,7 +407,6 @@ class RunTrackerController extends Notifier<RunTrackerState> {
   }
 
   /// Adds a simulated point (for emulator / test mode).
-  /// Works when run is running or paused.
   void addSimulatedPoint({required double lat, required double lng}) {
     if (state.phase != RunPhase.running && state.phase != RunPhase.paused) {
       return;
@@ -369,12 +415,21 @@ class RunTrackerController extends Notifier<RunTrackerState> {
     state = state.copyWith(points: [...state.points, p]);
   }
 
+  // ── Cleanup ──────────────────────────────────────────────────────────────
+
   Future<void> _stopRunSession() async {
     await _posSub?.cancel();
+    await _bgSub?.cancel();
+    _posSub = null;
+    _bgSub = null;
+
+    if (_useBackgroundService) {
+      await BackgroundLocationService.instance.stopTracking();
+    }
+
     await ref
         .read(localNotificationsServiceProvider)
         .cancelRunTrackingNotification();
-    _posSub = null;
   }
 
   Future<void> _dispose() async {

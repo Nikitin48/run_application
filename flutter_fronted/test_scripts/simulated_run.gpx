@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  GPX route: правильный шестиугольник (~100м радиус) с центром в 52.604314, 39.545575
+  Замкнутый маршрут, последняя точка = первая.
+  Точки каждые 3 секунды, 2 круга для наглядности.
+
+  Использование:
+    1. Открыть ios/Runner.xcworkspace в Xcode
+    2. Перетащить этот файл в проект
+    3. Начать пробежку → свернуть (Cmd+Shift+H)
+    4. Xcode: Debug > Simulate Location > simulated_run
+-->
+<gpx version="1.1" creator="RunApp Test"
+     xmlns="http://www.topografix.com/GPX/1/1">
+  <trk>
+    <name>Test Hexagon Run</name>
+    <trkseg>
+      <!-- === Круг 1 === -->
+      <!-- Вершина 0 (верх, 0°) -->
+      <trkpt lat="52.605214" lon="39.545575"><time>2026-04-01T10:00:00Z</time></trkpt>
+      <trkpt lat="52.605114" lon="39.545575"><time>2026-04-01T10:00:03Z</time></trkpt>
+      <trkpt lat="52.605014" lon="39.545575"><time>2026-04-01T10:00:06Z</time></trkpt>
+
+      <!-- Вершина 1 (60°, верх-право) -->
+      <trkpt lat="52.604764" lon="39.546950"><time>2026-04-01T10:00:09Z</time></trkpt>
+      <trkpt lat="52.604664" lon="39.546800"><time>2026-04-01T10:00:12Z</time></trkpt>
+      <trkpt lat="52.604564" lon="39.546650"><time>2026-04-01T10:00:15Z</time></trkpt>
+
+      <!-- Вершина 2 (120°, низ-право) -->
+      <trkpt lat="52.603864" lon="39.546950"><time>2026-04-01T10:00:18Z</time></trkpt>
+      <trkpt lat="52.603764" lon="39.546800"><time>2026-04-01T10:00:21Z</time></trkpt>
+      <trkpt lat="52.603664" lon="39.546650"><time>2026-04-01T10:00:24Z</time></trkpt>
+
+      <!-- Вершина 3 (180°, низ) -->
+      <trkpt lat="52.603414" lon="39.545575"><time>2026-04-01T10:00:27Z</time></trkpt>
+      <trkpt lat="52.603514" lon="39.545575"><time>2026-04-01T10:00:30Z</time></trkpt>
+      <trkpt lat="52.603614" lon="39.545575"><time>2026-04-01T10:00:33Z</time></trkpt>
+
+      <!-- Вершина 4 (240°, низ-лево) -->
+      <trkpt lat="52.603864" lon="39.544200"><time>2026-04-01T10:00:36Z</time></trkpt>
+      <trkpt lat="52.603964" lon="39.544350"><time>2026-04-01T10:00:39Z</time></trkpt>
+      <trkpt lat="52.604064" lon="39.544500"><time>2026-04-01T10:00:42Z</time></trkpt>
+
+      <!-- Вершина 5 (300°, верх-лево) -->
+      <trkpt lat="52.604764" lon="39.544200"><time>2026-04-01T10:00:45Z</time></trkpt>
+      <trkpt lat="52.604864" lon="39.544350"><time>2026-04-01T10:00:48Z</time></trkpt>
+      <trkpt lat="52.604964" lon="39.544500"><time>2026-04-01T10:00:51Z</time></trkpt>
+
+      <!-- Замыкание на вершину 0 -->
+      <trkpt lat="52.605214" lon="39.545575"><time>2026-04-01T10:00:54Z</time></trkpt>
+
+      <!-- === Круг 2 === -->
+      <trkpt lat="52.605114" lon="39.545575"><time>2026-04-01T10:00:57Z</time></trkpt>
+      <trkpt lat="52.605014" lon="39.545575"><time>2026-04-01T10:01:00Z</time></trkpt>
+
+      <trkpt lat="52.604764" lon="39.546950"><time>2026-04-01T10:01:03Z</time></trkpt>
+      <trkpt lat="52.604664" lon="39.546800"><time>2026-04-01T10:01:06Z</time></trkpt>
+      <trkpt lat="52.604564" lon="39.546650"><time>2026-04-01T10:01:09Z</time></trkpt>
+
+      <trkpt lat="52.603864" lon="39.546950"><time>2026-04-01T10:01:12Z</time></trkpt>
+      <trkpt lat="52.603764" lon="39.546800"><time>2026-04-01T10:01:15Z</time></trkpt>
+      <trkpt lat="52.603664" lon="39.546650"><time>2026-04-01T10:01:18Z</time></trkpt>
+
+      <trkpt lat="52.603414" lon="39.545575"><time>2026-04-01T10:01:21Z</time></trkpt>
+      <trkpt lat="52.603514" lon="39.545575"><time>2026-04-01T10:01:24Z</time></trkpt>
+      <trkpt lat="52.603614" lon="39.545575"><time>2026-04-01T10:01:27Z</time></trkpt>
+
+      <trkpt lat="52.603864" lon="39.544200"><time>2026-04-01T10:01:30Z</time></trkpt>
+      <trkpt lat="52.603964" lon="39.544350"><time>2026-04-01T10:01:33Z</time></trkpt>
+      <trkpt lat="52.604064" lon="39.544500"><time>2026-04-01T10:01:36Z</time></trkpt>
+
+      <trkpt lat="52.604764" lon="39.544200"><time>2026-04-01T10:01:39Z</time></trkpt>
+      <trkpt lat="52.604864" lon="39.544350"><time>2026-04-01T10:01:42Z</time></trkpt>
+      <trkpt lat="52.604964" lon="39.544500"><time>2026-04-01T10:01:45Z</time></trkpt>
+
+      <!-- Замыкание круг 2 -->
+      <trkpt lat="52.605214" lon="39.545575"><time>2026-04-01T10:01:48Z</time></trkpt>
+    </trkseg>
+  </trk>
+</gpx>
