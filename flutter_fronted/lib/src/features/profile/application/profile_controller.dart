@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../core/network/dio_provider.dart';
 import '../data/profile_api.dart';
@@ -66,6 +67,22 @@ class ProfileActionsController extends Notifier<AsyncValue<void>> {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
       await ref.read(updateTerritoryColorUseCaseProvider)(territoryColor);
+      ref.invalidate(meProfileProvider);
+    });
+  }
+
+  Future<void> uploadAvatar(XFile file) async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      await ref.read(profileRepositoryProvider).uploadAvatar(file);
+      ref.invalidate(meProfileProvider);
+    });
+  }
+
+  Future<void> deleteAvatar() async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      await ref.read(profileRepositoryProvider).deleteAvatar();
       ref.invalidate(meProfileProvider);
     });
   }

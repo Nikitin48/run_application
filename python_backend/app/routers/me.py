@@ -1,10 +1,15 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from pathlib import Path
+from urllib.parse import unquote, urlparse
+from uuid import uuid4
+
+from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from ..db import db_conn
 from ..models import (
+    AvatarOut,
     ChangePasswordRequest,
     MeProfileOut,
     TerritoryColorOut,
@@ -13,12 +18,47 @@ from ..models import (
     UserOut,
     UserStatsOut,
 )
+from ..settings import settings
 from ..security import decode_access_token, hash_password, verify_password
 
 
 router = APIRouter(tags=["me"])
 bearer = HTTPBearer(auto_error=False)
 DEFAULT_TERRITORY_COLOR = "#3B82F6"
+AVATAR_SUBDIR = "avatars"
+MIME_EXTENSIONS = {
+    "image/jpeg": ".jpg",
+    "image/png": ".png",
+}
+
+
+def _safe_media_path(relative_path: str) -> Path:
+    media_root = Path(settings.media_root).resolve()
+    candidate = (media_root / relative_path.lstrip("/")).resolve()
+    if media_root not in candidate.parents and candidate != media_root:
+        raise HTTPException(status_code=400, detail="invalid media path")
+    return candidate
+
+
+def _extract_local_avatar_path(avatar_url: str | None) -> Path | None:
+    if not avatar_url:
+        return None
+    parsed = urlparse(avatar_url)
+    if parsed.scheme in {"http", "https"}:
+        raw_path = parsed.path
+    else:
+        raw_path = avatar_url
+    if not raw_path.startswith(settings.media_url_prefix):
+        return None
+    relative = raw_path[len(settings.media_url_prefix) :].lstrip("/")
+    if not relative.startswith(f"{AVATAR_SUBDIR}/"):
+        return None
+    return _safe_media_path(unquote(relative))
+
+
+def _build_avatar_url(request: Request, filename: str) -> str:
+    base = str(request.base_url).rstrip("/")
+    return f"{base}{settings.media_url_prefix}/{AVATAR_SUBDIR}/{filename}"
 
 
 def current_user_id(
@@ -151,6 +191,95 @@ def update_me_profile(
                 (payload.display_name, payload.avatar_url, user_id),
             )
     return me_profile(user_id=user_id)
+
+
+@router.post("/me/avatar", response_model=AvatarOut)
+def upload_avatar(
+    request: Request,
+    file: UploadFile = File(...),
+    user_id: str = Depends(current_user_id),
+) -> AvatarOut:
+    content_type = (file.content_type or "").lower()
+    allowed_mime_types = {item.lower() for item in settings.allowed_avatar_mime_types}
+    if content_type not in allowed_mime_types:
+        raise HTTPException(status_code=415, detail="unsupported avatar file type")
+
+    extension = MIME_EXTENSIONS.get(content_type)
+    if extension is None:
+        raise HTTPException(status_code=415, detail="unsupported avatar file type")
+
+    avatar_dir = _safe_media_path(AVATAR_SUBDIR)
+    avatar_dir.mkdir(parents=True, exist_ok=True)
+    filename = f"{uuid4().hex}{extension}"
+    destination = avatar_dir / filename
+
+    max_size_bytes = settings.max_avatar_size_mb * 1024 * 1024
+    bytes_written = 0
+    try:
+        with destination.open("wb") as out:
+            while True:
+                chunk = file.file.read(1024 * 1024)
+                if not chunk:
+                    break
+                bytes_written += len(chunk)
+                if bytes_written > max_size_bytes:
+                    raise HTTPException(status_code=413, detail="avatar file is too large")
+                out.write(chunk)
+    except HTTPException:
+        if destination.exists():
+            destination.unlink()
+        raise
+    finally:
+        file.file.close()
+
+    avatar_url = _build_avatar_url(request, filename)
+    old_avatar_path: Path | None = None
+    with db_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT avatar_url FROM users WHERE id = %s", (user_id,))
+            row = cur.fetchone()
+            if row is None:
+                if destination.exists():
+                    destination.unlink()
+                raise HTTPException(status_code=404, detail="user not found")
+            old_avatar_path = _extract_local_avatar_path(row[0])
+            cur.execute(
+                """
+                UPDATE users
+                SET avatar_url = %s, updated_at = now()
+                WHERE id = %s
+                """,
+                (avatar_url, user_id),
+            )
+
+    if old_avatar_path is not None and old_avatar_path.exists():
+        old_avatar_path.unlink(missing_ok=True)
+
+    return AvatarOut(avatar_url=avatar_url)
+
+
+@router.delete("/me/avatar", response_model=AvatarOut)
+def delete_avatar(user_id: str = Depends(current_user_id)) -> AvatarOut:
+    with db_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT avatar_url FROM users WHERE id = %s", (user_id,))
+            row = cur.fetchone()
+            if row is None:
+                raise HTTPException(status_code=404, detail="user not found")
+            old_avatar_path = _extract_local_avatar_path(row[0])
+            cur.execute(
+                """
+                UPDATE users
+                SET avatar_url = NULL, updated_at = now()
+                WHERE id = %s
+                """,
+                (user_id,),
+            )
+
+    if old_avatar_path is not None and old_avatar_path.exists():
+        old_avatar_path.unlink(missing_ok=True)
+
+    return AvatarOut(avatar_url=None)
 
 
 @router.patch("/me/password")

@@ -1,3 +1,5 @@
+import 'package:image_picker/image_picker.dart';
+
 import '../domain/me_profile.dart';
 import '../domain/repositories/profile_repository.dart';
 import 'profile_api.dart';
@@ -28,6 +30,16 @@ class ProfileRepositoryImpl implements ProfileRepository {
   @override
   Future<String> updateTerritoryColor(String territoryColor) {
     return _api.updateTerritoryColor(territoryColor);
+  }
+
+  @override
+  Future<String?> uploadAvatar(XFile file) {
+    return _api.uploadAvatar(file);
+  }
+
+  @override
+  Future<void> deleteAvatar() {
+    return _api.deleteAvatar();
   }
 
   @override

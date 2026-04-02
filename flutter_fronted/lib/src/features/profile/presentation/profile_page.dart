@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:run_application/l10n/app_localizations.dart';
 
 import '../../../core/utils/color_utils.dart';
@@ -20,21 +21,21 @@ class ProfilePage extends ConsumerStatefulWidget {
 
 class _ProfilePageState extends ConsumerState<ProfilePage> {
   final _displayNameController = TextEditingController();
-  final _avatarUrlController = TextEditingController();
   final _emailController = TextEditingController();
   final _currentPasswordController = TextEditingController();
   final _newPasswordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  final _imagePicker = ImagePicker();
   bool _initialized = false;
   bool _currentPasswordVisible = false;
   bool _newPasswordVisible = false;
   bool _confirmPasswordVisible = false;
   String? _selectedTerritoryColor;
+  _ProfileAction? _lastAction;
 
   @override
   void dispose() {
     _displayNameController.dispose();
-    _avatarUrlController.dispose();
     _emailController.dispose();
     _currentPasswordController.dispose();
     _newPasswordController.dispose();
@@ -57,10 +58,21 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     if (!_initialized) {
       _initialized = true;
       _displayNameController.text = profile.displayName;
-      _avatarUrlController.text = profile.avatarUrl ?? '';
       _selectedTerritoryColor = profile.territoryColor.toUpperCase();
     }
     _emailController.text = profile.email ?? '';
+  }
+
+  Future<void> _pickAndUploadAvatar() async {
+    final picked = await _imagePicker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1200,
+      maxHeight: 1200,
+      imageQuality: 88,
+    );
+    if (picked == null || !mounted) return;
+    _lastAction = _ProfileAction.uploadAvatar;
+    await ref.read(profileActionsProvider.notifier).uploadAvatar(picked);
   }
 
   Future<void> _openColorPicker(
@@ -122,9 +134,15 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         ).showSnackBar(SnackBar(content: Text(msg)));
       }
       if (previous?.isLoading == true && next.hasValue) {
+        final successText = switch (_lastAction) {
+          _ProfileAction.uploadAvatar => l10n.profileAvatarUploadSuccess,
+          _ProfileAction.deleteAvatar => l10n.profileAvatarDeleteSuccess,
+          _ProfileAction.changePassword => l10n.profilePasswordChangedSuccess,
+          _ => l10n.profileSaveSuccess,
+        };
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(l10n.profileSaveSuccess)));
+        ).showSnackBar(SnackBar(content: Text(successText)));
       }
     });
 
@@ -162,6 +180,45 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
                         const SizedBox(height: 12),
+                        Center(
+                          child: CircleAvatar(
+                            radius: 42,
+                            backgroundImage: (profile.avatarUrl?.isNotEmpty ?? false)
+                                ? NetworkImage(profile.avatarUrl!)
+                                : null,
+                            child: (profile.avatarUrl?.isNotEmpty ?? false)
+                                ? null
+                                : const Icon(Icons.person_outline, size: 40),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton.icon(
+                                onPressed: isSaving ? null : _pickAndUploadAvatar,
+                                icon: const Icon(Icons.photo_library_outlined),
+                                label: Text(l10n.profileUploadAvatarAction),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: TextButton.icon(
+                                onPressed: isSaving || profile.avatarUrl == null
+                                    ? null
+                                    : () async {
+                                        _lastAction = _ProfileAction.deleteAvatar;
+                                        await ref
+                                            .read(profileActionsProvider.notifier)
+                                            .deleteAvatar();
+                                      },
+                                icon: const Icon(Icons.delete_outline),
+                                label: Text(l10n.profileDeleteAvatarAction),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
                         TextField(
                           controller: _displayNameController,
                           enabled: !isSaving,
@@ -171,7 +228,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                           ),
                         ),
                         const SizedBox(height: 10),
-
                         TextField(
                           readOnly: true,
                           enabled: false,
@@ -191,16 +247,11 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                                   final displayName = _displayNameController
                                       .text
                                       .trim();
-                                  final avatarRaw = _avatarUrlController.text
-                                      .trim();
-                                  final avatarUrl = avatarRaw.isEmpty
-                                      ? null
-                                      : avatarRaw;
+                                  _lastAction = _ProfileAction.saveProfile;
                                   await ref
                                       .read(profileActionsProvider.notifier)
                                       .saveProfile(
                                         displayName: displayName,
-                                        avatarUrl: avatarUrl,
                                       );
                                 },
                           child: Text(
@@ -260,6 +311,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                           onPressed: isSaving
                               ? null
                               : () async {
+                                  _lastAction = _ProfileAction.saveColor;
                                   await ref
                                       .read(profileActionsProvider.notifier)
                                       .saveTerritoryColor(currentColor);
@@ -380,6 +432,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                                     );
                                     return;
                                   }
+                                  _lastAction = _ProfileAction.changePassword;
                                   await ref
                                       .read(profileActionsProvider.notifier)
                                       .changePassword(
@@ -452,6 +505,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     );
   }
 }
+
+enum _ProfileAction { saveProfile, saveColor, uploadAvatar, deleteAvatar, changePassword }
 
 class _MetricRow extends StatelessWidget {
   const _MetricRow({required this.label, required this.value});

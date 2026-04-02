@@ -434,6 +434,30 @@ abstract class AppLocalizations {
   /// **'Avatar URL'**
   String get profileAvatarUrlLabel;
 
+  /// No description provided for @profileUploadAvatarAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose photo'**
+  String get profileUploadAvatarAction;
+
+  /// No description provided for @profileDeleteAvatarAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete avatar'**
+  String get profileDeleteAvatarAction;
+
+  /// No description provided for @profileAvatarUploadSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Avatar updated'**
+  String get profileAvatarUploadSuccess;
+
+  /// No description provided for @profileAvatarDeleteSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Avatar removed'**
+  String get profileAvatarDeleteSuccess;
+
   /// No description provided for @profileEmailReadonlyHint.
   ///
   /// In en, this message translates to:
@@ -505,6 +529,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Change password'**
   String get profileChangePasswordAction;
+
+  /// No description provided for @profilePasswordChangedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Password changed successfully'**
+  String get profilePasswordChangedSuccess;
 
   /// No description provided for @profilePasswordMismatchError.
   ///

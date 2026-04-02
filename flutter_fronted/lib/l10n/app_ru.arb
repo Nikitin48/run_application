@@ -67,6 +67,10 @@
 
   "profilePersonalSection": "Персональные данные",
   "profileAvatarUrlLabel": "Ссылка на аватар",
+  "profileUploadAvatarAction": "Выбрать фото",
+  "profileDeleteAvatarAction": "Удалить аватар",
+  "profileAvatarUploadSuccess": "Аватар обновлён",
+  "profileAvatarDeleteSuccess": "Аватар удалён",
   "profileEmailReadonlyHint": "Email доступен только для чтения.",
   "profileSaveProfileAction": "Сохранить данные",
   "profileTerritoryColorSection": "Цвет территории",
@@ -79,6 +83,7 @@
   "profileNewPasswordLabel": "Новый пароль",
   "profileConfirmPasswordLabel": "Подтвердите новый пароль",
   "profileChangePasswordAction": "Сменить пароль",
+  "profilePasswordChangedSuccess": "Пароль успешно изменён",
   "profilePasswordMismatchError": "Новый пароль и подтверждение не совпадают.",
   "profilePasswordMinLengthError": "Новый пароль должен быть не короче 8 символов.",
   "profileStatsSection": "Статистика",

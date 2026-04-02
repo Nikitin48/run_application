@@ -188,6 +188,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileAvatarUrlLabel => 'Avatar URL';
 
   @override
+  String get profileUploadAvatarAction => 'Choose photo';
+
+  @override
+  String get profileDeleteAvatarAction => 'Delete avatar';
+
+  @override
+  String get profileAvatarUploadSuccess => 'Avatar updated';
+
+  @override
+  String get profileAvatarDeleteSuccess => 'Avatar removed';
+
+  @override
   String get profileEmailReadonlyHint => 'Email is read-only.';
 
   @override
@@ -222,6 +234,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profileChangePasswordAction => 'Change password';
+
+  @override
+  String get profilePasswordChangedSuccess => 'Password changed successfully';
 
   @override
   String get profilePasswordMismatchError =>

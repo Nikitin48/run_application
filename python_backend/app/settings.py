@@ -47,6 +47,10 @@ class Settings(BaseSettings):
 
     fcm_enabled: bool = False
     fcm_service_account_json_path: str = ""
+    media_root: str = "/app/media"
+    media_url_prefix: str = "/media"
+    max_avatar_size_mb: int = 5
+    allowed_avatar_mime_types: list[str] = ["image/jpeg", "image/png"]
 
 
 settings = Settings()

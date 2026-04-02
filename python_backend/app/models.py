@@ -71,6 +71,10 @@ class MeProfileOut(BaseModel):
     stats: UserStatsOut
 
 
+class AvatarOut(BaseModel):
+    avatar_url: str | None = None
+
+
 class UpdateTerritoryColorRequest(BaseModel):
     territory_color: str = Field(
         min_length=7,

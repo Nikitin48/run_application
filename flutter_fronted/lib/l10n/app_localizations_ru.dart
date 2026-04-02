@@ -188,6 +188,18 @@ class AppLocalizationsRu extends AppLocalizations {
   String get profileAvatarUrlLabel => 'Ссылка на аватар';
 
   @override
+  String get profileUploadAvatarAction => 'Выбрать фото';
+
+  @override
+  String get profileDeleteAvatarAction => 'Удалить аватар';
+
+  @override
+  String get profileAvatarUploadSuccess => 'Аватар обновлён';
+
+  @override
+  String get profileAvatarDeleteSuccess => 'Аватар удалён';
+
+  @override
   String get profileEmailReadonlyHint => 'Email доступен только для чтения.';
 
   @override
@@ -222,6 +234,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get profileChangePasswordAction => 'Сменить пароль';
+
+  @override
+  String get profilePasswordChangedSuccess => 'Пароль успешно изменён';
 
   @override
   String get profilePasswordMismatchError =>

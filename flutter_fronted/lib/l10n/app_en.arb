@@ -67,6 +67,10 @@
 
   "profilePersonalSection": "Personal data",
   "profileAvatarUrlLabel": "Avatar URL",
+  "profileUploadAvatarAction": "Choose photo",
+  "profileDeleteAvatarAction": "Delete avatar",
+  "profileAvatarUploadSuccess": "Avatar updated",
+  "profileAvatarDeleteSuccess": "Avatar removed",
   "profileEmailReadonlyHint": "Email is read-only.",
   "profileSaveProfileAction": "Save profile",
   "profileTerritoryColorSection": "Territory color",
@@ -79,6 +83,7 @@
   "profileNewPasswordLabel": "New password",
   "profileConfirmPasswordLabel": "Confirm new password",
   "profileChangePasswordAction": "Change password",
+  "profilePasswordChangedSuccess": "Password changed successfully",
   "profilePasswordMismatchError": "New password and confirmation do not match.",
   "profilePasswordMinLengthError": "New password must be at least 8 characters long.",
   "profileStatsSection": "Stats",

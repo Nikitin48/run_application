@@ -50,6 +50,8 @@
 		<string>We use your location to track your running route and capture territories on the map.</string>
 		<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 		<string>We use your location to track your running route and capture territories on the map.</string>
+		<key>NSPhotoLibraryUsageDescription</key>
+		<string>We use your photo library so you can choose an avatar image.</string>
 		<!-- Allow HTTP during development (local backend on LAN) -->
 		<key>NSAppTransportSecurity</key>
 		<dict>
