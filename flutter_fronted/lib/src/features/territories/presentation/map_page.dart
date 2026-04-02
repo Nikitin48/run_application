@@ -16,6 +16,7 @@ import '../domain/territory.dart';
 import '../../runs/application/run_tracker_controller.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/color_utils.dart';
+import '../../../core/utils/formatters.dart';
 import '../domain/value_objects/bbox.dart';
 import 'neon_map_layers.dart';
 import 'territory_map_label.dart';
@@ -181,6 +182,54 @@ class _MapPageBodyState extends ConsumerState<_MapPageBody> {
     ).showSnackBar(SnackBar(content: Text(message)));
   }
 
+  void _handleTerritoryTap(
+    LatLng point,
+    List<_TerritoryAreaTapTarget> targets,
+  ) {
+    for (final target in targets.reversed) {
+      if (_containsPoint(point, target.ring)) {
+        _showTerritoryDetails(target);
+        return;
+      }
+    }
+  }
+
+  bool _containsPoint(LatLng point, List<LatLng> ring) {
+    if (ring.length < 3) return false;
+    final x = point.longitude;
+    final y = point.latitude;
+    var inside = false;
+    for (var i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+      final xi = ring[i].longitude;
+      final yi = ring[i].latitude;
+      final xj = ring[j].longitude;
+      final yj = ring[j].latitude;
+      final intersects =
+          ((yi > y) != (yj > y)) &&
+          (x <
+              (xj - xi) *
+                      (y - yi) /
+                      ((yj - yi).abs() < 1e-12 ? 1e-12 : (yj - yi)) +
+                  xi);
+      if (intersects) inside = !inside;
+    }
+    return inside;
+  }
+
+  void _showTerritoryDetails(_TerritoryAreaTapTarget target) {
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (context) {
+        return _TerritoryOwnerBottomSheet(
+          territory: target.territory,
+          areaM2: target.areaM2,
+        );
+      },
+    );
+  }
+
   LatLng _moveByMeters(
     LatLng from, {
     required double northM,
@@ -239,6 +288,16 @@ class _MapPageBodyState extends ConsumerState<_MapPageBody> {
     final meProfileAsync = ref.watch(meProfileProvider);
     final hasUnread = ref.watch(hasUnreadNotificationsProvider);
     final runState = ref.watch(runTrackerProvider);
+    final territories = territoriesAsync.valueOrNull ?? const <Territory>[];
+    final tapTargets = <_TerritoryAreaTapTarget>[
+      for (final t in territories)
+        for (var i = 0; i < t.polygons.length; i++)
+          _TerritoryAreaTapTarget(
+            territory: t,
+            polygonIndex: i,
+            ring: t.polygons[i],
+          ),
+    ];
     final bottomBarInset = 52.0 + 10.0;
     final myTrackColor = meProfileAsync.maybeWhen(
       data: (profile) => colorFromHexOrDefault(profile.territoryColor),
@@ -373,6 +432,7 @@ class _MapPageBodyState extends ConsumerState<_MapPageBody> {
                 }
                 _scheduleBboxUpdate();
               },
+              onTap: (_, point) => _handleTerritoryTap(point, tapTargets),
             ),
             children: [
               TileLayer(
@@ -402,51 +462,43 @@ class _MapPageBodyState extends ConsumerState<_MapPageBody> {
                     ),
                   ],
                 ),
-              ...territoriesAsync.when(
-                data: (territories) {
-                  final polygons = <Polygon>[];
-                  final labelMarkers = <Marker>[];
-                  for (final t in territories) {
-                    final baseColor = colorFromHexOrDefault(
-                      t.territoryColorHex,
+              ...() {
+                final polygons = <Polygon>[];
+                final labelMarkers = <Marker>[];
+                for (final t in territories) {
+                  final baseColor = colorFromHexOrDefault(t.territoryColorHex);
+                  for (var i = 0; i < t.polygons.length; i++) {
+                    final ring = t.polygons[i];
+                    appendNeonTerritoryRing(
+                      polygons,
+                      ring: ring,
+                      baseColor: baseColor,
                     );
-                    for (var i = 0; i < t.polygons.length; i++) {
-                      final ring = t.polygons[i];
-                      appendNeonTerritoryRing(
-                        polygons,
-                        ring: ring,
-                        baseColor: baseColor,
-                      );
-                      final anchor = polygonRingCentroid(ring);
-                      if (anchor != null && t.displayName.isNotEmpty) {
-                        labelMarkers.add(
-                          Marker(
-                            key: ValueKey(
-                              'territory-label-${t.userId}-$i',
-                            ),
-                            point: anchor,
-                            width: 132,
-                            height: 28,
-                            alignment: Alignment.center,
-                            rotate: true,
-                            child: TerritoryDisplayNameMapLabel(
-                              displayName: t.displayName,
-                              territoryColorHex: t.territoryColorHex,
-                            ),
+                    final anchor = polygonRingCentroid(ring);
+                    if (anchor != null && t.displayName.isNotEmpty) {
+                      labelMarkers.add(
+                        Marker(
+                          key: ValueKey('territory-label-${t.userId}-$i'),
+                          point: anchor,
+                          width: 132,
+                          height: 28,
+                          alignment: Alignment.center,
+                          rotate: true,
+                          child: TerritoryDisplayNameMapLabel(
+                            displayName: t.displayName,
+                            territoryColorHex: t.territoryColorHex,
                           ),
-                        );
-                      }
+                        ),
+                      );
                     }
                   }
-                  return <Widget>[
-                    PolygonLayer(polygons: polygons),
-                    if (labelMarkers.isNotEmpty)
-                      MarkerLayer(markers: labelMarkers),
-                  ];
-                },
-                loading: () => const <Widget>[],
-                error: (error, stackTrace) => const <Widget>[],
-              ),
+                }
+                return <Widget>[
+                  PolygonLayer(polygons: polygons),
+                  if (labelMarkers.isNotEmpty)
+                    MarkerLayer(markers: labelMarkers),
+                ];
+              }(),
             ],
           ),
           if (_testMode)
@@ -486,9 +538,8 @@ class _MapPageBodyState extends ConsumerState<_MapPageBody> {
                       const SizedBox(height: 8),
                       Text(
                         l10n.runStartingSoon,
-                        style: Theme.of(
-                          context,
-                        ).textTheme.titleMedium?.copyWith(color: AppColors.text),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(color: AppColors.text),
                       ),
                     ],
                   ),
@@ -502,10 +553,7 @@ class _MapPageBodyState extends ConsumerState<_MapPageBody> {
 }
 
 class _TestPad extends StatelessWidget {
-  const _TestPad({
-    required this.onMoveStart,
-    required this.onMoveStop,
-  });
+  const _TestPad({required this.onMoveStart, required this.onMoveStop});
 
   final void Function({required double northM, required double eastM})
   onMoveStart;
@@ -558,7 +606,10 @@ class _TestPad extends StatelessWidget {
                 SizedBox(
                   width: 40,
                   child: Center(
-                    child: Text('10m', style: Theme.of(context).textTheme.bodySmall),
+                    child: Text(
+                      '10m',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
                   ),
                 ),
                 _HoldMoveButton(
@@ -650,11 +701,7 @@ class _HoldMoveButton extends StatelessWidget {
       onTapDown: (_) => onStart(),
       onTapUp: (_) => onStop(),
       onTapCancel: onStop,
-      child: SizedBox(
-        width: 40,
-        height: 40,
-        child: Icon(icon),
-      ),
+      child: SizedBox(width: 40, height: 40, child: Icon(icon)),
     );
   }
 }
@@ -680,4 +727,177 @@ class _TileStyle {
 
   @override
   int get hashCode => id.hashCode;
+}
+
+class _TerritoryAreaTapTarget {
+  const _TerritoryAreaTapTarget({
+    required this.territory,
+    required this.polygonIndex,
+    required this.ring,
+  });
+
+  final Territory territory;
+  final int polygonIndex;
+  final List<LatLng> ring;
+
+  double get areaM2 {
+    if (polygonIndex < territory.polygonAreasM2.length) {
+      return territory.polygonAreasM2[polygonIndex];
+    }
+    if (territory.polygons.length == 1) return territory.areaM2;
+    return 0;
+  }
+}
+
+class _TerritoryOwnerBottomSheet extends StatelessWidget {
+  const _TerritoryOwnerBottomSheet({
+    required this.territory,
+    required this.areaM2,
+  });
+
+  final Territory territory;
+  final double areaM2;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final insets = MediaQuery.viewInsetsOf(context).bottom;
+    final stats = territory.stats;
+    final sharePercent = stats.ownedAreaM2 <= 0
+        ? 0
+        : ((areaM2 / stats.ownedAreaM2) * 100).clamp(0, 100);
+    return SafeArea(
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(16, 8, 16, 16 + insets),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  CircleAvatar(
+                    radius: 22,
+                    backgroundColor: colorFromHexOrDefault(
+                      territory.territoryColorHex,
+                    ).withValues(alpha: 0.2),
+                    backgroundImage: territory.avatarUrl?.isNotEmpty == true
+                        ? NetworkImage(territory.avatarUrl!)
+                        : null,
+                    child: territory.avatarUrl?.isNotEmpty == true
+                        ? null
+                        : Icon(
+                            Icons.person,
+                            color: colorFromHexOrDefault(
+                              territory.territoryColorHex,
+                            ),
+                          ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      territory.displayName.isEmpty
+                          ? 'Игрок'
+                          : territory.displayName,
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              _StatsSectionCard(
+                title: 'Статистика данной области',
+                children: [
+                  _MetricRow(
+                    label: l10n.capturedArea,
+                    value: formatAreaM2(areaM2),
+                  ),
+                  _MetricRow(
+                    label: 'Доля от всей территории',
+                    value: '${sharePercent.toStringAsFixed(1)}%',
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              _StatsSectionCard(
+                title: 'Общая статистика пользователя',
+                children: [
+                  _MetricRow(
+                    label: l10n.profileRunsCount,
+                    value: '${stats.runCount}',
+                  ),
+                  _MetricRow(
+                    label: l10n.distance,
+                    value: formatMeters(stats.totalDistanceM),
+                  ),
+                  _MetricRow(
+                    label: l10n.elapsed,
+                    value: formatDurationMmSs(stats.totalElapsedS),
+                  ),
+                  _MetricRow(
+                    label: l10n.paused,
+                    value: formatDurationMmSs(stats.totalPausedS),
+                  ),
+                  _MetricRow(
+                    label: l10n.moving,
+                    value: formatDurationMmSs(stats.totalMovingS),
+                  ),
+                  _MetricRow(
+                    label: l10n.profileOwnedArea,
+                    value: formatAreaM2(stats.ownedAreaM2),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _StatsSectionCard extends StatelessWidget {
+  const _StatsSectionCard({required this.title, required this.children});
+
+  final String title;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(title, style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 8),
+            ...children,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MetricRow extends StatelessWidget {
+  const _MetricRow({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(label, style: Theme.of(context).textTheme.bodyMedium),
+          ),
+          Text(value, style: Theme.of(context).textTheme.titleMedium),
+        ],
+      ),
+    );
+  }
 }

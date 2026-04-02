@@ -35,6 +35,13 @@ class TerritoriesRepositoryImpl implements TerritoriesRepository {
       final areaM2 = (props['area_m2'] as num?)?.toDouble() ?? 0.0;
       final territoryColorHex =
           (props['territory_color'] as String?) ?? '#3B82F6';
+      final avatarUrl = props['avatar_url'] as String?;
+      final statsJson =
+          (props['stats'] as Map?)?.cast<String, dynamic>() ?? const {};
+      final polygonAreasRaw = (props['polygon_areas_m2'] as List?) ?? const [];
+      final polygonAreasM2 = polygonAreasRaw
+          .map((v) => (v as num).toDouble())
+          .toList(growable: false);
 
       final geometry = (f['geometry'] as Map?)?.cast<String, dynamic>();
       if (geometry == null) continue;
@@ -70,6 +77,18 @@ class TerritoriesRepositoryImpl implements TerritoriesRepository {
           areaM2: areaM2,
           territoryColorHex: territoryColorHex,
           polygons: polygons,
+          polygonAreasM2: polygonAreasM2,
+          avatarUrl: avatarUrl,
+          stats: TerritoryOwnerStats(
+            runCount: (statsJson['run_count'] as num?)?.toInt() ?? 0,
+            totalDistanceM:
+                (statsJson['total_distance_m'] as num?)?.toDouble() ?? 0,
+            totalElapsedS: (statsJson['total_elapsed_s'] as num?)?.toInt() ?? 0,
+            totalPausedS: (statsJson['total_paused_s'] as num?)?.toInt() ?? 0,
+            totalMovingS: (statsJson['total_moving_s'] as num?)?.toInt() ?? 0,
+            ownedAreaM2:
+                (statsJson['owned_area_m2'] as num?)?.toDouble() ?? areaM2,
+          ),
         ),
       );
     }

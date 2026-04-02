@@ -238,7 +238,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get profileRunsCount => 'Количество пробежек';
 
   @override
-  String get profileOwnedArea => 'Текущая площадь';
+  String get profileOwnedArea => 'Общая площадь';
 
   @override
   String get profileSaveSuccess => 'Изменения сохранены';

@@ -83,7 +83,7 @@
   "profilePasswordMinLengthError": "Новый пароль должен быть не короче 8 символов.",
   "profileStatsSection": "Статистика",
   "profileRunsCount": "Количество пробежек",
-  "profileOwnedArea": "Текущая площадь",
+  "profileOwnedArea": "Общая площадь",
   "profileSaveSuccess": "Изменения сохранены",
 
   "historiesEmpty": "Пока нет завершенных пробежек.",
