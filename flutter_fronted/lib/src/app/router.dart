@@ -10,6 +10,7 @@ import '../features/profile/presentation/profile_page.dart';
 import '../features/territories/presentation/map_page.dart';
 import '../features/auth/application/auth_controller.dart';
 import '../features/runs/presentation/run_summary_page.dart';
+import '../features/leaderboard/presentation/leaderboard_page.dart';
 
 final startupDelayPassedProvider = StateProvider<bool>((ref) => false);
 
@@ -77,6 +78,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/notifications',
         builder: (context, state) => const NotificationsPage(),
+      ),
+      GoRoute(
+        path: '/leaderboard',
+        builder: (context, state) => const LeaderboardPage(),
       ),
     ],
   );

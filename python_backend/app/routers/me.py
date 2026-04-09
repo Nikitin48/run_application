@@ -116,6 +116,12 @@ def me_profile(user_id: str = Depends(current_user_id)) -> MeProfileOut:
                     LIMIT 1
                   ) AS email,
                   u.territory_color,
+                  u.country_code,
+                  c.name AS country_name,
+                  u.region_code,
+                  r.name AS region_name,
+                  u.city_code,
+                  ct.name AS city_name,
                   u.created_at,
                   COALESCE(us.run_count, 0),
                   COALESCE(us.total_distance_m, 0),
@@ -124,6 +130,9 @@ def me_profile(user_id: str = Depends(current_user_id)) -> MeProfileOut:
                   COALESCE(us.total_moving_s, 0),
                   COALESCE(us.owned_area_m2, 0)
                 FROM users u
+                JOIN ref_countries c ON c.code = u.country_code
+                LEFT JOIN ref_regions r ON r.code = u.region_code
+                LEFT JOIN ref_cities ct ON ct.code = u.city_code
                 LEFT JOIN user_stats us ON us.user_id = u.id
                 WHERE u.id = %s
                 """,
@@ -139,14 +148,20 @@ def me_profile(user_id: str = Depends(current_user_id)) -> MeProfileOut:
                 avatar_url=row[3],
                 email=row[4],
                 territory_color=row[5] or DEFAULT_TERRITORY_COLOR,
-                created_at=row[6],
+                country_code=row[6],
+                country_name=row[7],
+                region_code=row[8],
+                region_name=row[9],
+                city_code=row[10],
+                city_name=row[11],
+                created_at=row[12],
                 stats=UserStatsOut(
-                    run_count=int(row[7]),
-                    total_distance_m=float(row[8]),
-                    total_elapsed_s=int(row[9]),
-                    total_paused_s=int(row[10]),
-                    total_moving_s=int(row[11]),
-                    owned_area_m2=float(row[12]),
+                    run_count=int(row[13]),
+                    total_distance_m=float(row[14]),
+                    total_elapsed_s=int(row[15]),
+                    total_paused_s=int(row[16]),
+                    total_moving_s=int(row[17]),
+                    owned_area_m2=float(row[18]),
                 ),
             )
 
@@ -182,13 +197,94 @@ def update_me_profile(
         with conn.cursor() as cur:
             cur.execute(
                 """
+                SELECT country_code, region_code, city_code
+                FROM users
+                WHERE id = %s
+                """,
+                (user_id,),
+            )
+            current_row = cur.fetchone()
+            if current_row is None:
+                raise HTTPException(status_code=404, detail="user not found")
+
+            current_country, current_region, current_city = current_row
+            has_country = "country_code" in payload.model_fields_set
+            has_region = "region_code" in payload.model_fields_set
+            has_city = "city_code" in payload.model_fields_set
+
+            next_country = payload.country_code if has_country else current_country
+            next_region = payload.region_code if has_region else current_region
+            next_city = payload.city_code if has_city else current_city
+
+            if has_region and next_region is None:
+                next_city = None
+            elif has_region and next_region != current_region and not has_city:
+                next_city = None
+
+            if next_country != "RU":
+                raise HTTPException(status_code=422, detail="only RU country is supported")
+
+            cur.execute(
+                """
+                SELECT 1
+                FROM ref_countries
+                WHERE code = %s AND is_active = true
+                """,
+                (next_country,),
+            )
+            if cur.fetchone() is None:
+                raise HTTPException(status_code=422, detail="invalid country_code")
+
+            if next_region is not None:
+                cur.execute(
+                    """
+                    SELECT 1
+                    FROM ref_regions
+                    WHERE code = %s
+                      AND country_code = %s
+                      AND is_active = true
+                    """,
+                    (next_region, next_country),
+                )
+                if cur.fetchone() is None:
+                    raise HTTPException(status_code=422, detail="invalid region_code")
+
+            if next_city is not None:
+                if next_region is None:
+                    raise HTTPException(status_code=422, detail="region_code is required for city_code")
+                cur.execute(
+                    """
+                    SELECT 1
+                    FROM ref_cities
+                    WHERE code = %s
+                      AND country_code = %s
+                      AND region_code = %s
+                      AND is_active = true
+                    """,
+                    (next_city, next_country, next_region),
+                )
+                if cur.fetchone() is None:
+                    raise HTTPException(status_code=422, detail="invalid city_code")
+
+            cur.execute(
+                """
                 UPDATE users
                 SET display_name = COALESCE(%s, display_name),
                     avatar_url = COALESCE(%s, avatar_url),
+                    country_code = %s,
+                    region_code = %s,
+                    city_code = %s,
                     updated_at = now()
                 WHERE id = %s
                 """,
-                (payload.display_name, payload.avatar_url, user_id),
+                (
+                    payload.display_name,
+                    payload.avatar_url,
+                    next_country,
+                    next_region,
+                    next_city,
+                    user_id,
+                ),
             )
     return me_profile(user_id=user_id)
 

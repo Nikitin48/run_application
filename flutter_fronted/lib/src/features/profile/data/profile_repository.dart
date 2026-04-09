@@ -19,10 +19,20 @@ class ProfileRepositoryImpl implements ProfileRepository {
   Future<MeProfile> updateMeProfile({
     String? displayName,
     String? avatarUrl,
+    String? countryCode,
+    String? regionCode,
+    String? cityCode,
+    bool clearRegion = false,
+    bool clearCity = false,
   }) async {
     final json = await _api.updateMeProfile(
       displayName: displayName,
       avatarUrl: avatarUrl,
+      countryCode: countryCode,
+      regionCode: regionCode,
+      cityCode: cityCode,
+      clearRegion: clearRegion,
+      clearCity: clearCity,
     );
     return _fromJson(json);
   }
@@ -63,6 +73,12 @@ class ProfileRepositoryImpl implements ProfileRepository {
       avatarUrl: json['avatar_url'] as String?,
       email: json['email'] as String?,
       territoryColor: (json['territory_color'] as String?) ?? '#3B82F6',
+      countryCode: (json['country_code'] as String?) ?? 'RU',
+      countryName: (json['country_name'] as String?) ?? 'Россия',
+      regionCode: json['region_code'] as String?,
+      regionName: json['region_name'] as String?,
+      cityCode: json['city_code'] as String?,
+      cityName: json['city_name'] as String?,
       createdAt:
           DateTime.tryParse((json['created_at'] as String?) ?? '') ??
           DateTime.now(),

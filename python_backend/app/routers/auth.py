@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ipaddress
 import time
 
 from fastapi import APIRouter, HTTPException, Request, status
@@ -18,6 +19,16 @@ from ..settings import settings
 
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
+
+def _safe_client_ip(request: Request) -> str | None:
+    raw = request.client.host if request.client else None
+    if not raw:
+        return None
+    try:
+        return str(ipaddress.ip_address(raw))
+    except ValueError:
+        return None
 
 
 @router.post("/register", response_model=AuthResponse)
@@ -76,7 +87,7 @@ def register(payload: RegisterRequest, request: Request) -> AuthResponse:
                     refresh_hash,
                     refresh_expires_at,
                     request.headers.get("user-agent"),
-                    request.client.host if request.client else None,
+                    _safe_client_ip(request),
                 ),
             )
 
@@ -139,7 +150,7 @@ def login(payload: LoginRequest, request: Request) -> AuthResponse:
                     refresh_hash,
                     refresh_expires_at,
                     request.headers.get("user-agent"),
-                    request.client.host if request.client else None,
+                    _safe_client_ip(request),
                 ),
             )
 
@@ -198,7 +209,7 @@ def refresh(payload: RefreshRequest, request: Request) -> AuthResponse:
                     new_hash,
                     new_expires_at,
                     request.headers.get("user-agent"),
-                    request.client.host if request.client else None,
+                    _safe_client_ip(request),
                 ),
             )
 

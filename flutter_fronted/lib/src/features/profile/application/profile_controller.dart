@@ -52,12 +52,22 @@ class ProfileActionsController extends Notifier<AsyncValue<void>> {
   Future<void> saveProfile({
     required String displayName,
     String? avatarUrl,
+    String? countryCode,
+    String? regionCode,
+    String? cityCode,
+    bool clearRegion = false,
+    bool clearCity = false,
   }) async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
       await ref.read(updateMeProfileUseCaseProvider)(
         displayName: displayName,
         avatarUrl: avatarUrl,
+        countryCode: countryCode,
+        regionCode: regionCode,
+        cityCode: cityCode,
+        clearRegion: clearRegion,
+        clearCity: clearCity,
       );
       ref.invalidate(meProfileProvider);
     });

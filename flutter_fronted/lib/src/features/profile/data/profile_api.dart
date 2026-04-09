@@ -14,10 +14,29 @@ class ProfileApi {
   Future<Map<String, dynamic>> updateMeProfile({
     String? displayName,
     String? avatarUrl,
+    String? countryCode,
+    String? regionCode,
+    String? cityCode,
+    bool clearRegion = false,
+    bool clearCity = false,
   }) async {
     final payload = <String, dynamic>{};
     if (displayName != null) payload['display_name'] = displayName;
     if (avatarUrl != null) payload['avatar_url'] = avatarUrl;
+    if (countryCode != null) payload['country_code'] = countryCode;
+    if (clearRegion) {
+      payload['region_code'] = null;
+      payload['city_code'] = null;
+    } else if (regionCode != null) {
+      payload['region_code'] = regionCode;
+    }
+    if (!clearRegion) {
+      if (clearCity) {
+        payload['city_code'] = null;
+      } else if (cityCode != null) {
+        payload['city_code'] = cityCode;
+      }
+    }
     final res = await _dio.patch<Map<String, dynamic>>(
       '/me/profile',
       data: payload,

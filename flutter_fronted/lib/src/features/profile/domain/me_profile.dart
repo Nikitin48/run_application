@@ -24,6 +24,12 @@ class MeProfile {
     required this.avatarUrl,
     required this.email,
     required this.territoryColor,
+    required this.countryCode,
+    required this.countryName,
+    required this.regionCode,
+    required this.regionName,
+    required this.cityCode,
+    required this.cityName,
     required this.createdAt,
     required this.stats,
   });
@@ -34,6 +40,12 @@ class MeProfile {
   final String? avatarUrl;
   final String? email;
   final String territoryColor;
+  final String countryCode;
+  final String countryName;
+  final String? regionCode;
+  final String? regionName;
+  final String? cityCode;
+  final String? cityName;
   final DateTime createdAt;
   final MeProfileStats stats;
 }

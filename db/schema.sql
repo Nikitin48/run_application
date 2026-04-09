@@ -12,17 +12,52 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 BEGIN;
 
+-- Reference locations (Russia-focused leaderboard scopes).
+CREATE TABLE IF NOT EXISTS ref_countries (
+  code text PRIMARY KEY,
+  name text NOT NULL,
+  is_active boolean NOT NULL DEFAULT true
+);
+
+CREATE TABLE IF NOT EXISTS ref_regions (
+  code text PRIMARY KEY,
+  country_code text NOT NULL REFERENCES ref_countries(code) ON DELETE RESTRICT,
+  name text NOT NULL,
+  normalized_name text NOT NULL,
+  is_active boolean NOT NULL DEFAULT true
+);
+
+CREATE TABLE IF NOT EXISTS ref_cities (
+  code text PRIMARY KEY,
+  country_code text NOT NULL REFERENCES ref_countries(code) ON DELETE RESTRICT,
+  region_code text NOT NULL REFERENCES ref_regions(code) ON DELETE RESTRICT,
+  name text NOT NULL,
+  normalized_name text NOT NULL,
+  is_active boolean NOT NULL DEFAULT true
+);
+
+CREATE INDEX IF NOT EXISTS ref_regions_lookup_ix
+  ON ref_regions(country_code, normalized_name);
+CREATE INDEX IF NOT EXISTS ref_cities_lookup_ix
+  ON ref_cities(country_code, region_code, normalized_name);
+
 -- Users
 CREATE TABLE IF NOT EXISTS users (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   username text NOT NULL UNIQUE,
   display_name text NOT NULL,
+  country_code text NOT NULL DEFAULT 'RU' REFERENCES ref_countries(code) ON DELETE RESTRICT,
+  region_code text REFERENCES ref_regions(code) ON DELETE RESTRICT,
+  city_code text REFERENCES ref_cities(code) ON DELETE RESTRICT,
   avatar_url text,
   territory_color text NOT NULL DEFAULT '#3B82F6' CHECK (territory_color ~ '^#[0-9A-Fa-f]{6}$'),
   is_banned boolean NOT NULL DEFAULT false,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
+
+CREATE INDEX IF NOT EXISTS users_location_ix
+  ON users(country_code, region_code, city_code);
 
 -- Auth identities (email/phone). Password hash stored as text (algorithm handled by backend).
 CREATE TABLE IF NOT EXISTS auth_identities (
@@ -164,6 +199,12 @@ CREATE TABLE IF NOT EXISTS user_push_tokens (
 
 CREATE INDEX IF NOT EXISTS user_push_tokens_user_ix
   ON user_push_tokens(user_id, updated_at DESC);
+
+-- Minimal bootstrap data for Russia-only MVP.
+INSERT INTO ref_countries (code, name)
+VALUES ('RU', 'Россия')
+ON CONFLICT (code) DO UPDATE
+SET name = EXCLUDED.name;
 
 COMMIT;
 

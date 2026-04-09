@@ -4,7 +4,15 @@ import '../me_profile.dart';
 
 abstract class ProfileRepository {
   Future<MeProfile> getMeProfile();
-  Future<MeProfile> updateMeProfile({String? displayName, String? avatarUrl});
+  Future<MeProfile> updateMeProfile({
+    String? displayName,
+    String? avatarUrl,
+    String? countryCode,
+    String? regionCode,
+    String? cityCode,
+    bool clearRegion = false,
+    bool clearCity = false,
+  });
   Future<String> updateTerritoryColor(String territoryColor);
   Future<String?> uploadAvatar(XFile file);
   Future<void> deleteAvatar();

@@ -2,6 +2,8 @@ from fastapi import FastAPI
 
 from .settings import settings
 from .routers import auth as auth_router
+from .routers import leaderboard as leaderboard_router
+from .routers import locations as locations_router
 from .routers import me as me_router
 from .routers import notifications as notifications_router
 from .routers import push_tokens as push_tokens_router
@@ -24,6 +26,8 @@ app = FastAPI(
         {"name": "territories", "description": "Read-only territories GeoJSON by bbox."},
         {"name": "notifications", "description": "Last notification about stolen territory (requires Bearer token)."},
         {"name": "push-tokens", "description": "Register/remove device push tokens (requires Bearer token)."},
+        {"name": "locations", "description": "Reference locations for country/region/city profile selection."},
+        {"name": "leaderboard", "description": "Leaderboard by city/region/country and metric."},
     ],
 )
 
@@ -33,6 +37,8 @@ app.include_router(runs_router.router)
 app.include_router(territories_router.router)
 app.include_router(notifications_router.router)
 app.include_router(push_tokens_router.router)
+app.include_router(locations_router.router)
+app.include_router(leaderboard_router.router)
 
 
 @app.on_event("startup")

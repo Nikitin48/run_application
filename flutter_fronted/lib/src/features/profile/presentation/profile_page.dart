@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:run_application/l10n/app_localizations.dart';
 
@@ -9,6 +12,8 @@ import '../../../core/utils/color_utils.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/formatters.dart';
 import '../../auth/application/auth_controller.dart';
+import '../../locations/domain/location_models.dart';
+import '../../locations/application/locations_provider.dart';
 import '../application/profile_controller.dart';
 import '../domain/me_profile.dart';
 
@@ -31,6 +36,14 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   bool _newPasswordVisible = false;
   bool _confirmPasswordVisible = false;
   String? _selectedTerritoryColor;
+  String _countryCode = 'RU';
+  String _countryName = 'Россия';
+  String? _regionCode;
+  String? _regionName;
+  String? _cityCode;
+  String? _cityName;
+  bool _clearRegionOnSave = false;
+  bool _clearCityOnSave = false;
   _ProfileAction? _lastAction;
 
   @override
@@ -59,8 +72,60 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       _initialized = true;
       _displayNameController.text = profile.displayName;
       _selectedTerritoryColor = profile.territoryColor.toUpperCase();
+      _countryCode = profile.countryCode;
+      _countryName = profile.countryName;
+      _regionCode = profile.regionCode;
+      _regionName = profile.regionName;
+      _cityCode = profile.cityCode;
+      _cityName = profile.cityName;
     }
     _emailController.text = profile.email ?? '';
+  }
+
+  Future<RegionItem?> _pickRegion() async {
+    return showModalBottomSheet<RegionItem>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) {
+        return _PaginatedPickerSheet<RegionItem>(
+          title: 'Выберите область',
+          searchHint: 'Начните вводить область...',
+          itemLabel: (item) => item.name,
+          loadPage: ({required query, required limit, required offset}) {
+            return ref.read(searchRegionsUseCaseProvider)(
+              countryCode: _countryCode,
+              query: query,
+              limit: limit,
+              offset: offset,
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<CityItem?> _pickCity() async {
+    if (_regionCode == null) return null;
+    return showModalBottomSheet<CityItem>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) {
+        return _PaginatedPickerSheet<CityItem>(
+          title: 'Выберите город',
+          searchHint: 'Начните вводить город...',
+          itemLabel: (item) => item.name,
+          loadPage: ({required query, required limit, required offset}) {
+            return ref.read(searchCitiesUseCaseProvider)(
+              countryCode: _countryCode,
+              regionCode: _regionCode!,
+              query: query,
+              limit: limit,
+              offset: offset,
+            );
+          },
+        );
+      },
+    );
   }
 
   Future<void> _pickAndUploadAvatar() async {
@@ -150,6 +215,11 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       appBar: AppBar(
         title: Text(l10n.profileTitle),
         actions: [
+          IconButton(
+            tooltip: 'Рейтинг',
+            onPressed: () => context.push('/leaderboard'),
+            icon: const Icon(Icons.leaderboard_outlined),
+          ),
           TextButton(
             onPressed: () => ref.read(authControllerProvider.notifier).logout(),
             child: Text(l10n.logout),
@@ -183,7 +253,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                         Center(
                           child: CircleAvatar(
                             radius: 42,
-                            backgroundImage: (profile.avatarUrl?.isNotEmpty ?? false)
+                            backgroundImage:
+                                (profile.avatarUrl?.isNotEmpty ?? false)
                                 ? NetworkImage(profile.avatarUrl!)
                                 : null,
                             child: (profile.avatarUrl?.isNotEmpty ?? false)
@@ -196,7 +267,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                           children: [
                             Expanded(
                               child: OutlinedButton.icon(
-                                onPressed: isSaving ? null : _pickAndUploadAvatar,
+                                onPressed: isSaving
+                                    ? null
+                                    : _pickAndUploadAvatar,
                                 icon: const Icon(Icons.photo_library_outlined),
                                 label: Text(l10n.profileUploadAvatarAction),
                               ),
@@ -207,9 +280,12 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                                 onPressed: isSaving || profile.avatarUrl == null
                                     ? null
                                     : () async {
-                                        _lastAction = _ProfileAction.deleteAvatar;
+                                        _lastAction =
+                                            _ProfileAction.deleteAvatar;
                                         await ref
-                                            .read(profileActionsProvider.notifier)
+                                            .read(
+                                              profileActionsProvider.notifier,
+                                            )
                                             .deleteAvatar();
                                       },
                                 icon: const Icon(Icons.delete_outline),
@@ -237,8 +313,61 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                             prefixIcon: const Icon(Icons.alternate_email),
                           ),
                         ),
+                        const SizedBox(height: 14),
+                        Text(
+                          'Локация для рейтинга',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
                         const SizedBox(height: 8),
-
+                        ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          title: const Text('Страна'),
+                          subtitle: Text(_countryName),
+                          leading: const Icon(Icons.flag_outlined),
+                        ),
+                        ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: const Icon(Icons.map_outlined),
+                          title: const Text('Область'),
+                          subtitle: Text(_regionName ?? 'Не выбрано'),
+                          trailing: OutlinedButton(
+                            onPressed: isSaving
+                                ? null
+                                : () async {
+                                    final region = await _pickRegion();
+                                    if (region == null) return;
+                                    setState(() {
+                                      _regionCode = region.code;
+                                      _regionName = region.name;
+                                      _cityCode = null;
+                                      _cityName = null;
+                                      _clearRegionOnSave = false;
+                                      _clearCityOnSave = false;
+                                    });
+                                  },
+                            child: const Text('Выбрать'),
+                          ),
+                        ),
+                        ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: const Icon(Icons.location_city_outlined),
+                          title: const Text('Город'),
+                          subtitle: Text(_cityName ?? 'Не выбрано'),
+                          trailing: OutlinedButton(
+                            onPressed: isSaving || _regionCode == null
+                                ? null
+                                : () async {
+                                    final city = await _pickCity();
+                                    if (city == null) return;
+                                    setState(() {
+                                      _cityCode = city.code;
+                                      _cityName = city.name;
+                                      _clearCityOnSave = false;
+                                    });
+                                  },
+                            child: const Text('Выбрать'),
+                          ),
+                        ),
                         const SizedBox(height: 14),
                         FilledButton(
                           onPressed: isSaving
@@ -252,7 +381,14 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                                       .read(profileActionsProvider.notifier)
                                       .saveProfile(
                                         displayName: displayName,
+                                        countryCode: _countryCode,
+                                        regionCode: _regionCode,
+                                        cityCode: _cityCode,
+                                        clearRegion: _clearRegionOnSave,
+                                        clearCity: _clearCityOnSave,
                                       );
+                                  _clearRegionOnSave = false;
+                                  _clearCityOnSave = false;
                                 },
                           child: Text(
                             isSaving
@@ -495,6 +631,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                     ),
                   ),
                 ),
+                const SizedBox(height: 40),
               ],
             ),
           );
@@ -506,7 +643,195 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   }
 }
 
-enum _ProfileAction { saveProfile, saveColor, uploadAvatar, deleteAvatar, changePassword }
+typedef _PagedLoader<T> =
+    Future<List<T>> Function({
+      required String query,
+      required int limit,
+      required int offset,
+    });
+
+class _PaginatedPickerSheet<T> extends StatefulWidget {
+  const _PaginatedPickerSheet({
+    required this.title,
+    required this.searchHint,
+    required this.itemLabel,
+    required this.loadPage,
+  });
+
+  final String title;
+  final String searchHint;
+  final String Function(T item) itemLabel;
+  final _PagedLoader<T> loadPage;
+
+  @override
+  State<_PaginatedPickerSheet<T>> createState() =>
+      _PaginatedPickerSheetState<T>();
+}
+
+class _PaginatedPickerSheetState<T> extends State<_PaginatedPickerSheet<T>> {
+  static const _pageSize = 30;
+  final _items = <T>[];
+  final _scrollController = ScrollController();
+  final _searchController = TextEditingController();
+
+  Timer? _debounce;
+  bool _loading = false;
+  bool _hasMore = true;
+  int _offset = 0;
+  String _query = '';
+  Object? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+    _load(reset: true);
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _scrollController.dispose();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (!_hasMore || _loading) return;
+    if (_scrollController.position.pixels <
+        _scrollController.position.maxScrollExtent - 200) {
+      return;
+    }
+    _load();
+  }
+
+  Future<void> _load({bool reset = false}) async {
+    if (_loading) return;
+    if (!reset && !_hasMore) return;
+    setState(() {
+      _loading = true;
+      _error = null;
+      if (reset) {
+        _offset = 0;
+        _hasMore = true;
+        _items.clear();
+      }
+    });
+
+    try {
+      final page = await widget.loadPage(
+        query: _query,
+        limit: _pageSize,
+        offset: _offset,
+      );
+      if (!mounted) return;
+      setState(() {
+        _items.addAll(page);
+        _offset += page.length;
+        _hasMore = page.length == _pageSize;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = e;
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _loading = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final height = MediaQuery.of(context).size.height * 0.82;
+    return SafeArea(
+      child: SizedBox(
+        height: height,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
+          child: Column(
+            children: [
+              Container(
+                width: 42,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).dividerColor,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                widget.title,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: _searchController,
+                autofocus: true,
+                decoration: InputDecoration(
+                  hintText: widget.searchHint,
+                  prefixIcon: const Icon(Icons.search),
+                ),
+                onChanged: (value) {
+                  _debounce?.cancel();
+                  _debounce = Timer(const Duration(milliseconds: 300), () {
+                    _query = value.trim();
+                    _load(reset: true);
+                  });
+                },
+              ),
+              const SizedBox(height: 10),
+              Expanded(child: _buildList(context)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildList(BuildContext context) {
+    if (_error != null && _items.isEmpty) {
+      return Center(child: Text(_error.toString()));
+    }
+    if (_loading && _items.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_items.isEmpty) {
+      return const Center(child: Text('Ничего не найдено'));
+    }
+    final itemCount = _items.length + (_loading || _hasMore ? 1 : 0);
+    return ListView.separated(
+      controller: _scrollController,
+      itemCount: itemCount,
+      separatorBuilder: (context, index) => const Divider(height: 1),
+      itemBuilder: (context, index) {
+        if (index >= _items.length) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 14),
+            child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+          );
+        }
+        final item = _items[index];
+        return ListTile(
+          dense: true,
+          title: Text(widget.itemLabel(item)),
+          onTap: () => Navigator.of(context).pop(item),
+        );
+      },
+    );
+  }
+}
+
+enum _ProfileAction {
+  saveProfile,
+  saveColor,
+  uploadAvatar,
+  deleteAvatar,
+  changePassword,
+}
 
 class _MetricRow extends StatelessWidget {
   const _MetricRow({required this.label, required this.value});

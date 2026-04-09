@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, EmailStr, Field, model_validator
 
@@ -67,6 +68,12 @@ class MeProfileOut(BaseModel):
     avatar_url: str | None = None
     email: EmailStr | None = None
     territory_color: str
+    country_code: str
+    country_name: str
+    region_code: str | None = None
+    region_name: str | None = None
+    city_code: str | None = None
+    city_name: str | None = None
     created_at: datetime
     stats: UserStatsOut
 
@@ -90,11 +97,20 @@ class TerritoryColorOut(BaseModel):
 class UpdateMeProfileRequest(BaseModel):
     display_name: str | None = Field(default=None, min_length=1, max_length=80)
     avatar_url: str | None = Field(default=None, max_length=500)
+    country_code: str | None = Field(default=None, min_length=2, max_length=8)
+    region_code: str | None = Field(default=None, min_length=2, max_length=32)
+    city_code: str | None = Field(default=None, min_length=2, max_length=32)
 
     @model_validator(mode="after")
     def validate_any_field_provided(self) -> "UpdateMeProfileRequest":
-        if self.display_name is None and self.avatar_url is None:
+        if not self.model_fields_set:
             raise ValueError("at least one field must be provided")
+        return self
+
+    @model_validator(mode="after")
+    def validate_location_hierarchy(self) -> "UpdateMeProfileRequest":
+        if self.city_code is not None and self.region_code is None:
+            raise ValueError("region_code is required when city_code is set")
         return self
 
 
@@ -182,4 +198,47 @@ class PushTokenUpsertRequest(BaseModel):
 
 class PushTokenDeleteRequest(BaseModel):
     token: str = Field(min_length=16, max_length=4096)
+
+
+LeaderboardScope = Literal["city", "region", "country"]
+LeaderboardMetric = Literal["area", "distance"]
+
+
+class LeaderboardEntryOut(BaseModel):
+    rank: int
+    user_id: str
+    display_name: str
+    avatar_url: str | None = None
+    country_code: str
+    region_code: str | None = None
+    city_code: str | None = None
+    total_distance_m: float
+    owned_area_m2: float
+    score: float
+
+
+class LeaderboardResponseOut(BaseModel):
+    scope: LeaderboardScope
+    metric: LeaderboardMetric
+    entries: list[LeaderboardEntryOut]
+    my_rank: int | None = None
+    my_score: float | None = None
+
+
+class LocationItemOut(BaseModel):
+    code: str
+    name: str
+
+
+class CountryItemOut(LocationItemOut):
+    pass
+
+
+class RegionItemOut(LocationItemOut):
+    country_code: str
+
+
+class CityItemOut(LocationItemOut):
+    country_code: str
+    region_code: str
 
