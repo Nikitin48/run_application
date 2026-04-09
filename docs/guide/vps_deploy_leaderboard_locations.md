@@ -84,26 +84,43 @@ docker compose -f docker-compose.prod.yml exec -T db sh -lc \
 
 ## 5) Импорт справочника регионов/городов
 
-### Вариант A: импорт готового `final_cities.csv` (формат `region;city`)
+Важно: текущий Docker-образ backend содержит только каталог `app/`.
+Скрипты из `python_backend/scripts` в контейнере отсутствуют, поэтому импорт выполняем через временное копирование скрипта и CSV в running backend-контейнер.
+
+### Импорт `final_cities.csv` (рекомендуемый путь)
 
 ```bash
 cd /opt/run_application
+
+# 1) Узнать id контейнера backend
+BACKEND_CID=$(docker compose -f docker-compose.prod.yml ps -q backend)
+echo "$BACKEND_CID"
+
+# 2) Скопировать скрипт и датасет в контейнер
+docker cp python_backend/scripts/import_ru_locations.py "$BACKEND_CID:/tmp/import_ru_locations.py"
+docker cp data_cities/final_cities.csv "$BACKEND_CID:/tmp/final_cities.csv"
+
+# 3) Выполнить импорт внутри контейнера (там корректный DATABASE_URL -> db:5432)
 docker compose -f docker-compose.prod.yml exec -T backend sh -lc \
-  'python scripts/import_ru_locations.py \
-    --dataset-csv /opt/run_application/data_cities/final_cities.csv \
+  'python /tmp/import_ru_locations.py \
+    --dataset-csv /tmp/final_cities.csv \
     --replace-all'
 ```
 
-Важно: путь к файлу должен быть доступен внутри backend-контейнера.
-
-### Вариант B: импорт из `ru_regions.csv` + `ru_cities.csv`
+### Альтернатива: импорт `ru_regions.csv` + `ru_cities.csv`
 
 ```bash
 cd /opt/run_application
+BACKEND_CID=$(docker compose -f docker-compose.prod.yml ps -q backend)
+
+docker cp python_backend/scripts/import_ru_locations.py "$BACKEND_CID:/tmp/import_ru_locations.py"
+docker cp python_backend/data/ru_regions.csv "$BACKEND_CID:/tmp/ru_regions.csv"
+docker cp python_backend/data/ru_cities.csv "$BACKEND_CID:/tmp/ru_cities.csv"
+
 docker compose -f docker-compose.prod.yml exec -T backend sh -lc \
-  'python scripts/import_ru_locations.py \
-    --regions-csv data/ru_regions.csv \
-    --cities-csv data/ru_cities.csv \
+  'python /tmp/import_ru_locations.py \
+    --regions-csv /tmp/ru_regions.csv \
+    --cities-csv /tmp/ru_cities.csv \
     --replace-all'
 ```
 
