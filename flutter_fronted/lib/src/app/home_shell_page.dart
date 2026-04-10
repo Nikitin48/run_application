@@ -1,7 +1,9 @@
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:run_application/l10n/app_localizations.dart';
 
@@ -36,6 +38,23 @@ class _HomeShellPageState extends ConsumerState<HomeShellPage> {
     if (finish != null) {
       context.push('/run-summary');
     }
+  }
+
+  Future<void> _showAlwaysLocationHintIfNeededBeforeStart() async {
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) return;
+    try {
+      final perm = await Geolocator.checkPermission();
+      if (perm == LocationPermission.always) return;
+    } catch (_) {
+      return;
+    }
+    if (!mounted) return;
+    await showModalBottomSheet<void>(
+      context: context,
+      useRootNavigator: true,
+      showDragHandle: true,
+      builder: (context) => const _AlwaysLocationPermissionHintSheet(),
+    );
   }
 
   @override
@@ -146,6 +165,8 @@ class _HomeShellPageState extends ConsumerState<HomeShellPage> {
                           return;
                         }
                         if (runPhase == RunPhase.idle) {
+                          await _showAlwaysLocationHintIfNeededBeforeStart();
+                          if (!mounted) return;
                           await ref.read(runTrackerProvider.notifier).start();
                           if (!mounted) return;
                           final phaseAfterStart = ref
@@ -239,6 +260,45 @@ class _HomeShellPageState extends ConsumerState<HomeShellPage> {
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AlwaysLocationPermissionHintSheet extends StatelessWidget {
+  const _AlwaysLocationPermissionHintSheet();
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Для стабильной работы GPS в фоне включите разрешение "Разрешить всегда".',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Без этого на некоторых устройствах маршрут при свернутом приложении или выключенном экране может записываться с пропусками.',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 14),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: () async {
+                  await Geolocator.openAppSettings();
+                },
+                icon: const Icon(Icons.settings_outlined),
+                label: const Text('Открыть настройки'),
+              ),
+            ),
+          ],
         ),
       ),
     );

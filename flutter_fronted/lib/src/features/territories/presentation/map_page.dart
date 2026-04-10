@@ -76,7 +76,6 @@ class _MapPageBodyState extends ConsumerState<_MapPageBody> {
   StreamSubscription<Position>? _mapPosSub;
   _TileStyle _selectedTileStyle = _tileStyles[2];
   static const double _bboxEpsilon = 0.00001;
-
   @override
   void initState() {
     super.initState();

@@ -177,9 +177,11 @@ void bgOnStart(ServiceInstance service) async {
     buffer.clear();
 
     posSub = Geolocator.getPositionStream(
-      locationSettings: const LocationSettings(
+      locationSettings: AndroidSettings(
         accuracy: LocationAccuracy.bestForNavigation,
         distanceFilter: 3,
+        intervalDuration: const Duration(seconds: 2),
+        forceLocationManager: true,
       ),
     ).listen((pos) {
       final data = <String, dynamic>{

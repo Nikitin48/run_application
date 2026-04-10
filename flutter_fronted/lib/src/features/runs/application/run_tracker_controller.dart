@@ -90,6 +90,8 @@ class RunTrackerController extends Notifier<RunTrackerState> {
   StreamSubscription<BgLocationPoint>? _bgSub;
   StreamSubscription<RunNotificationAction>? _runActionSub;
   AppLifecycleListener? _lifecycleListener;
+  bool _isUsingBackgroundForCurrentRun = false;
+  int? _lastAcceptedPointTimestampMs;
 
   bool get _useBackgroundService =>
       !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
@@ -151,7 +153,7 @@ class RunTrackerController extends Notifier<RunTrackerState> {
       return;
     }
 
-    if (_useBackgroundService) {
+    if (_isUsingBackgroundForCurrentRun) {
       BackgroundLocationService.instance.flushBuffer();
     }
 
@@ -189,6 +191,16 @@ class RunTrackerController extends Notifier<RunTrackerState> {
       return;
     }
 
+    // Android background service needs "Allow all the time".
+    final canUseBackgroundService =
+        !_useBackgroundService || perm == LocationPermission.always;
+    if (_useBackgroundService && !canUseBackgroundService) {
+      state = state.copyWith(
+        error:
+            'Background GPS disabled: grant "Allow all the time" for location.',
+      );
+    }
+
     state = const RunTrackerState.idle().copyWith(
       countdownSeconds: 3,
       error: null,
@@ -213,8 +225,10 @@ class RunTrackerController extends Notifier<RunTrackerState> {
 
     await _posSub?.cancel();
     await _bgSub?.cancel();
+    _lastAcceptedPointTimestampMs = null;
 
-    if (_useBackgroundService) {
+    _isUsingBackgroundForCurrentRun = canUseBackgroundService;
+    if (_isUsingBackgroundForCurrentRun) {
       await _startAndroidBackgroundTracking();
     } else {
       _startDirectTracking();
@@ -279,6 +293,7 @@ class RunTrackerController extends Notifier<RunTrackerState> {
     if (accuracy.isFinite && accuracy > 65) return;
 
     final ts = DateTime.fromMillisecondsSinceEpoch(pt.timestampMs, isUtc: true);
+    if (!_isPointTimestampNew(ts)) return;
     final last = state.points.isEmpty ? null : state.points.last;
     if (last != null) {
       final dtMs = ts.difference(last.ts).inMilliseconds.abs();
@@ -297,6 +312,7 @@ class RunTrackerController extends Notifier<RunTrackerState> {
       speedMps: pt.speed,
       altitudeM: pt.altitude,
     );
+    _rememberPointTimestamp(ts);
     state = state.copyWith(points: [...state.points, point], error: null);
   }
 
@@ -312,6 +328,7 @@ class RunTrackerController extends Notifier<RunTrackerState> {
       pos.timestamp.millisecondsSinceEpoch,
       isUtc: true,
     );
+    if (!_isPointTimestampNew(ts)) return;
     final last = state.points.isEmpty ? null : state.points.last;
     if (last != null) {
       final dtMs = ts.difference(last.ts).inMilliseconds.abs();
@@ -333,6 +350,7 @@ class RunTrackerController extends Notifier<RunTrackerState> {
       speedMps: pos.speed,
       altitudeM: pos.altitude,
     );
+    _rememberPointTimestamp(ts);
     state = state.copyWith(points: [...state.points, point], error: null);
   }
 
@@ -423,9 +441,11 @@ class RunTrackerController extends Notifier<RunTrackerState> {
     _posSub = null;
     _bgSub = null;
 
-    if (_useBackgroundService) {
+    if (_isUsingBackgroundForCurrentRun) {
       await BackgroundLocationService.instance.stopTracking();
     }
+    _isUsingBackgroundForCurrentRun = false;
+    _lastAcceptedPointTimestampMs = null;
 
     await ref
         .read(localNotificationsServiceProvider)
@@ -438,5 +458,18 @@ class RunTrackerController extends Notifier<RunTrackerState> {
     _lifecycleListener?.dispose();
     _runActionSub = null;
     _lifecycleListener = null;
+  }
+
+  bool _isPointTimestampNew(DateTime ts) {
+    final tsMs = ts.millisecondsSinceEpoch;
+    final lastTsMs = _lastAcceptedPointTimestampMs;
+    if (lastTsMs != null && tsMs <= lastTsMs) {
+      return false;
+    }
+    return true;
+  }
+
+  void _rememberPointTimestamp(DateTime ts) {
+    _lastAcceptedPointTimestampMs = ts.millisecondsSinceEpoch;
   }
 }
