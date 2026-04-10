@@ -52,6 +52,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Password must be at least 8 characters.';
 
   @override
+  String get authInvalidCredentials => 'Invalid email or password';
+
+  @override
   String get mapTitle => 'Map';
 
   @override

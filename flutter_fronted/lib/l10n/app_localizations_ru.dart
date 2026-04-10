@@ -52,6 +52,9 @@ class AppLocalizationsRu extends AppLocalizations {
       'Пароль должен быть не короче 8 символов.';
 
   @override
+  String get authInvalidCredentials => 'Неверные учетные данные';
+
+  @override
   String get mapTitle => 'Карта';
 
   @override

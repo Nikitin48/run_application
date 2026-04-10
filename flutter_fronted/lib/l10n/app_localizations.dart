@@ -182,6 +182,12 @@ abstract class AppLocalizations {
   /// **'Password must be at least 8 characters.'**
   String get authValidationPasswordMinLength;
 
+  /// No description provided for @authInvalidCredentials.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid email or password'**
+  String get authInvalidCredentials;
+
   /// No description provided for @mapTitle.
   ///
   /// In en, this message translates to:

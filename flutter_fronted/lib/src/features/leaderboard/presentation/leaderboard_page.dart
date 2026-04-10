@@ -100,7 +100,9 @@ class _LeaderboardPageState extends ConsumerState<LeaderboardPage> {
           Expanded(
             child: RefreshIndicator(
               onRefresh: () async {
-                await ref.read(leaderboardPagingProvider.notifier).refreshList();
+                await ref
+                    .read(leaderboardPagingProvider.notifier)
+                    .refreshList();
               },
               child: leaderboardAsync.when(
                 data: (data) {
@@ -111,7 +113,9 @@ class _LeaderboardPageState extends ConsumerState<LeaderboardPage> {
                         Card(
                           child: Padding(
                             padding: EdgeInsets.all(16),
-                            child: Text('Пока нет данных рейтинга для этого фильтра'),
+                            child: Text(
+                              'Пока нет данных рейтинга для этого фильтра',
+                            ),
                           ),
                         ),
                       ],
@@ -120,12 +124,15 @@ class _LeaderboardPageState extends ConsumerState<LeaderboardPage> {
                   return ListView.builder(
                     controller: _scrollController,
                     padding: const EdgeInsets.fromLTRB(12, 4, 12, 16),
-                    itemCount: data.entries.length + 1 + (data.isLoadingMore ? 1 : 0),
+                    itemCount:
+                        data.entries.length + 1 + (data.isLoadingMore ? 1 : 0),
                     itemBuilder: (context, index) {
                       if (index == data.entries.length + 1) {
                         return const Padding(
                           padding: EdgeInsets.symmetric(vertical: 16),
-                          child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                          child: Center(
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
                         );
                       }
                       if (index == 0) {
@@ -137,16 +144,13 @@ class _LeaderboardPageState extends ConsumerState<LeaderboardPage> {
                             child: Text(
                               rank == null || score == null
                                   ? 'Ваш ранг пока не определен'
-                                  : 'Ваш ранг: #$rank • ${_formatScore(data.metric, score)}',
+                                  : 'Ваш ранг: №$rank • ${_formatScore(data.metric, score)}',
                             ),
                           ),
                         );
                       }
                       final entry = data.entries[index - 1];
-                      return _LeaderboardRow(
-                        entry: entry,
-                        metric: data.metric,
-                      );
+                      return _LeaderboardRow(entry: entry, metric: data.metric);
                     },
                   );
                 },
@@ -172,10 +176,7 @@ class _LeaderboardPageState extends ConsumerState<LeaderboardPage> {
 }
 
 class _LeaderboardRow extends StatelessWidget {
-  const _LeaderboardRow({
-    required this.entry,
-    required this.metric,
-  });
+  const _LeaderboardRow({required this.entry, required this.metric});
 
   final LeaderboardEntry entry;
   final LeaderboardMetric metric;
@@ -193,7 +194,7 @@ class _LeaderboardRow extends StatelessWidget {
               ? null
               : Text(entry.rank.toString()),
         ),
-        title: Text('#${entry.rank} ${entry.displayName}'),
+        title: Text('№${entry.rank} ${entry.displayName}'),
         subtitle: Text(
           'Площадь: ${formatAreaM2(entry.ownedAreaM2)} • Дистанция: ${formatMeters(entry.totalDistanceM)}',
         ),

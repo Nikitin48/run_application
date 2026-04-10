@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/notifications/local_notifications_service.dart';
 import '../../auth/application/auth_controller.dart';
+import '../data/notifications_api.dart';
 import 'last_notification_provider.dart';
 
 @pragma('vm:entry-point')
@@ -22,23 +23,29 @@ class PushMessagingController extends Notifier<void> {
   StreamSubscription<RemoteMessage>? _onMessageSub;
   StreamSubscription<RemoteMessage>? _onMessageOpenedSub;
   String? _registeredToken;
+  NotificationsApi? _notificationsApi;
   bool _started = false;
+  bool _disposeRegistered = false;
 
   @override
   void build() {
+    if (!_disposeRegistered) {
+      _disposeRegistered = true;
+      ref.onDispose(_teardown);
+    }
+
     final authStatus = ref.watch(authControllerProvider).status;
     if (authStatus == AuthStatus.authenticated) {
       _startIfNeeded();
     } else {
       _teardown();
     }
-
-    ref.onDispose(_teardown);
   }
 
   void _startIfNeeded() {
     if (_started) return;
     _started = true;
+    _notificationsApi = ref.read(notificationsApiProvider);
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
     _onMessageSub = FirebaseMessaging.onMessage.listen(_onForegroundMessage);
     _onMessageOpenedSub = FirebaseMessaging.onMessageOpenedApp.listen((_) {
@@ -102,8 +109,10 @@ class PushMessagingController extends Notifier<void> {
     _onMessageSub = null;
     _onMessageOpenedSub?.cancel();
     _onMessageOpenedSub = null;
-    if (token != null) {
-      unawaited(ref.read(notificationsApiProvider).unregisterPushToken(token));
+    final api = _notificationsApi;
+    _notificationsApi = null;
+    if (token != null && api != null) {
+      unawaited(api.unregisterPushToken(token));
     }
   }
 }
