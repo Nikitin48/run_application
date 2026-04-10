@@ -68,12 +68,14 @@ class _MapPageBodyState extends ConsumerState<_MapPageBody> {
   Timer? _debounce;
   Timer? _testMoveTimer;
   Bbox? _bbox;
+  List<Territory> _territoriesCache = const <Territory>[];
   bool _followMe = true;
   bool _testMode = false;
   bool _mapReady = false;
   LatLng? _currentLocation;
   StreamSubscription<Position>? _mapPosSub;
   _TileStyle _selectedTileStyle = _tileStyles[2];
+  static const double _bboxEpsilon = 0.00001;
 
   @override
   void initState() {
@@ -165,15 +167,25 @@ class _MapPageBodyState extends ConsumerState<_MapPageBody> {
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 250), () {
       final bounds = _mapController.camera.visibleBounds;
-      setState(() {
-        _bbox = Bbox(
-          minLng: bounds.southWest.longitude,
-          minLat: bounds.southWest.latitude,
-          maxLng: bounds.northEast.longitude,
-          maxLat: bounds.northEast.latitude,
-        );
-      });
+      final nextBbox = Bbox(
+        minLng: bounds.southWest.longitude,
+        minLat: bounds.southWest.latitude,
+        maxLng: bounds.northEast.longitude,
+        maxLat: bounds.northEast.latitude,
+      );
+      final currentBbox = _bbox;
+      if (currentBbox != null && _isBboxAlmostEqual(currentBbox, nextBbox)) {
+        return;
+      }
+      setState(() => _bbox = nextBbox);
     });
+  }
+
+  bool _isBboxAlmostEqual(Bbox a, Bbox b) {
+    return (a.minLng - b.minLng).abs() < _bboxEpsilon &&
+        (a.minLat - b.minLat).abs() < _bboxEpsilon &&
+        (a.maxLng - b.maxLng).abs() < _bboxEpsilon &&
+        (a.maxLat - b.maxLat).abs() < _bboxEpsilon;
   }
 
   void _showSnack(String message) {
@@ -288,7 +300,11 @@ class _MapPageBodyState extends ConsumerState<_MapPageBody> {
     final meProfileAsync = ref.watch(meProfileProvider);
     final hasUnread = ref.watch(hasUnreadNotificationsProvider);
     final runState = ref.watch(runTrackerProvider);
-    final territories = territoriesAsync.valueOrNull ?? const <Territory>[];
+    final latestTerritories = territoriesAsync.valueOrNull;
+    if (latestTerritories != null) {
+      _territoriesCache = latestTerritories;
+    }
+    final territories = latestTerritories ?? _territoriesCache;
     final tapTargets = <_TerritoryAreaTapTarget>[
       for (final t in territories)
         for (var i = 0; i < t.polygons.length; i++)
