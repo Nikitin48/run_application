@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, EmailStr, Field, model_validator
 
@@ -186,6 +186,8 @@ class RunHistoryItemOut(BaseModel):
     moving_s: int
     capture_area_m2: float
     victims_count: int
+    capture_geojson: dict[str, Any] | None = None
+    track_geojson: dict[str, Any] | None = None
     created_at: datetime
 
 

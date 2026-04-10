@@ -115,6 +115,8 @@ class RunHistoryItem {
     required this.movingS,
     required this.captureAreaM2,
     required this.victimsCount,
+    required this.capturePolygons,
+    required this.trackPoints,
     required this.createdAt,
   });
 
@@ -128,6 +130,8 @@ class RunHistoryItem {
   final int movingS;
   final double captureAreaM2;
   final int victimsCount;
+  final List<List<RunGeoPoint>> capturePolygons;
+  final List<RunGeoPoint> trackPoints;
   final DateTime createdAt;
 
   static RunHistoryItem fromJson(Map<String, Object?> json) {
@@ -148,9 +152,85 @@ class RunHistoryItem {
       movingS: (json['moving_s'] as num?)?.toInt() ?? 0,
       captureAreaM2: (json['capture_area_m2'] as num?)?.toDouble() ?? 0,
       victimsCount: (json['victims_count'] as num?)?.toInt() ?? 0,
+      capturePolygons: _parseCapturePolygons(json['capture_geojson']),
+      trackPoints: _parseTrackPoints(json['track_geojson']),
       createdAt:
           DateTime.tryParse((json['created_at'] as String?) ?? '')?.toLocal() ??
           DateTime.now(),
     );
   }
+
+  static List<List<RunGeoPoint>> _parseCapturePolygons(Object? rawGeoJson) {
+    if (rawGeoJson is! Map) return const <List<RunGeoPoint>>[];
+    final geoJson = rawGeoJson.cast<Object?, Object?>();
+    final type = (geoJson['type'] as String?)?.toLowerCase();
+    final coordinates = geoJson['coordinates'];
+    if (coordinates is! List) return const <List<RunGeoPoint>>[];
+
+    if (type == 'polygon') {
+      if (coordinates.isEmpty) return const <List<RunGeoPoint>>[];
+      final ring = _parseRing(coordinates.first);
+      return ring.isEmpty
+          ? const <List<RunGeoPoint>>[]
+          : <List<RunGeoPoint>>[ring];
+    }
+
+    if (type == 'multipolygon') {
+      final rings = <List<RunGeoPoint>>[];
+      for (final polygonRaw in coordinates) {
+        if (polygonRaw is! List || polygonRaw.isEmpty) continue;
+        final ring = _parseRing(polygonRaw.first);
+        if (ring.isNotEmpty) rings.add(ring);
+      }
+      return List.unmodifiable(rings);
+    }
+
+    return const <List<RunGeoPoint>>[];
+  }
+
+  static List<RunGeoPoint> _parseRing(Object? rawRing) {
+    if (rawRing is! List) return const <RunGeoPoint>[];
+    final points = <RunGeoPoint>[];
+    for (final pointRaw in rawRing) {
+      if (pointRaw is! List || pointRaw.length < 2) continue;
+      final lng = _toDouble(pointRaw[0]);
+      final lat = _toDouble(pointRaw[1]);
+      if (lng == null || lat == null) continue;
+      points.add(RunGeoPoint(lat: lat, lng: lng));
+    }
+    if (points.length < 3) return const <RunGeoPoint>[];
+    return List.unmodifiable(points);
+  }
+
+  static double? _toDouble(Object? value) {
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value);
+    return null;
+  }
+
+  static List<RunGeoPoint> _parseTrackPoints(Object? rawGeoJson) {
+    if (rawGeoJson is! Map) return const <RunGeoPoint>[];
+    final geoJson = rawGeoJson.cast<Object?, Object?>();
+    final type = (geoJson['type'] as String?)?.toLowerCase();
+    if (type != 'linestring') return const <RunGeoPoint>[];
+    final coordinates = geoJson['coordinates'];
+    if (coordinates is! List) return const <RunGeoPoint>[];
+    final points = <RunGeoPoint>[];
+    for (final pointRaw in coordinates) {
+      if (pointRaw is! List || pointRaw.length < 2) continue;
+      final lng = _toDouble(pointRaw[0]);
+      final lat = _toDouble(pointRaw[1]);
+      if (lng == null || lat == null) continue;
+      points.add(RunGeoPoint(lat: lat, lng: lng));
+    }
+    if (points.length < 2) return const <RunGeoPoint>[];
+    return List.unmodifiable(points);
+  }
+}
+
+class RunGeoPoint {
+  const RunGeoPoint({required this.lat, required this.lng});
+
+  final double lat;
+  final double lng;
 }

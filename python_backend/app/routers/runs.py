@@ -168,6 +168,7 @@ def finish_run(payload: RunFinishRequest, user_id: str = Depends(current_user_id
                 UPDATE runs
                 SET capture_area_m2 = %s,
                     victims_count = %s,
+                    capture_geom = compute_capture_polygons(track_line),
                     updated_at = now()
                 WHERE id = %s
                 """,
@@ -231,6 +232,8 @@ def runs_history(
                   COALESCE(r.moving_s, 0),
                   COALESCE(r.capture_area_m2, 0),
                   COALESCE(r.victims_count, 0),
+                  ST_AsGeoJSON(r.capture_geom)::jsonb,
+                  ST_AsGeoJSON(r.track_line)::jsonb,
                   r.created_at
                 FROM runs r
                 WHERE r.user_id = %s
@@ -251,7 +254,9 @@ def runs_history(
                     moving_s=int(row[7]),
                     capture_area_m2=float(row[8]),
                     victims_count=int(row[9]),
-                    created_at=row[10],
+                    capture_geojson=row[10],
+                    track_geojson=row[11],
+                    created_at=row[12],
                 )
                 for row in cur.fetchall()
             ]

@@ -1,9 +1,15 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:run_application/l10n/app_localizations.dart';
 
+import '../../../core/utils/color_utils.dart';
 import '../../../core/utils/formatters.dart';
+import '../../profile/application/profile_controller.dart';
 import '../../runs/domain/run_models.dart';
 import '../application/run_history_provider.dart';
 
@@ -14,6 +20,11 @@ class HistoriesPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final historyAsync = ref.watch(runHistoryProvider);
+    final meProfileAsync = ref.watch(meProfileProvider);
+    final previewAccent = meProfileAsync.maybeWhen(
+      data: (profile) => colorFromHexOrDefault(profile.territoryColor),
+      orElse: () => Theme.of(context).colorScheme.primary,
+    );
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.historiesTitle)),
@@ -42,7 +53,7 @@ class HistoriesPage extends ConsumerWidget {
               itemCount: items.length,
               separatorBuilder: (context, index) => const SizedBox(height: 10),
               itemBuilder: (context, index) =>
-                  _RunHistoryCard(item: items[index]),
+                  _RunHistoryCard(item: items[index], previewAccent: previewAccent),
             );
           },
           loading: () => const Center(child: CircularProgressIndicator()),
@@ -64,9 +75,10 @@ class HistoriesPage extends ConsumerWidget {
 }
 
 class _RunHistoryCard extends StatelessWidget {
-  const _RunHistoryCard({required this.item});
+  const _RunHistoryCard({required this.item, required this.previewAccent});
 
   final RunHistoryItem item;
+  final Color previewAccent;
 
   @override
   Widget build(BuildContext context) {
@@ -89,6 +101,14 @@ class _RunHistoryCard extends StatelessWidget {
               '${l10n.historiesEndedAt}: $endedLabel',
               style: Theme.of(context).textTheme.bodyMedium,
             ),
+            if (item.capturePolygons.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              _RunCapturePreview(
+                polygons: item.capturePolygons,
+                trackPoints: item.trackPoints,
+                accent: previewAccent,
+              ),
+            ],
             const SizedBox(height: 10),
             _MetricRow(
               label: l10n.distance,
@@ -114,6 +134,144 @@ class _RunHistoryCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _RunCapturePreview extends StatefulWidget {
+  const _RunCapturePreview({
+    required this.polygons,
+    required this.trackPoints,
+    required this.accent,
+  });
+
+  final List<List<RunGeoPoint>> polygons;
+  final List<RunGeoPoint> trackPoints;
+  final Color accent;
+
+  @override
+  State<_RunCapturePreview> createState() => _RunCapturePreviewState();
+}
+
+class _RunCapturePreviewState extends State<_RunCapturePreview> {
+  // Dark Gray Base has limited native zoom levels; clamp preview zoom to avoid
+  // raster upscaling blur on tiny captured polygons.
+  static const double _previewMinZoom = 9;
+  static const double _previewMaxZoom = 14;
+  static const int _previewNativeMaxZoom = 16;
+  static const _urlTemplate =
+      'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}';
+
+  final _mapController = MapController();
+  bool _cameraFitted = false;
+
+  List<List<LatLng>> get _latLngPolygons => widget.polygons
+      .map(
+        (ring) => ring
+            .map((p) => LatLng(p.lat, p.lng))
+            .toList(growable: false),
+      )
+      .toList(growable: false);
+
+  @override
+  Widget build(BuildContext context) {
+    final polygons = _latLngPolygons;
+    if (polygons.isEmpty) return const SizedBox.shrink();
+    final bounds = _expandedBounds(_boundsFromPolygons(polygons));
+    final initialCenter = LatLng(
+      (bounds.north + bounds.south) / 2,
+      (bounds.east + bounds.west) / 2,
+    );
+    return SizedBox(
+      width: double.infinity,
+      height: 200,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: IgnorePointer(
+          child: FlutterMap(
+            mapController: _mapController,
+            options: MapOptions(
+              initialCenter: initialCenter,
+              initialZoom: 14,
+              minZoom: _previewMinZoom,
+              maxZoom: _previewMaxZoom,
+              interactionOptions: const InteractionOptions(
+                flags: InteractiveFlag.none,
+              ),
+              onMapReady: () {
+                if (_cameraFitted) return;
+                _cameraFitted = true;
+                _mapController.fitCamera(
+                  CameraFit.bounds(
+                    bounds: bounds,
+                    padding: const EdgeInsets.all(16),
+                    maxZoom: _previewMaxZoom,
+                  ),
+                );
+              },
+            ),
+            children: [
+              TileLayer(
+                urlTemplate: _urlTemplate,
+                userAgentPackageName: 'run_application',
+                minZoom: _previewMinZoom,
+                maxZoom: _previewMaxZoom,
+                maxNativeZoom: _previewNativeMaxZoom,
+              ),
+              PolygonLayer(
+                polygons: [
+                  for (final ring in polygons)
+                    Polygon(
+                      points: ring,
+                      color: widget.accent.withValues(alpha: 0.26),
+                      borderColor: widget.accent.withValues(alpha: 0.95),
+                      borderStrokeWidth: 2,
+                    ),
+                ],
+              ),
+              if (widget.trackPoints.length >= 2)
+                PolylineLayer(
+                  polylines: [
+                    Polyline(
+                      points: widget.trackPoints
+                          .map((p) => LatLng(p.lat, p.lng))
+                          .toList(growable: false),
+                      color: widget.accent.withValues(alpha: 0.95),
+                      strokeWidth: 3.2,
+                    ),
+                  ],
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  LatLngBounds _boundsFromPolygons(List<List<LatLng>> polygons) {
+    var minLat = double.infinity;
+    var maxLat = -double.infinity;
+    var minLng = double.infinity;
+    var maxLng = -double.infinity;
+    for (final ring in polygons) {
+      for (final p in ring) {
+        minLat = math.min(minLat, p.latitude);
+        maxLat = math.max(maxLat, p.latitude);
+        minLng = math.min(minLng, p.longitude);
+        maxLng = math.max(maxLng, p.longitude);
+      }
+    }
+    return LatLngBounds(LatLng(minLat, minLng), LatLng(maxLat, maxLng));
+  }
+
+  LatLngBounds _expandedBounds(LatLngBounds bounds) {
+    final latSpan = (bounds.north - bounds.south).abs();
+    final lngSpan = (bounds.east - bounds.west).abs();
+    final latPad = math.max(latSpan * 0.2, 0.0004);
+    final lngPad = math.max(lngSpan * 0.2, 0.0004);
+    return LatLngBounds(
+      LatLng(bounds.south - latPad, bounds.west - lngPad),
+      LatLng(bounds.north + latPad, bounds.east + lngPad),
     );
   }
 }

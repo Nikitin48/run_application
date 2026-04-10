@@ -107,6 +107,7 @@ CREATE TABLE IF NOT EXISTS runs (
   -- Capture metrics for finished run (used in history UI).
   capture_area_m2 double precision NOT NULL DEFAULT 0,
   victims_count integer NOT NULL DEFAULT 0,
+  capture_geom geometry(MultiPolygon, 4326),
   avg_pace_s_per_km integer,
   -- Raw points (optional). In MVP you can store points here and/or compute LineString server-side.
   points jsonb,
