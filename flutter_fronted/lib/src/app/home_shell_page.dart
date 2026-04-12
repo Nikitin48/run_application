@@ -240,7 +240,37 @@ class _HomeShellPageState extends ConsumerState<HomeShellPage> {
                             ),
                     ),
                   ),
+                  Expanded(
+                    child: _SideNavButton(
+                      tooltip: l10n.achievementsPageTitle,
+                      icon: Icons.emoji_events_outlined,
+                      activeIcon: Icons.emoji_events,
+                      selected: navigationShell.currentIndex == 3,
+                      onTap: tabsLocked
+                          ? null
+                          : () => navigationShell.goBranch(
+                              3,
+                              initialLocation:
+                                  navigationShell.currentIndex == 3,
+                            ),
+                    ),
+                  ),
                   const SizedBox(width: 82),
+                  Expanded(
+                    child: _SideNavButton(
+                      tooltip: 'Рейтинг',
+                      icon: Icons.leaderboard_outlined,
+                      activeIcon: Icons.leaderboard,
+                      selected: navigationShell.currentIndex == 4,
+                      onTap: tabsLocked
+                          ? null
+                          : () => navigationShell.goBranch(
+                              4,
+                              initialLocation:
+                                  navigationShell.currentIndex == 4,
+                            ),
+                    ),
+                  ),
                   Expanded(
                     child: _SideNavButton(
                       tooltip: l10n.profileTitle,

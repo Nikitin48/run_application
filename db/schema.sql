@@ -165,9 +165,100 @@ CREATE TABLE IF NOT EXISTS user_stats (
   total_elapsed_s bigint NOT NULL DEFAULT 0,
   total_paused_s bigint NOT NULL DEFAULT 0,
   total_moving_s bigint NOT NULL DEFAULT 0,
+  successful_captures_count integer NOT NULL DEFAULT 0,
+  total_captured_area_m2 double precision NOT NULL DEFAULT 0,
+  total_victims_count integer NOT NULL DEFAULT 0,
   owned_area_m2 double precision NOT NULL DEFAULT 0,
+  profile_xp integer NOT NULL DEFAULT 0,
+  profile_level integer NOT NULL DEFAULT 1,
   updated_at timestamptz NOT NULL DEFAULT now()
 );
+
+-- Achievement catalog
+CREATE TABLE IF NOT EXISTS achievement_definitions (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  code text NOT NULL UNIQUE,
+  title text NOT NULL,
+  description text NOT NULL,
+  category text NOT NULL,
+  icon_key text NOT NULL,
+  xp integer NOT NULL CHECK (xp >= 0),
+  rule_type text NOT NULL,
+  rule_value double precision NOT NULL,
+  sort_order integer NOT NULL DEFAULT 0,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS achievement_definitions_category_sort_ix
+  ON achievement_definitions(category, sort_order, code);
+
+-- Earned achievements per user
+CREATE TABLE IF NOT EXISTS user_achievements (
+  user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  achievement_id uuid NOT NULL REFERENCES achievement_definitions(id) ON DELETE CASCADE,
+  source_run_id uuid REFERENCES runs(id) ON DELETE SET NULL,
+  unlocked_at timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (user_id, achievement_id)
+);
+
+CREATE INDEX IF NOT EXISTS user_achievements_user_unlocked_ix
+  ON user_achievements(user_id, unlocked_at DESC);
+CREATE INDEX IF NOT EXISTS user_achievements_source_run_ix
+  ON user_achievements(source_run_id);
+
+INSERT INTO achievement_definitions(code, title, description, category, icon_key, xp, rule_type, rule_value, sort_order)
+VALUES
+  ('runs_001', 'Первые шаги', 'Завершить 1 пробежку', 'run_count', 'run_count', 100, 'run_count_gte', 1, 10),
+  ('runs_005', 'Разогрев', 'Завершить 5 пробежек', 'run_count', 'run_count', 100, 'run_count_gte', 5, 20),
+  ('runs_010', 'В ритме', 'Завершить 10 пробежек', 'run_count', 'run_count', 250, 'run_count_gte', 10, 30),
+  ('runs_025', 'Не остановить', 'Завершить 25 пробежек', 'run_count', 'run_count', 500, 'run_count_gte', 25, 40),
+  ('runs_050', 'Машина бега', 'Завершить 50 пробежек', 'run_count', 'run_count', 1000, 'run_count_gte', 50, 50),
+
+  ('single_distance_1k', 'Первый километр', 'Пробежать 1 км за один забег', 'distance_single', 'distance_single', 100, 'distance_single_gte', 1000, 110),
+  ('single_distance_5k', 'Пятёрка', 'Пробежать 5 км за один забег', 'distance_single', 'distance_single', 100, 'distance_single_gte', 5000, 120),
+  ('single_distance_10k', 'Десятка', 'Пробежать 10 км за один забег', 'distance_single', 'distance_single', 250, 'distance_single_gte', 10000, 130),
+  ('single_distance_21k', 'Полумарафонец', 'Пробежать 21.1 км за один забег', 'distance_single', 'distance_single', 500, 'distance_single_gte', 21100, 140),
+  ('single_distance_42k', 'Марафонец', 'Пробежать 42.2 км за один забег', 'distance_single', 'distance_single', 1000, 'distance_single_gte', 42200, 150),
+
+  ('total_distance_10k', 'На дистанции', 'Пробежать 10 км суммарно', 'distance_total', 'distance_total', 100, 'distance_total_gte', 10000, 210),
+  ('total_distance_50k', 'Дальше больше', 'Пробежать 50 км суммарно', 'distance_total', 'distance_total', 250, 'distance_total_gte', 50000, 220),
+  ('total_distance_100k', 'Сотня', 'Пробежать 100 км суммарно', 'distance_total', 'distance_total', 500, 'distance_total_gte', 100000, 230),
+  ('total_distance_250k', 'Длинный путь', 'Пробежать 250 км суммарно', 'distance_total', 'distance_total', 1000, 'distance_total_gte', 250000, 240),
+  ('total_distance_500k', 'Железная выносливость', 'Пробежать 500 км суммарно', 'distance_total', 'distance_total', 1000, 'distance_total_gte', 500000, 250),
+
+  ('single_capture_first', 'Первый захват', 'Первая пробежка с захватом территории', 'capture_single', 'capture_single', 100, 'capture_single_gte', 1, 310),
+  ('single_capture_100k', 'Землемер', 'Захватить 0.1 км² за один забег', 'capture_single', 'capture_single', 100, 'capture_single_gte', 100000, 320),
+  ('single_capture_4m', 'Картограф', 'Захватить 4 км² за один забег', 'capture_single', 'capture_single', 500, 'capture_single_gte', 4000000, 330),
+  ('single_capture_10m', 'Завоеватель', 'Захватить 10 км² за один забег', 'capture_single', 'capture_single', 1000, 'capture_single_gte', 10000000, 340),
+  ('single_capture_25m', 'Титан карты', 'Захватить 25 км² за один забег', 'capture_single', 'capture_single', 1000, 'capture_single_gte', 25000000, 350),
+
+  ('captures_005', 'Захватчик', 'Выполнить 5 успешных захватов', 'captures_count', 'captures_count', 100, 'captures_count_gte', 5, 410),
+  ('captures_010', 'Охотник за землями', 'Выполнить 10 успешных захватов', 'captures_count', 'captures_count', 250, 'captures_count_gte', 10, 420),
+  ('captures_025', 'Коллекционер территорий', 'Выполнить 25 успешных захватов', 'captures_count', 'captures_count', 500, 'captures_count_gte', 25, 430),
+  ('captures_050', 'Повелитель карты', 'Выполнить 50 успешных захватов', 'captures_count', 'captures_count', 1000, 'captures_count_gte', 50, 440),
+
+  ('total_capture_10m', 'Империя растёт', 'Захватить 10 км² суммарно', 'capture_total', 'capture_total', 250, 'capture_total_gte', 10000000, 510),
+  ('total_capture_50m', 'Расширение границ', 'Захватить 50 км² суммарно', 'capture_total', 'capture_total', 500, 'capture_total_gte', 50000000, 520),
+  ('total_capture_100m', 'Континентальный размах', 'Захватить 100 км² суммарно', 'capture_total', 'capture_total', 1000, 'capture_total_gte', 100000000, 530),
+
+  ('victims_single_1', 'Первый соперник', 'Захватить территорию хотя бы у 1 соперника за забег', 'victims_single', 'victims', 100, 'victims_single_gte', 1, 610),
+  ('victims_single_2', 'Двойной удар', 'Захватить территорию у 2 соперников за один забег', 'victims_single', 'victims', 250, 'victims_single_gte', 2, 620),
+  ('victims_single_3', 'Тройная угроза', 'Захватить территорию у 3 соперников за один забег', 'victims_single', 'victims', 500, 'victims_single_gte', 3, 630),
+  ('victims_total_10', 'Гроза района', 'Суммарно затронуть 10 соперников', 'victims_total', 'victims', 250, 'victims_total_gte', 10, 640),
+  ('victims_total_25', 'Легенда захватов', 'Суммарно затронуть 25 соперников', 'victims_total', 'victims', 1000, 'victims_total_gte', 25, 650),
+
+  ('owned_area_500k', 'Есть своя земля', 'Иметь текущую площадь 0.5 км²', 'owned_area', 'owned_area', 100, 'owned_area_gte', 500000, 710),
+  ('owned_area_5m', 'Маленькое королевство', 'Иметь текущую площадь 5 км²', 'owned_area', 'owned_area', 500, 'owned_area_gte', 5000000, 720),
+  ('owned_area_20m', 'Большая держава', 'Иметь текущую площадь 20 км²', 'owned_area', 'owned_area', 1000, 'owned_area_gte', 20000000, 730)
+ON CONFLICT (code) DO UPDATE
+SET title = EXCLUDED.title,
+    description = EXCLUDED.description,
+    category = EXCLUDED.category,
+    icon_key = EXCLUDED.icon_key,
+    xp = EXCLUDED.xp,
+    rule_type = EXCLUDED.rule_type,
+    rule_value = EXCLUDED.rule_value,
+    sort_order = EXCLUDED.sort_order;
 
 -- Notifications history (victim-facing feed).
 -- We keep full rows and trim to last N entries in business logic.

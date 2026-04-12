@@ -13,11 +13,37 @@ import '../../profile/application/profile_controller.dart';
 import '../../runs/domain/run_models.dart';
 import '../application/run_history_provider.dart';
 
-class HistoriesPage extends ConsumerWidget {
+class HistoriesPage extends ConsumerStatefulWidget {
   const HistoriesPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HistoriesPage> createState() => _HistoriesPageState();
+}
+
+class _HistoriesPageState extends ConsumerState<HistoriesPage> {
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    final position = _scrollController.position;
+    if (position.pixels < position.maxScrollExtent - 220) return;
+    ref.read(runHistoryProvider.notifier).loadMore();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final historyAsync = ref.watch(runHistoryProvider);
     final meProfileAsync = ref.watch(meProfileProvider);
@@ -30,13 +56,13 @@ class HistoriesPage extends ConsumerWidget {
       appBar: AppBar(title: Text(l10n.historiesTitle)),
       body: RefreshIndicator(
         onRefresh: () async {
-          ref.invalidate(runHistoryProvider);
-          await ref.read(runHistoryProvider.future);
+          await ref.read(runHistoryProvider.notifier).refreshList();
         },
         child: historyAsync.when(
-          data: (items) {
-            if (items.isEmpty) {
+          data: (data) {
+            if (data.items.isEmpty) {
               return ListView(
+                controller: _scrollController,
                 padding: const EdgeInsets.all(16),
                 children: [
                   Card(
@@ -49,11 +75,22 @@ class HistoriesPage extends ConsumerWidget {
               );
             }
             return ListView.separated(
+              controller: _scrollController,
               padding: const EdgeInsets.all(12),
-              itemCount: items.length,
+              itemCount: data.items.length + (data.isLoadingMore ? 1 : 0),
               separatorBuilder: (context, index) => const SizedBox(height: 10),
-              itemBuilder: (context, index) =>
-                  _RunHistoryCard(item: items[index], previewAccent: previewAccent),
+              itemBuilder: (context, index) {
+                if (index >= data.items.length) {
+                  return const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 10),
+                    child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                  );
+                }
+                return _RunHistoryCard(
+                  item: data.items[index],
+                  previewAccent: previewAccent,
+                );
+              },
             );
           },
           loading: () => const Center(child: CircularProgressIndicator()),
@@ -101,7 +138,7 @@ class _RunHistoryCard extends StatelessWidget {
               '${l10n.historiesEndedAt}: $endedLabel',
               style: Theme.of(context).textTheme.bodyMedium,
             ),
-            if (item.capturePolygons.isNotEmpty) ...[
+            if (item.capturePolygons.isNotEmpty || item.trackPoints.length >= 2) ...[
               const SizedBox(height: 12),
               _RunCapturePreview(
                 polygons: item.capturePolygons,
@@ -162,9 +199,6 @@ class _RunCapturePreviewState extends State<_RunCapturePreview> {
   static const _urlTemplate =
       'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}';
 
-  final _mapController = MapController();
-  bool _cameraFitted = false;
-
   List<List<LatLng>> get _latLngPolygons => widget.polygons
       .map(
         (ring) => ring
@@ -173,11 +207,20 @@ class _RunCapturePreviewState extends State<_RunCapturePreview> {
       )
       .toList(growable: false);
 
+  List<LatLng> get _latLngTrackPoints => widget.trackPoints
+      .map((p) => LatLng(p.lat, p.lng))
+      .toList(growable: false);
+
   @override
   Widget build(BuildContext context) {
     final polygons = _latLngPolygons;
-    if (polygons.isEmpty) return const SizedBox.shrink();
-    final bounds = _expandedBounds(_boundsFromPolygons(polygons));
+    final trackPoints = _latLngTrackPoints;
+    final previewPoints = <LatLng>[
+      for (final ring in polygons) ...ring,
+      ...trackPoints,
+    ];
+    if (previewPoints.isEmpty) return const SizedBox.shrink();
+    final bounds = _expandedBounds(_boundsFromPoints(previewPoints));
     final initialCenter = LatLng(
       (bounds.north + bounds.south) / 2,
       (bounds.east + bounds.west) / 2,
@@ -189,26 +232,19 @@ class _RunCapturePreviewState extends State<_RunCapturePreview> {
         borderRadius: BorderRadius.circular(12),
         child: IgnorePointer(
           child: FlutterMap(
-            mapController: _mapController,
             options: MapOptions(
               initialCenter: initialCenter,
               initialZoom: 14,
+              initialCameraFit: CameraFit.bounds(
+                bounds: bounds,
+                padding: const EdgeInsets.all(16),
+                maxZoom: _previewMaxZoom,
+              ),
               minZoom: _previewMinZoom,
               maxZoom: _previewMaxZoom,
               interactionOptions: const InteractionOptions(
                 flags: InteractiveFlag.none,
               ),
-              onMapReady: () {
-                if (_cameraFitted) return;
-                _cameraFitted = true;
-                _mapController.fitCamera(
-                  CameraFit.bounds(
-                    bounds: bounds,
-                    padding: const EdgeInsets.all(16),
-                    maxZoom: _previewMaxZoom,
-                  ),
-                );
-              },
             ),
             children: [
               TileLayer(
@@ -218,24 +254,23 @@ class _RunCapturePreviewState extends State<_RunCapturePreview> {
                 maxZoom: _previewMaxZoom,
                 maxNativeZoom: _previewNativeMaxZoom,
               ),
-              PolygonLayer(
-                polygons: [
-                  for (final ring in polygons)
-                    Polygon(
-                      points: ring,
-                      color: widget.accent.withValues(alpha: 0.26),
-                      borderColor: widget.accent.withValues(alpha: 0.95),
-                      borderStrokeWidth: 2,
-                    ),
-                ],
-              ),
-              if (widget.trackPoints.length >= 2)
+              if (polygons.isNotEmpty)
+                PolygonLayer(
+                  polygons: [
+                    for (final ring in polygons)
+                      Polygon(
+                        points: ring,
+                        color: widget.accent.withValues(alpha: 0.26),
+                        borderColor: widget.accent.withValues(alpha: 0.95),
+                        borderStrokeWidth: 2,
+                      ),
+                  ],
+                ),
+              if (trackPoints.length >= 2)
                 PolylineLayer(
                   polylines: [
                     Polyline(
-                      points: widget.trackPoints
-                          .map((p) => LatLng(p.lat, p.lng))
-                          .toList(growable: false),
+                      points: trackPoints,
                       color: widget.accent.withValues(alpha: 0.95),
                       strokeWidth: 3.2,
                     ),
@@ -248,18 +283,16 @@ class _RunCapturePreviewState extends State<_RunCapturePreview> {
     );
   }
 
-  LatLngBounds _boundsFromPolygons(List<List<LatLng>> polygons) {
+  LatLngBounds _boundsFromPoints(List<LatLng> points) {
     var minLat = double.infinity;
     var maxLat = -double.infinity;
     var minLng = double.infinity;
     var maxLng = -double.infinity;
-    for (final ring in polygons) {
-      for (final p in ring) {
-        minLat = math.min(minLat, p.latitude);
-        maxLat = math.max(maxLat, p.latitude);
-        minLng = math.min(minLng, p.longitude);
-        maxLng = math.max(maxLng, p.longitude);
-      }
+    for (final p in points) {
+      minLat = math.min(minLat, p.latitude);
+      maxLat = math.max(maxLat, p.latitude);
+      minLng = math.min(minLng, p.longitude);
+      maxLng = math.max(maxLng, p.longitude);
     }
     return LatLngBounds(LatLng(minLat, minLng), LatLng(maxLat, maxLng));
   }

@@ -58,7 +58,45 @@ class UserStatsOut(BaseModel):
     total_elapsed_s: int
     total_paused_s: int
     total_moving_s: int
+    successful_captures_count: int
+    total_captured_area_m2: float
+    total_victims_count: int
     owned_area_m2: float
+    profile_xp: int
+    profile_level: int
+
+
+class AchievementUnlockedOut(BaseModel):
+    code: str
+    title: str
+    description: str
+    category: str
+    icon_key: str
+    xp: int
+    unlocked_at: datetime
+
+
+class AchievementItemOut(BaseModel):
+    code: str
+    title: str
+    description: str
+    category: str
+    icon_key: str
+    xp: int
+    sort_order: int
+    is_unlocked: bool
+    unlocked_at: datetime | None = None
+
+
+class LevelUpOut(BaseModel):
+    old_level: int
+    new_level: int
+
+
+class AchievementsResponseOut(BaseModel):
+    profile_xp: int
+    profile_level: int
+    items: list[AchievementItemOut]
 
 
 class MeProfileOut(BaseModel):
@@ -173,6 +211,10 @@ class RunFinishResponse(BaseModel):
     moving_s: int
     capture_area_m2: float
     victims_count: int
+    new_achievements: list[AchievementUnlockedOut] = Field(default_factory=list)
+    level_up: LevelUpOut | None = None
+    profile_xp: int = 0
+    profile_level: int = 1
 
 
 class RunHistoryItemOut(BaseModel):

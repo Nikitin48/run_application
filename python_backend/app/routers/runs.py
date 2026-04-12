@@ -8,8 +8,9 @@ from psycopg.types.json import Jsonb
 
 from ..db import db_conn
 from ..geo import clip_interval, haversine_m, seconds_between, wkt_linestring
-from ..models import RunFinishRequest, RunFinishResponse, RunHistoryItemOut
+from ..models import AchievementUnlockedOut, LevelUpOut, RunFinishRequest, RunFinishResponse, RunHistoryItemOut
 from ..push import send_territory_attacked_pushes
+from ..services.achievements_service import evaluate_user_achievements
 from .me import current_user_id
 
 
@@ -174,6 +175,11 @@ def finish_run(payload: RunFinishRequest, user_id: str = Depends(current_user_id
                 """,
                 (float(cap_area), int(victims), run_id),
             )
+        achievements_result = evaluate_user_achievements(
+            conn,
+            user_id=user_id,
+            run_id=str(run_id),
+        )
 
     push_targets = _collect_push_targets_for_run(str(run_id))
     if not push_targets:
@@ -208,6 +214,28 @@ def finish_run(payload: RunFinishRequest, user_id: str = Depends(current_user_id
         moving_s=moving_s,
         capture_area_m2=float(cap_area),
         victims_count=int(victims),
+        new_achievements=[
+            AchievementUnlockedOut(
+                code=item.code,
+                title=item.title,
+                description=item.description,
+                category=item.category,
+                icon_key=item.icon_key,
+                xp=item.xp,
+                unlocked_at=item.unlocked_at,
+            )
+            for item in achievements_result.new_achievements
+        ],
+        level_up=(
+            LevelUpOut(
+                old_level=achievements_result.old_level,
+                new_level=achievements_result.profile_level,
+            )
+            if achievements_result.profile_level > achievements_result.old_level
+            else None
+        ),
+        profile_xp=achievements_result.profile_xp,
+        profile_level=achievements_result.profile_level,
     )
 
 

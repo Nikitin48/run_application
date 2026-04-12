@@ -5,14 +5,35 @@ import 'package:run_application/l10n/app_localizations.dart';
 
 import '../application/run_tracker_controller.dart';
 import '../../../core/utils/formatters.dart';
+import 'widgets/achievements_popup.dart';
 
-class RunSummaryPage extends ConsumerWidget {
+class RunSummaryPage extends ConsumerStatefulWidget {
   const RunSummaryPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<RunSummaryPage> createState() => _RunSummaryPageState();
+}
+
+class _RunSummaryPageState extends ConsumerState<RunSummaryPage> {
+  bool _didShowAchievementsPopup = false;
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final finish = ref.watch(runTrackerProvider).lastFinish;
+
+    if (!_didShowAchievementsPopup &&
+        finish != null &&
+        (finish.newAchievements.isNotEmpty || finish.levelUp != null)) {
+      _didShowAchievementsPopup = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        showDialog<void>(
+          context: context,
+          builder: (context) => AchievementsPopup(finish: finish),
+        );
+      });
+    }
 
     return Scaffold(
       appBar: AppBar(

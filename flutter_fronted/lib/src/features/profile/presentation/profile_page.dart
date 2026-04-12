@@ -4,7 +4,6 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:run_application/l10n/app_localizations.dart';
 
@@ -215,11 +214,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       appBar: AppBar(
         title: Text(l10n.profileTitle),
         actions: [
-          IconButton(
-            tooltip: 'Рейтинг',
-            onPressed: () => context.push('/leaderboard'),
-            icon: const Icon(Icons.leaderboard_outlined),
-          ),
           TextButton(
             onPressed: () => ref.read(authControllerProvider.notifier).logout(),
             child: Text(l10n.logout),
@@ -602,6 +596,14 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                         ),
                         const SizedBox(height: 12),
                         _MetricRow(
+                          label: l10n.profileLevelLabel,
+                          value: '${profile.stats.profileLevel}',
+                        ),
+                        _MetricRow(
+                          label: l10n.profileXpLabel,
+                          value: '${profile.stats.profileXp} XP',
+                        ),
+                        _MetricRow(
                           label: l10n.profileRunsCount,
                           value: '${profile.stats.runCount}',
                         ),
@@ -624,6 +626,18 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                           value: formatDurationMmSs(profile.stats.totalMovingS),
                         ),
                         _MetricRow(
+                          label: l10n.profileSuccessfulCapturesLabel,
+                          value: '${profile.stats.successfulCapturesCount}',
+                        ),
+                        _MetricRow(
+                          label: l10n.profileTotalCapturedLabel,
+                          value: formatAreaM2(profile.stats.totalCapturedAreaM2),
+                        ),
+                        _MetricRow(
+                          label: l10n.profileTotalVictimsLabel,
+                          value: '${profile.stats.totalVictimsCount}',
+                        ),
+                        _MetricRow(
                           label: l10n.profileOwnedArea,
                           value: formatAreaM2(profile.stats.ownedAreaM2),
                         ),
@@ -631,6 +645,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                     ),
                   ),
                 ),
+                const SizedBox(height: 12),
                 const SizedBox(height: 40),
               ],
             ),

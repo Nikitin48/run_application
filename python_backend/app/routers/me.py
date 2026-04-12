@@ -9,6 +9,9 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from ..db import db_conn
 from ..models import (
+    AchievementsResponseOut,
+    AchievementItemOut,
+    AchievementUnlockedOut,
     AvatarOut,
     ChangePasswordRequest,
     MeProfileOut,
@@ -18,6 +21,7 @@ from ..models import (
     UserOut,
     UserStatsOut,
 )
+from ..services.achievements_service import list_user_achievements
 from ..settings import settings
 from ..security import decode_access_token, hash_password, verify_password
 
@@ -128,7 +132,12 @@ def me_profile(user_id: str = Depends(current_user_id)) -> MeProfileOut:
                   COALESCE(us.total_elapsed_s, 0),
                   COALESCE(us.total_paused_s, 0),
                   COALESCE(us.total_moving_s, 0),
-                  COALESCE(us.owned_area_m2, 0)
+                  COALESCE(us.successful_captures_count, 0),
+                  COALESCE(us.total_captured_area_m2, 0),
+                  COALESCE(us.total_victims_count, 0),
+                  COALESCE(us.owned_area_m2, 0),
+                  COALESCE(us.profile_xp, 0),
+                  COALESCE(us.profile_level, 1)
                 FROM users u
                 JOIN ref_countries c ON c.code = u.country_code
                 LEFT JOIN ref_regions r ON r.code = u.region_code
@@ -161,9 +170,41 @@ def me_profile(user_id: str = Depends(current_user_id)) -> MeProfileOut:
                     total_elapsed_s=int(row[15]),
                     total_paused_s=int(row[16]),
                     total_moving_s=int(row[17]),
-                    owned_area_m2=float(row[18]),
+                    successful_captures_count=int(row[18]),
+                    total_captured_area_m2=float(row[19]),
+                    total_victims_count=int(row[20]),
+                    owned_area_m2=float(row[21]),
+                    profile_xp=int(row[22]),
+                    profile_level=int(row[23]),
                 ),
             )
+
+
+@router.get("/me/achievements", response_model=AchievementsResponseOut)
+def my_achievements(user_id: str = Depends(current_user_id)) -> AchievementsResponseOut:
+    with db_conn() as conn:
+        try:
+            profile_xp, profile_level, items = list_user_achievements(conn, user_id=user_id)
+        except ValueError:
+            raise HTTPException(status_code=404, detail="user not found")
+        return AchievementsResponseOut(
+            profile_xp=profile_xp,
+            profile_level=profile_level,
+            items=[
+                AchievementItemOut(
+                    code=item.code,
+                    title=item.title,
+                    description=item.description,
+                    category=item.category,
+                    icon_key=item.icon_key,
+                    xp=item.xp,
+                    sort_order=item.sort_order,
+                    is_unlocked=item.is_unlocked,
+                    unlocked_at=item.unlocked_at,
+                )
+                for item in items
+            ],
+        )
 
 
 @router.patch("/me/territory-color", response_model=TerritoryColorOut)

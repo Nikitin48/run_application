@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../../core/network/dio_provider.dart';
 import '../data/profile_api.dart';
 import '../data/profile_repository.dart';
+import '../domain/achievement_models.dart';
 import '../domain/me_profile.dart';
 import '../domain/repositories/profile_repository.dart';
 import '../domain/usecases/change_password.dart';
@@ -38,6 +39,10 @@ final changePasswordUseCaseProvider = Provider<ChangePasswordUseCase>((ref) {
 
 final meProfileProvider = FutureProvider<MeProfile>((ref) async {
   return ref.watch(getMeProfileUseCaseProvider)();
+});
+
+final myAchievementsProvider = FutureProvider<AchievementsOverview>((ref) async {
+  return ref.watch(profileRepositoryProvider).getMyAchievements();
 });
 
 final profileActionsProvider =

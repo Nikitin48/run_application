@@ -578,6 +578,552 @@ abstract class AppLocalizations {
   /// **'Changes saved'**
   String get profileSaveSuccess;
 
+  /// No description provided for @profileLevelLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile level'**
+  String get profileLevelLabel;
+
+  /// No description provided for @profileXpLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile XP'**
+  String get profileXpLabel;
+
+  /// No description provided for @profileSuccessfulCapturesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Successful captures'**
+  String get profileSuccessfulCapturesLabel;
+
+  /// No description provided for @profileTotalCapturedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Total captured'**
+  String get profileTotalCapturedLabel;
+
+  /// No description provided for @profileTotalVictimsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Total opponents affected'**
+  String get profileTotalVictimsLabel;
+
+  /// No description provided for @achievementsPopupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New achievements'**
+  String get achievementsPopupTitle;
+
+  /// No description provided for @achievementsPopupIntroSingle.
+  ///
+  /// In en, this message translates to:
+  /// **'You unlocked a new reward on this run.'**
+  String get achievementsPopupIntroSingle;
+
+  /// No description provided for @achievementsPopupIntroMultiple.
+  ///
+  /// In en, this message translates to:
+  /// **'You unlocked several rewards on this run.'**
+  String get achievementsPopupIntroMultiple;
+
+  /// No description provided for @achievementsPopupAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Nice'**
+  String get achievementsPopupAction;
+
+  /// No description provided for @achievementsLevelUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Level up: {oldLevel} -> {newLevel}'**
+  String achievementsLevelUp(Object oldLevel, Object newLevel);
+
+  /// No description provided for @achievementsCollectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Achievement collection'**
+  String get achievementsCollectionTitle;
+
+  /// No description provided for @achievementsCollectionSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlocked {count} | Level {level} | {xp} XP'**
+  String achievementsCollectionSummary(Object count, Object level, Object xp);
+
+  /// No description provided for @achievementsOpenAllAction.
+  ///
+  /// In en, this message translates to:
+  /// **'All achievements'**
+  String get achievementsOpenAllAction;
+
+  /// No description provided for @achievementsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No achievements unlocked yet. Finish runs and capture territory to start your collection.'**
+  String get achievementsEmpty;
+
+  /// No description provided for @achievementsLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load achievements: {error}'**
+  String achievementsLoadError(Object error);
+
+  /// No description provided for @achievementsPageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'All achievements'**
+  String get achievementsPageTitle;
+
+  /// No description provided for @achievementsPageSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your unlocked rewards and profile progress'**
+  String get achievementsPageSubtitle;
+
+  /// No description provided for @achievementTierBase.
+  ///
+  /// In en, this message translates to:
+  /// **'Basic'**
+  String get achievementTierBase;
+
+  /// No description provided for @achievementTierAdvanced.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced'**
+  String get achievementTierAdvanced;
+
+  /// No description provided for @achievementTierRare.
+  ///
+  /// In en, this message translates to:
+  /// **'Rare'**
+  String get achievementTierRare;
+
+  /// No description provided for @achievementTierLegendary.
+  ///
+  /// In en, this message translates to:
+  /// **'Legendary'**
+  String get achievementTierLegendary;
+
+  /// No description provided for @achievementRuns001Title.
+  ///
+  /// In en, this message translates to:
+  /// **'First steps'**
+  String get achievementRuns001Title;
+
+  /// No description provided for @achievementRuns001Description.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish 1 run'**
+  String get achievementRuns001Description;
+
+  /// No description provided for @achievementRuns005Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Warm-up'**
+  String get achievementRuns005Title;
+
+  /// No description provided for @achievementRuns005Description.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish 5 runs'**
+  String get achievementRuns005Description;
+
+  /// No description provided for @achievementRuns010Title.
+  ///
+  /// In en, this message translates to:
+  /// **'In rhythm'**
+  String get achievementRuns010Title;
+
+  /// No description provided for @achievementRuns010Description.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish 10 runs'**
+  String get achievementRuns010Description;
+
+  /// No description provided for @achievementRuns025Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Unstoppable'**
+  String get achievementRuns025Title;
+
+  /// No description provided for @achievementRuns025Description.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish 25 runs'**
+  String get achievementRuns025Description;
+
+  /// No description provided for @achievementRuns050Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Running machine'**
+  String get achievementRuns050Title;
+
+  /// No description provided for @achievementRuns050Description.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish 50 runs'**
+  String get achievementRuns050Description;
+
+  /// No description provided for @achievementSingleDistance1kTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'First kilometer'**
+  String get achievementSingleDistance1kTitle;
+
+  /// No description provided for @achievementSingleDistance1kDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Run 1 km in a single run'**
+  String get achievementSingleDistance1kDescription;
+
+  /// No description provided for @achievementSingleDistance5kTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Five k'**
+  String get achievementSingleDistance5kTitle;
+
+  /// No description provided for @achievementSingleDistance5kDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Run 5 km in a single run'**
+  String get achievementSingleDistance5kDescription;
+
+  /// No description provided for @achievementSingleDistance10kTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ten k'**
+  String get achievementSingleDistance10kTitle;
+
+  /// No description provided for @achievementSingleDistance10kDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Run 10 km in a single run'**
+  String get achievementSingleDistance10kDescription;
+
+  /// No description provided for @achievementSingleDistance21kTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Half marathoner'**
+  String get achievementSingleDistance21kTitle;
+
+  /// No description provided for @achievementSingleDistance21kDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Run 21.1 km in a single run'**
+  String get achievementSingleDistance21kDescription;
+
+  /// No description provided for @achievementSingleDistance42kTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Marathoner'**
+  String get achievementSingleDistance42kTitle;
+
+  /// No description provided for @achievementSingleDistance42kDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Run 42.2 km in a single run'**
+  String get achievementSingleDistance42kDescription;
+
+  /// No description provided for @achievementTotalDistance10kTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'On the move'**
+  String get achievementTotalDistance10kTitle;
+
+  /// No description provided for @achievementTotalDistance10kDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Run 10 km total'**
+  String get achievementTotalDistance10kDescription;
+
+  /// No description provided for @achievementTotalDistance50kTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Further and further'**
+  String get achievementTotalDistance50kTitle;
+
+  /// No description provided for @achievementTotalDistance50kDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Run 50 km total'**
+  String get achievementTotalDistance50kDescription;
+
+  /// No description provided for @achievementTotalDistance100kTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'One hundred'**
+  String get achievementTotalDistance100kTitle;
+
+  /// No description provided for @achievementTotalDistance100kDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Run 100 km total'**
+  String get achievementTotalDistance100kDescription;
+
+  /// No description provided for @achievementTotalDistance250kTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Long road'**
+  String get achievementTotalDistance250kTitle;
+
+  /// No description provided for @achievementTotalDistance250kDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Run 250 km total'**
+  String get achievementTotalDistance250kDescription;
+
+  /// No description provided for @achievementTotalDistance500kTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Iron endurance'**
+  String get achievementTotalDistance500kTitle;
+
+  /// No description provided for @achievementTotalDistance500kDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Run 500 km total'**
+  String get achievementTotalDistance500kDescription;
+
+  /// No description provided for @achievementSingleCaptureFirstTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'First capture'**
+  String get achievementSingleCaptureFirstTitle;
+
+  /// No description provided for @achievementSingleCaptureFirstDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Your first run with captured territory'**
+  String get achievementSingleCaptureFirstDescription;
+
+  /// No description provided for @achievementSingleCapture100kTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Surveyor'**
+  String get achievementSingleCapture100kTitle;
+
+  /// No description provided for @achievementSingleCapture100kDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Capture 0.1 km² in one run'**
+  String get achievementSingleCapture100kDescription;
+
+  /// No description provided for @achievementSingleCapture4mTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cartographer'**
+  String get achievementSingleCapture4mTitle;
+
+  /// No description provided for @achievementSingleCapture4mDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Capture 4 km² in one run'**
+  String get achievementSingleCapture4mDescription;
+
+  /// No description provided for @achievementSingleCapture10mTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Conqueror'**
+  String get achievementSingleCapture10mTitle;
+
+  /// No description provided for @achievementSingleCapture10mDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Capture 10 km² in one run'**
+  String get achievementSingleCapture10mDescription;
+
+  /// No description provided for @achievementSingleCapture25mTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Map titan'**
+  String get achievementSingleCapture25mTitle;
+
+  /// No description provided for @achievementSingleCapture25mDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Capture 25 km² in one run'**
+  String get achievementSingleCapture25mDescription;
+
+  /// No description provided for @achievementCaptures005Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Capturer'**
+  String get achievementCaptures005Title;
+
+  /// No description provided for @achievementCaptures005Description.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete 5 successful captures'**
+  String get achievementCaptures005Description;
+
+  /// No description provided for @achievementCaptures010Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Land hunter'**
+  String get achievementCaptures010Title;
+
+  /// No description provided for @achievementCaptures010Description.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete 10 successful captures'**
+  String get achievementCaptures010Description;
+
+  /// No description provided for @achievementCaptures025Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Territory collector'**
+  String get achievementCaptures025Title;
+
+  /// No description provided for @achievementCaptures025Description.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete 25 successful captures'**
+  String get achievementCaptures025Description;
+
+  /// No description provided for @achievementCaptures050Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Lord of the map'**
+  String get achievementCaptures050Title;
+
+  /// No description provided for @achievementCaptures050Description.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete 50 successful captures'**
+  String get achievementCaptures050Description;
+
+  /// No description provided for @achievementTotalCapture10mTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Empire grows'**
+  String get achievementTotalCapture10mTitle;
+
+  /// No description provided for @achievementTotalCapture10mDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Capture 10 km² total'**
+  String get achievementTotalCapture10mDescription;
+
+  /// No description provided for @achievementTotalCapture50mTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Expanding borders'**
+  String get achievementTotalCapture50mTitle;
+
+  /// No description provided for @achievementTotalCapture50mDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Capture 50 km² total'**
+  String get achievementTotalCapture50mDescription;
+
+  /// No description provided for @achievementTotalCapture100mTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Continental scale'**
+  String get achievementTotalCapture100mTitle;
+
+  /// No description provided for @achievementTotalCapture100mDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Capture 100 km² total'**
+  String get achievementTotalCapture100mDescription;
+
+  /// No description provided for @achievementVictimsSingle1Title.
+  ///
+  /// In en, this message translates to:
+  /// **'First rival'**
+  String get achievementVictimsSingle1Title;
+
+  /// No description provided for @achievementVictimsSingle1Description.
+  ///
+  /// In en, this message translates to:
+  /// **'Capture territory from at least 1 rival in a run'**
+  String get achievementVictimsSingle1Description;
+
+  /// No description provided for @achievementVictimsSingle2Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Double strike'**
+  String get achievementVictimsSingle2Title;
+
+  /// No description provided for @achievementVictimsSingle2Description.
+  ///
+  /// In en, this message translates to:
+  /// **'Capture territory from 2 rivals in one run'**
+  String get achievementVictimsSingle2Description;
+
+  /// No description provided for @achievementVictimsSingle3Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Triple threat'**
+  String get achievementVictimsSingle3Title;
+
+  /// No description provided for @achievementVictimsSingle3Description.
+  ///
+  /// In en, this message translates to:
+  /// **'Capture territory from 3 rivals in one run'**
+  String get achievementVictimsSingle3Description;
+
+  /// No description provided for @achievementVictimsTotal10Title.
+  ///
+  /// In en, this message translates to:
+  /// **'District menace'**
+  String get achievementVictimsTotal10Title;
+
+  /// No description provided for @achievementVictimsTotal10Description.
+  ///
+  /// In en, this message translates to:
+  /// **'Affect 10 rivals total'**
+  String get achievementVictimsTotal10Description;
+
+  /// No description provided for @achievementVictimsTotal25Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Capture legend'**
+  String get achievementVictimsTotal25Title;
+
+  /// No description provided for @achievementVictimsTotal25Description.
+  ///
+  /// In en, this message translates to:
+  /// **'Affect 25 rivals total'**
+  String get achievementVictimsTotal25Description;
+
+  /// No description provided for @achievementOwnedArea500kTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Landowner'**
+  String get achievementOwnedArea500kTitle;
+
+  /// No description provided for @achievementOwnedArea500kDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Own 0.5 km² of current territory'**
+  String get achievementOwnedArea500kDescription;
+
+  /// No description provided for @achievementOwnedArea5mTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Little kingdom'**
+  String get achievementOwnedArea5mTitle;
+
+  /// No description provided for @achievementOwnedArea5mDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Own 5 km² of current territory'**
+  String get achievementOwnedArea5mDescription;
+
+  /// No description provided for @achievementOwnedArea20mTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Great power'**
+  String get achievementOwnedArea20mTitle;
+
+  /// No description provided for @achievementOwnedArea20mDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Own 20 km² of current territory'**
+  String get achievementOwnedArea20mDescription;
+
   /// No description provided for @historiesEmpty.
   ///
   /// In en, this message translates to:

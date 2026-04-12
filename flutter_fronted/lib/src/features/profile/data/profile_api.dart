@@ -11,6 +11,11 @@ class ProfileApi {
     return res.data!;
   }
 
+  Future<Map<String, dynamic>> getMyAchievements() async {
+    final res = await _dio.get<Map<String, dynamic>>('/me/achievements');
+    return res.data!;
+  }
+
   Future<Map<String, dynamic>> updateMeProfile({
     String? displayName,
     String? avatarUrl,

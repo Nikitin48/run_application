@@ -262,6 +262,318 @@ class AppLocalizationsRu extends AppLocalizations {
   String get profileSaveSuccess => 'Изменения сохранены';
 
   @override
+  String get profileLevelLabel => 'Уровень профиля';
+
+  @override
+  String get profileXpLabel => 'Опыт профиля';
+
+  @override
+  String get profileSuccessfulCapturesLabel => 'Успешные захваты';
+
+  @override
+  String get profileTotalCapturedLabel => 'Суммарно захвачено';
+
+  @override
+  String get profileTotalVictimsLabel => 'Всего затронуто соперников';
+
+  @override
+  String get achievementsPopupTitle => 'Новые достижения';
+
+  @override
+  String get achievementsPopupIntroSingle =>
+      'За этот забег вы открыли новую награду.';
+
+  @override
+  String get achievementsPopupIntroMultiple =>
+      'За этот забег открыто сразу несколько наград.';
+
+  @override
+  String get achievementsPopupAction => 'Круто';
+
+  @override
+  String achievementsLevelUp(Object oldLevel, Object newLevel) {
+    return 'Уровень повышен: $oldLevel -> $newLevel';
+  }
+
+  @override
+  String get achievementsCollectionTitle => 'Коллекция достижений';
+
+  @override
+  String achievementsCollectionSummary(Object count, Object level, Object xp) {
+    return 'Открыто $count | Уровень $level | $xp XP';
+  }
+
+  @override
+  String get achievementsOpenAllAction => 'Все достижения';
+
+  @override
+  String get achievementsEmpty =>
+      'Пока нет открытых достижений. Завершайте пробежки и захватывайте территорию.';
+
+  @override
+  String achievementsLoadError(Object error) {
+    return 'Не удалось загрузить достижения: $error';
+  }
+
+  @override
+  String get achievementsPageTitle => 'Все достижения';
+
+  @override
+  String get achievementsPageSubtitle =>
+      'Ваши открытые награды и прогресс профиля';
+
+  @override
+  String get achievementTierBase => 'Базовое';
+
+  @override
+  String get achievementTierAdvanced => 'Продвинутое';
+
+  @override
+  String get achievementTierRare => 'Редкое';
+
+  @override
+  String get achievementTierLegendary => 'Легендарное';
+
+  @override
+  String get achievementRuns001Title => 'Первые шаги';
+
+  @override
+  String get achievementRuns001Description => 'Завершить 1 пробежку';
+
+  @override
+  String get achievementRuns005Title => 'Разогрев';
+
+  @override
+  String get achievementRuns005Description => 'Завершить 5 пробежек';
+
+  @override
+  String get achievementRuns010Title => 'В ритме';
+
+  @override
+  String get achievementRuns010Description => 'Завершить 10 пробежек';
+
+  @override
+  String get achievementRuns025Title => 'Не остановить';
+
+  @override
+  String get achievementRuns025Description => 'Завершить 25 пробежек';
+
+  @override
+  String get achievementRuns050Title => 'Машина бега';
+
+  @override
+  String get achievementRuns050Description => 'Завершить 50 пробежек';
+
+  @override
+  String get achievementSingleDistance1kTitle => 'Первый километр';
+
+  @override
+  String get achievementSingleDistance1kDescription =>
+      'Пробежать 1 км за один забег';
+
+  @override
+  String get achievementSingleDistance5kTitle => 'Пятёрка';
+
+  @override
+  String get achievementSingleDistance5kDescription =>
+      'Пробежать 5 км за один забег';
+
+  @override
+  String get achievementSingleDistance10kTitle => 'Десятка';
+
+  @override
+  String get achievementSingleDistance10kDescription =>
+      'Пробежать 10 км за один забег';
+
+  @override
+  String get achievementSingleDistance21kTitle => 'Полумарафонец';
+
+  @override
+  String get achievementSingleDistance21kDescription =>
+      'Пробежать 21.1 км за один забег';
+
+  @override
+  String get achievementSingleDistance42kTitle => 'Марафонец';
+
+  @override
+  String get achievementSingleDistance42kDescription =>
+      'Пробежать 42.2 км за один забег';
+
+  @override
+  String get achievementTotalDistance10kTitle => 'На дистанции';
+
+  @override
+  String get achievementTotalDistance10kDescription =>
+      'Пробежать 10 км суммарно';
+
+  @override
+  String get achievementTotalDistance50kTitle => 'Дальше больше';
+
+  @override
+  String get achievementTotalDistance50kDescription =>
+      'Пробежать 50 км суммарно';
+
+  @override
+  String get achievementTotalDistance100kTitle => 'Сотня';
+
+  @override
+  String get achievementTotalDistance100kDescription =>
+      'Пробежать 100 км суммарно';
+
+  @override
+  String get achievementTotalDistance250kTitle => 'Длинный путь';
+
+  @override
+  String get achievementTotalDistance250kDescription =>
+      'Пробежать 250 км суммарно';
+
+  @override
+  String get achievementTotalDistance500kTitle => 'Железная выносливость';
+
+  @override
+  String get achievementTotalDistance500kDescription =>
+      'Пробежать 500 км суммарно';
+
+  @override
+  String get achievementSingleCaptureFirstTitle => 'Первый захват';
+
+  @override
+  String get achievementSingleCaptureFirstDescription =>
+      'Первая пробежка с захватом территории';
+
+  @override
+  String get achievementSingleCapture100kTitle => 'Землемер';
+
+  @override
+  String get achievementSingleCapture100kDescription =>
+      'Захватить 0.1 км² за один забег';
+
+  @override
+  String get achievementSingleCapture4mTitle => 'Картограф';
+
+  @override
+  String get achievementSingleCapture4mDescription =>
+      'Захватить 4 км² за один забег';
+
+  @override
+  String get achievementSingleCapture10mTitle => 'Завоеватель';
+
+  @override
+  String get achievementSingleCapture10mDescription =>
+      'Захватить 10 км² за один забег';
+
+  @override
+  String get achievementSingleCapture25mTitle => 'Титан карты';
+
+  @override
+  String get achievementSingleCapture25mDescription =>
+      'Захватить 25 км² за один забег';
+
+  @override
+  String get achievementCaptures005Title => 'Захватчик';
+
+  @override
+  String get achievementCaptures005Description =>
+      'Выполнить 5 успешных захватов';
+
+  @override
+  String get achievementCaptures010Title => 'Охотник за землями';
+
+  @override
+  String get achievementCaptures010Description =>
+      'Выполнить 10 успешных захватов';
+
+  @override
+  String get achievementCaptures025Title => 'Коллекционер территорий';
+
+  @override
+  String get achievementCaptures025Description =>
+      'Выполнить 25 успешных захватов';
+
+  @override
+  String get achievementCaptures050Title => 'Повелитель карты';
+
+  @override
+  String get achievementCaptures050Description =>
+      'Выполнить 50 успешных захватов';
+
+  @override
+  String get achievementTotalCapture10mTitle => 'Империя растёт';
+
+  @override
+  String get achievementTotalCapture10mDescription =>
+      'Захватить 10 км² суммарно';
+
+  @override
+  String get achievementTotalCapture50mTitle => 'Расширение границ';
+
+  @override
+  String get achievementTotalCapture50mDescription =>
+      'Захватить 50 км² суммарно';
+
+  @override
+  String get achievementTotalCapture100mTitle => 'Континентальный размах';
+
+  @override
+  String get achievementTotalCapture100mDescription =>
+      'Захватить 100 км² суммарно';
+
+  @override
+  String get achievementVictimsSingle1Title => 'Первый соперник';
+
+  @override
+  String get achievementVictimsSingle1Description =>
+      'Захватить территорию хотя бы у 1 соперника за забег';
+
+  @override
+  String get achievementVictimsSingle2Title => 'Двойной удар';
+
+  @override
+  String get achievementVictimsSingle2Description =>
+      'Захватить территорию у 2 соперников за один забег';
+
+  @override
+  String get achievementVictimsSingle3Title => 'Тройная угроза';
+
+  @override
+  String get achievementVictimsSingle3Description =>
+      'Захватить территорию у 3 соперников за один забег';
+
+  @override
+  String get achievementVictimsTotal10Title => 'Гроза района';
+
+  @override
+  String get achievementVictimsTotal10Description =>
+      'Суммарно затронуть 10 соперников';
+
+  @override
+  String get achievementVictimsTotal25Title => 'Легенда захватов';
+
+  @override
+  String get achievementVictimsTotal25Description =>
+      'Суммарно затронуть 25 соперников';
+
+  @override
+  String get achievementOwnedArea500kTitle => 'Есть своя земля';
+
+  @override
+  String get achievementOwnedArea500kDescription =>
+      'Иметь текущую площадь 0.5 км²';
+
+  @override
+  String get achievementOwnedArea5mTitle => 'Маленькое королевство';
+
+  @override
+  String get achievementOwnedArea5mDescription => 'Иметь текущую площадь 5 км²';
+
+  @override
+  String get achievementOwnedArea20mTitle => 'Большая держава';
+
+  @override
+  String get achievementOwnedArea20mDescription =>
+      'Иметь текущую площадь 20 км²';
+
+  @override
   String get historiesEmpty => 'Пока нет завершенных пробежек.';
 
   @override

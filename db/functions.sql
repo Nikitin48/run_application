@@ -114,17 +114,6 @@ BEGIN
     RAISE EXCEPTION 'run % not found', p_run_id;
   END IF;
 
-  v_capture := compute_capture_polygons(v_line, p_tol_m, p_min_area_m2);
-  IF v_capture IS NULL OR ST_IsEmpty(v_capture) THEN
-    capture_area_m2 := 0;
-    victims_count := 0;
-    RETURN NEXT;
-    RETURN;
-  END IF;
-
-  v_capture_m := ST_Transform(v_capture, 3857);
-  v_area_m2 := ST_Area(v_capture_m);
-
   -- Load run metrics (fallbacks are allowed).
   SELECT
     COALESCE(r.distance_m, 0),
@@ -145,6 +134,62 @@ BEGIN
   IF v_moving_s IS NULL THEN
     v_moving_s := GREATEST(0, v_elapsed_s - v_paused_s);
   END IF;
+
+  v_capture := compute_capture_polygons(v_line, p_tol_m, p_min_area_m2);
+  IF v_capture IS NULL OR ST_IsEmpty(v_capture) THEN
+    -- Even runs without territory capture must be fully processed and counted in stats.
+    UPDATE runs
+    SET status = 'processed',
+        elapsed_s = v_elapsed_s,
+        paused_s = v_paused_s,
+        moving_s = v_moving_s,
+        updated_at = v_now
+    WHERE id = p_run_id;
+
+    INSERT INTO user_stats(
+      user_id,
+      run_count,
+      total_distance_m,
+      total_elapsed_s,
+      total_paused_s,
+      total_moving_s,
+      successful_captures_count,
+      total_captured_area_m2,
+      total_victims_count,
+      owned_area_m2,
+      updated_at
+    )
+    VALUES (
+      v_runner_id,
+      1,
+      v_distance_m,
+      v_elapsed_s,
+      v_paused_s,
+      v_moving_s,
+      0,
+      0,
+      0,
+      COALESCE((SELECT ST_Area(ST_Transform(geom, 3857)) FROM territories WHERE user_id = v_runner_id), 0),
+      v_now
+    )
+    ON CONFLICT (user_id)
+    DO UPDATE SET
+      run_count = user_stats.run_count + 1,
+      total_distance_m = user_stats.total_distance_m + v_distance_m,
+      total_elapsed_s = user_stats.total_elapsed_s + v_elapsed_s,
+      total_paused_s = user_stats.total_paused_s + v_paused_s,
+      total_moving_s = user_stats.total_moving_s + v_moving_s,
+      owned_area_m2 = COALESCE((SELECT ST_Area(ST_Transform(geom, 3857)) FROM territories WHERE user_id = v_runner_id), 0),
+      updated_at = v_now;
+
+    capture_area_m2 := 0;
+    victims_count := 0;
+    RETURN NEXT;
+    RETURN;
+  END IF;
+
+  v_capture_m := ST_Transform(v_capture, 3857);
+  v_area_m2 := ST_Area(v_capture_m);
 
   -- Temp accumulator per victim (sum stolen area).
   CREATE TEMP TABLE IF NOT EXISTS tmp_victim_stolen (
@@ -264,6 +309,8 @@ BEGIN
   ) old
   WHERE un.id = old.id;
 
+  SELECT COUNT(*) INTO v_victims FROM tmp_victim_stolen;
+
   -- Update stats (runner + victims touched)
   -- Runner: increment run_count + distance, recompute owned area from territories.
   INSERT INTO user_stats(
@@ -273,6 +320,9 @@ BEGIN
     total_elapsed_s,
     total_paused_s,
     total_moving_s,
+    successful_captures_count,
+    total_captured_area_m2,
+    total_victims_count,
     owned_area_m2,
     updated_at
   )
@@ -283,6 +333,9 @@ BEGIN
     v_elapsed_s,
     v_paused_s,
     v_moving_s,
+    1,
+    v_area_m2,
+    v_victims,
     COALESCE((SELECT ST_Area(ST_Transform(geom, 3857)) FROM territories WHERE user_id = v_runner_id), 0),
     v_now
   )
@@ -293,6 +346,9 @@ BEGIN
     total_elapsed_s = user_stats.total_elapsed_s + v_elapsed_s,
     total_paused_s = user_stats.total_paused_s + v_paused_s,
     total_moving_s = user_stats.total_moving_s + v_moving_s,
+    successful_captures_count = user_stats.successful_captures_count + 1,
+    total_captured_area_m2 = user_stats.total_captured_area_m2 + v_area_m2,
+    total_victims_count = user_stats.total_victims_count + v_victims,
     owned_area_m2 = COALESCE((SELECT ST_Area(ST_Transform(geom, 3857)) FROM territories WHERE user_id = v_runner_id), 0),
     updated_at = v_now;
 
@@ -324,8 +380,6 @@ BEGIN
     v_now
   FROM tmp_victim_stolen tvs
   ON CONFLICT (user_id) DO NOTHING;
-
-  SELECT COUNT(*) INTO v_victims FROM tmp_victim_stolen;
 
   capture_area_m2 := v_area_m2;
   victims_count := v_victims;

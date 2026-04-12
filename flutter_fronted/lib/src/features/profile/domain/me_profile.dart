@@ -5,7 +5,12 @@ class MeProfileStats {
     required this.totalElapsedS,
     required this.totalPausedS,
     required this.totalMovingS,
+    required this.successfulCapturesCount,
+    required this.totalCapturedAreaM2,
+    required this.totalVictimsCount,
     required this.ownedAreaM2,
+    required this.profileXp,
+    required this.profileLevel,
   });
 
   final int runCount;
@@ -13,7 +18,12 @@ class MeProfileStats {
   final int totalElapsedS;
   final int totalPausedS;
   final int totalMovingS;
+  final int successfulCapturesCount;
+  final double totalCapturedAreaM2;
+  final int totalVictimsCount;
   final double ownedAreaM2;
+  final int profileXp;
+  final int profileLevel;
 }
 
 class MeProfile {

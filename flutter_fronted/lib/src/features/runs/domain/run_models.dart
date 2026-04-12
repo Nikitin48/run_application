@@ -80,6 +80,10 @@ class FinishRunResponse {
     required this.movingS,
     required this.captureAreaM2,
     required this.victimsCount,
+    required this.newAchievements,
+    required this.levelUp,
+    required this.profileXp,
+    required this.profileLevel,
   });
 
   final String runId;
@@ -89,8 +93,13 @@ class FinishRunResponse {
   final int movingS;
   final double captureAreaM2;
   final int victimsCount;
+  final List<UnlockedAchievement> newAchievements;
+  final LevelUpInfo? levelUp;
+  final int profileXp;
+  final int profileLevel;
 
   static FinishRunResponse fromJson(Map<String, Object?> json) {
+    final newAchievementsRaw = (json['new_achievements'] as List?) ?? const [];
     return FinishRunResponse(
       runId: json['run_id'] as String,
       distanceM: (json['distance_m'] as num).toDouble(),
@@ -99,6 +108,63 @@ class FinishRunResponse {
       movingS: (json['moving_s'] as num).toInt(),
       captureAreaM2: (json['capture_area_m2'] as num).toDouble(),
       victimsCount: (json['victims_count'] as num).toInt(),
+      newAchievements: newAchievementsRaw
+          .whereType<Map<String, Object?>>()
+          .map(UnlockedAchievement.fromJson)
+          .toList(growable: false),
+      levelUp: (json['level_up'] as Map<String, Object?>?) == null
+          ? null
+          : LevelUpInfo.fromJson(json['level_up'] as Map<String, Object?>),
+      profileXp: (json['profile_xp'] as num?)?.toInt() ?? 0,
+      profileLevel: (json['profile_level'] as num?)?.toInt() ?? 1,
+    );
+  }
+}
+
+class UnlockedAchievement {
+  const UnlockedAchievement({
+    required this.code,
+    required this.title,
+    required this.description,
+    required this.category,
+    required this.iconKey,
+    required this.xp,
+    required this.unlockedAt,
+  });
+
+  final String code;
+  final String title;
+  final String description;
+  final String category;
+  final String iconKey;
+  final int xp;
+  final DateTime unlockedAt;
+
+  static UnlockedAchievement fromJson(Map<String, Object?> json) {
+    return UnlockedAchievement(
+      code: (json['code'] as String?) ?? '',
+      title: (json['title'] as String?) ?? '',
+      description: (json['description'] as String?) ?? '',
+      category: (json['category'] as String?) ?? '',
+      iconKey: (json['icon_key'] as String?) ?? '',
+      xp: (json['xp'] as num?)?.toInt() ?? 0,
+      unlockedAt:
+          DateTime.tryParse((json['unlocked_at'] as String?) ?? '') ??
+          DateTime.now(),
+    );
+  }
+}
+
+class LevelUpInfo {
+  const LevelUpInfo({required this.oldLevel, required this.newLevel});
+
+  final int oldLevel;
+  final int newLevel;
+
+  static LevelUpInfo fromJson(Map<String, Object?> json) {
+    return LevelUpInfo(
+      oldLevel: (json['old_level'] as num?)?.toInt() ?? 1,
+      newLevel: (json['new_level'] as num?)?.toInt() ?? 1,
     );
   }
 }

@@ -8,6 +8,7 @@ import 'package:geolocator/geolocator.dart';
 import '../../../core/notifications/local_notifications_service.dart';
 import '../../../core/network/dio_provider.dart';
 import '../../../core/services/background_location_service.dart';
+import '../../profile/application/profile_controller.dart';
 import '../../runs/data/runs_api.dart';
 import '../../runs/data/runs_repository.dart';
 import '../domain/repositories/runs_repository.dart';
@@ -47,6 +48,7 @@ class RunTrackerState {
     List<RunPause>? pauses,
     int? countdownSeconds,
     FinishRunResponse? lastFinish,
+    bool clearLastFinish = false,
     String? error,
   }) {
     return RunTrackerState(
@@ -55,7 +57,7 @@ class RunTrackerState {
       points: points ?? this.points,
       pauses: pauses ?? this.pauses,
       countdownSeconds: countdownSeconds,
-      lastFinish: lastFinish ?? this.lastFinish,
+      lastFinish: clearLastFinish ? null : (lastFinish ?? this.lastFinish),
       error: error,
     );
   }
@@ -409,6 +411,8 @@ class RunTrackerController extends Notifier<RunTrackerState> {
     state = state.copyWith(phase: RunPhase.finishing, error: null);
     try {
       final res = await ref.read(finishRunUseCaseProvider)(req);
+      ref.invalidate(meProfileProvider);
+      ref.invalidate(myAchievementsProvider);
       state = const RunTrackerState.idle().copyWith(lastFinish: res);
       completed = true;
     } catch (e) {
@@ -421,7 +425,7 @@ class RunTrackerController extends Notifier<RunTrackerState> {
   }
 
   void clearLastFinish() {
-    state = state.copyWith(lastFinish: null);
+    state = state.copyWith(clearLastFinish: true);
   }
 
   /// Adds a simulated point (for emulator / test mode).
