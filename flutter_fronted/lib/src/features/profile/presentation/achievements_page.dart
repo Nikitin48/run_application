@@ -4,6 +4,7 @@ import 'package:run_application/l10n/app_localizations.dart';
 
 import '../../../core/ui/achievement_badge_card.dart';
 import '../../../core/utils/achievement_localization.dart';
+import '../../../core/utils/user_friendly_error.dart';
 import '../application/profile_controller.dart';
 import 'widgets/profile_achievements_summary_card.dart';
 
@@ -92,7 +93,14 @@ class AchievementsPage extends ConsumerWidget {
         error: (e, _) => Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
-            child: Text(l10n.achievementsLoadError(e.toString())),
+            child: Text(
+              l10n.achievementsLoadError(
+                toUserFriendlyError(
+                  e,
+                  fallbackMessage: 'попробуйте снова позже',
+                ),
+              ),
+            ),
           ),
         ),
       ),

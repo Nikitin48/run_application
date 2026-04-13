@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/utils/formatters.dart';
+import '../../../core/utils/user_friendly_error.dart';
 import '../application/last_notification_provider.dart';
 import '../application/notification_read_state_provider.dart';
 import '../domain/last_notification.dart';
@@ -46,7 +47,16 @@ class NotificationsPage extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Ошибка загрузки: $e')),
+        error: (e, _) => Center(
+          child: Text(
+            toUserFriendlyError(
+              e,
+              fallbackMessage:
+                  'Не удалось загрузить уведомления. Попробуйте снова.',
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
       ),
     );
   }
@@ -75,4 +85,3 @@ class _NotificationTile extends StatelessWidget {
     );
   }
 }
-

@@ -33,11 +33,6 @@ class _HomeShellPageState extends ConsumerState<HomeShellPage> {
     ref.invalidate(notificationsHistoryProvider);
     ref.invalidate(runHistoryProvider);
     ref.invalidate(territoriesForBboxProvider);
-    if (!mounted) return;
-    final finish = ref.read(runTrackerProvider).lastFinish;
-    if (finish != null) {
-      context.push('/run-summary');
-    }
   }
 
   Future<void> _showAlwaysLocationHintIfNeededBeforeStart() async {

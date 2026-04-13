@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:dio/dio.dart';
 
+import '../../../core/utils/user_friendly_error.dart';
 import '../../../core/utils/formatters.dart';
 import '../application/leaderboard_controller.dart';
 import '../domain/leaderboard_models.dart';
@@ -155,17 +157,20 @@ class _LeaderboardPageState extends ConsumerState<LeaderboardPage> {
                   );
                 },
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (error, _) => ListView(
-                  padding: const EdgeInsets.all(16),
-                  children: [
-                    Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Text(error.toString()),
+                error: (error, _) {
+                  final message = _leaderboardErrorMessage(error, filter.scope);
+                  return ListView(
+                    padding: const EdgeInsets.all(16),
+                    children: [
+                      Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Text(message),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  );
+                },
               ),
             ),
           ),
@@ -173,6 +178,21 @@ class _LeaderboardPageState extends ConsumerState<LeaderboardPage> {
       ),
     );
   }
+}
+
+String _leaderboardErrorMessage(Object error, LeaderboardScope scope) {
+  if (error is DioException && error.response?.statusCode == 422) {
+    if (scope == LeaderboardScope.region) {
+      return 'Для рейтинга по области сначала выберите область в профиле.';
+    }
+    if (scope == LeaderboardScope.city) {
+      return 'Для рейтинга по городу сначала выберите область и город в профиле.';
+    }
+  }
+  return toUserFriendlyError(
+    error,
+    fallbackMessage: 'Не удалось загрузить рейтинг. Попробуйте еще раз.',
+  );
 }
 
 class _LeaderboardRow extends StatelessWidget {

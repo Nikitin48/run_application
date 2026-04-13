@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,6 +9,7 @@ import 'package:run_application/l10n/app_localizations.dart';
 import '../../../core/utils/color_utils.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../core/utils/user_friendly_error.dart';
 import '../../auth/application/auth_controller.dart';
 import '../../locations/domain/location_models.dart';
 import '../../locations/application/locations_provider.dart';
@@ -43,7 +43,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   String? _cityName;
   bool _clearRegionOnSave = false;
   bool _clearCityOnSave = false;
-  _ProfileAction? _lastAction;
 
   @override
   void dispose() {
@@ -53,17 +52,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     _newPasswordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
-  }
-
-  String _prettyError(Object e) {
-    if (e is DioException) {
-      final data = e.response?.data;
-      if (data is Map && data['detail'] is String) {
-        return data['detail'] as String;
-      }
-      return e.message ?? 'Network error';
-    }
-    return e.toString();
   }
 
   void _syncForm(MeProfile profile) {
@@ -84,6 +72,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   Future<RegionItem?> _pickRegion() async {
     return showModalBottomSheet<RegionItem>(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       builder: (_) {
         return _PaginatedPickerSheet<RegionItem>(
@@ -107,6 +96,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     if (_regionCode == null) return null;
     return showModalBottomSheet<CityItem>(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       builder: (_) {
         return _PaginatedPickerSheet<CityItem>(
@@ -135,7 +125,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       imageQuality: 88,
     );
     if (picked == null || !mounted) return;
-    _lastAction = _ProfileAction.uploadAvatar;
     await ref.read(profileActionsProvider.notifier).uploadAvatar(picked);
   }
 
@@ -192,21 +181,13 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
     ref.listen<AsyncValue<void>>(profileActionsProvider, (previous, next) {
       if (next.hasError) {
-        final msg = _prettyError(next.error!);
+        final msg = toUserFriendlyError(
+          next.error!,
+          fallbackMessage: 'Не удалось сохранить изменения. Попробуйте снова.',
+        );
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(msg)));
-      }
-      if (previous?.isLoading == true && next.hasValue) {
-        final successText = switch (_lastAction) {
-          _ProfileAction.uploadAvatar => l10n.profileAvatarUploadSuccess,
-          _ProfileAction.deleteAvatar => l10n.profileAvatarDeleteSuccess,
-          _ProfileAction.changePassword => l10n.profilePasswordChangedSuccess,
-          _ => l10n.profileSaveSuccess,
-        };
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(successText)));
       }
     });
 
@@ -274,8 +255,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                                 onPressed: isSaving || profile.avatarUrl == null
                                     ? null
                                     : () async {
-                                        _lastAction =
-                                            _ProfileAction.deleteAvatar;
                                         await ref
                                             .read(
                                               profileActionsProvider.notifier,
@@ -370,7 +349,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                                   final displayName = _displayNameController
                                       .text
                                       .trim();
-                                  _lastAction = _ProfileAction.saveProfile;
                                   await ref
                                       .read(profileActionsProvider.notifier)
                                       .saveProfile(
@@ -441,7 +419,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                           onPressed: isSaving
                               ? null
                               : () async {
-                                  _lastAction = _ProfileAction.saveColor;
                                   await ref
                                       .read(profileActionsProvider.notifier)
                                       .saveTerritoryColor(currentColor);
@@ -562,7 +539,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                                     );
                                     return;
                                   }
-                                  _lastAction = _ProfileAction.changePassword;
                                   await ref
                                       .read(profileActionsProvider.notifier)
                                       .changePassword(
@@ -631,7 +607,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                         ),
                         _MetricRow(
                           label: l10n.profileTotalCapturedLabel,
-                          value: formatAreaM2(profile.stats.totalCapturedAreaM2),
+                          value: formatAreaM2(
+                            profile.stats.totalCapturedAreaM2,
+                          ),
                         ),
                         _MetricRow(
                           label: l10n.profileTotalVictimsLabel,
@@ -652,7 +630,16 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text(_prettyError(e))),
+        error: (e, _) => Center(
+          child: Text(
+            toUserFriendlyError(
+              e,
+              fallbackMessage:
+                  'Не удалось загрузить профиль. Попробуйте снова.',
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
       ),
     );
   }
@@ -809,7 +796,16 @@ class _PaginatedPickerSheetState<T> extends State<_PaginatedPickerSheet<T>> {
 
   Widget _buildList(BuildContext context) {
     if (_error != null && _items.isEmpty) {
-      return Center(child: Text(_error.toString()));
+      return Center(
+        child: Text(
+          toUserFriendlyError(
+            _error!,
+            fallbackMessage:
+                'Не удалось загрузить список. Проверьте сеть и попробуйте снова.',
+          ),
+          textAlign: TextAlign.center,
+        ),
+      );
     }
     if (_loading && _items.isEmpty) {
       return const Center(child: CircularProgressIndicator());
@@ -838,14 +834,6 @@ class _PaginatedPickerSheetState<T> extends State<_PaginatedPickerSheet<T>> {
       },
     );
   }
-}
-
-enum _ProfileAction {
-  saveProfile,
-  saveColor,
-  uploadAvatar,
-  deleteAvatar,
-  changePassword,
 }
 
 class _MetricRow extends StatelessWidget {

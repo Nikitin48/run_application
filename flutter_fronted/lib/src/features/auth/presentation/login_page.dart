@@ -1,8 +1,8 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:run_application/l10n/app_localizations.dart';
 
+import '../../../core/utils/user_friendly_error.dart';
 import '../application/auth_controller.dart';
 import '../domain/validation/auth_form_validation.dart';
 import '../../../core/theme/app_colors.dart';
@@ -22,6 +22,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   String? _loginEmailValidationError;
   bool _loginPasswordVisible = false;
   String? _loginError;
+
   /// Значения полей на момент показа [_loginError]; сброс только если текст реально изменился.
   String _loginEmailWhenErrorShown = '';
   String _loginPasswordWhenErrorShown = '';
@@ -127,7 +128,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   void _onLoginCredentialsTextChanged() {
     if (!mounted) return;
     final emailKey = AuthFormValidation.validateEmail(_loginEmail.text);
-    final shouldClearApiError = _loginError != null &&
+    final shouldClearApiError =
+        _loginError != null &&
         (_loginEmail.text != _loginEmailWhenErrorShown ||
             _loginPassword.text != _loginPasswordWhenErrorShown);
     setState(() {
@@ -152,17 +154,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   }
 
   String? get _currentError => _isRegister ? _registerError : _loginError;
-
-  String _prettyError(Object e) {
-    if (e is DioException) {
-      final data = e.response?.data;
-      if (data is Map && data['detail'] is String) {
-        return data['detail'] as String;
-      }
-      return e.message ?? 'Network error';
-    }
-    return e.toString();
-  }
 
   static bool _isInvalidCredentialsBackendMessage(String message) {
     return message.trim().toLowerCase() == 'invalid credentials';
@@ -199,7 +190,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     } catch (e) {
       if (!mounted) return;
       final l10n = AppLocalizations.of(context)!;
-      var msg = _prettyError(e);
+      var msg = toUserFriendlyError(
+        e,
+        fallbackMessage: 'Не удалось выполнить вход. Попробуйте снова.',
+      );
       if (!_isRegister && _isInvalidCredentialsBackendMessage(msg)) {
         msg = l10n.authInvalidCredentials;
       }

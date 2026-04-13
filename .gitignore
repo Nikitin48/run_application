@@ -1,2 +1,6 @@
 # Секреты на сервере / локально (FCM, ключи)
 secrets/
+
+# Python cache/build artifacts
+**/__pycache__/
+*.pyc

@@ -9,6 +9,7 @@ import 'package:run_application/l10n/app_localizations.dart';
 
 import '../../../core/utils/color_utils.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../core/utils/user_friendly_error.dart';
 import '../../profile/application/profile_controller.dart';
 import '../../runs/domain/run_models.dart';
 import '../application/run_history_provider.dart';
@@ -83,7 +84,9 @@ class _HistoriesPageState extends ConsumerState<HistoriesPage> {
                 if (index >= data.items.length) {
                   return const Padding(
                     padding: EdgeInsets.symmetric(vertical: 10),
-                    child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                    child: Center(
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
                   );
                 }
                 return _RunHistoryCard(
@@ -94,17 +97,24 @@ class _HistoriesPageState extends ConsumerState<HistoriesPage> {
             );
           },
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Text(e.toString()),
+          error: (e, _) {
+            final message = toUserFriendlyError(
+              e,
+              fallbackMessage:
+                  'Не удалось загрузить историю пробежек. Попробуйте еще раз.',
+            );
+            return ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Text(message),
+                  ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            );
+          },
         ),
       ),
     );
@@ -138,7 +148,8 @@ class _RunHistoryCard extends StatelessWidget {
               '${l10n.historiesEndedAt}: $endedLabel',
               style: Theme.of(context).textTheme.bodyMedium,
             ),
-            if (item.capturePolygons.isNotEmpty || item.trackPoints.length >= 2) ...[
+            if (item.capturePolygons.isNotEmpty ||
+                item.trackPoints.length >= 2) ...[
               const SizedBox(height: 12),
               _RunCapturePreview(
                 polygons: item.capturePolygons,
@@ -201,9 +212,7 @@ class _RunCapturePreviewState extends State<_RunCapturePreview> {
 
   List<List<LatLng>> get _latLngPolygons => widget.polygons
       .map(
-        (ring) => ring
-            .map((p) => LatLng(p.lat, p.lng))
-            .toList(growable: false),
+        (ring) => ring.map((p) => LatLng(p.lat, p.lng)).toList(growable: false),
       )
       .toList(growable: false);
 

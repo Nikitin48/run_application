@@ -28,8 +28,10 @@ class _RunSummaryPageState extends ConsumerState<RunSummaryPage> {
       _didShowAchievementsPopup = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
-        showDialog<void>(
+        showModalBottomSheet<void>(
           context: context,
+          showDragHandle: true,
+          isScrollControlled: true,
           builder: (context) => AchievementsPopup(finish: finish),
         );
       });
@@ -78,7 +80,10 @@ class _RunSummaryPageState extends ConsumerState<RunSummaryPage> {
                   ),
                   _MetricRow(
                     label: l10n.avgPaceMoving,
-                    value: formatPace(distanceM: finish.distanceM, movingS: finish.movingS),
+                    value: formatPace(
+                      distanceM: finish.distanceM,
+                      movingS: finish.movingS,
+                    ),
                   ),
                   const Divider(height: 32),
                   _MetricRow(
@@ -116,12 +121,12 @@ class _MetricRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
-          Expanded(child: Text(label, style: Theme.of(context).textTheme.bodyMedium)),
+          Expanded(
+            child: Text(label, style: Theme.of(context).textTheme.bodyMedium),
+          ),
           Text(value, style: Theme.of(context).textTheme.titleMedium),
         ],
       ),
     );
   }
 }
-
-
