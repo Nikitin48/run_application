@@ -40,6 +40,7 @@ class MeProfile {
     required this.regionName,
     required this.cityCode,
     required this.cityName,
+    required this.isAdmin,
     required this.createdAt,
     required this.stats,
   });
@@ -56,6 +57,7 @@ class MeProfile {
   final String? regionName;
   final String? cityCode;
   final String? cityName;
+  final bool isAdmin;
   final DateTime createdAt;
   final MeProfileStats stats;
 }

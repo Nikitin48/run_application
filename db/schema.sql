@@ -51,10 +51,14 @@ CREATE TABLE IF NOT EXISTS users (
   city_code text REFERENCES ref_cities(code) ON DELETE RESTRICT,
   avatar_url text,
   territory_color text NOT NULL DEFAULT '#3B82F6' CHECK (territory_color ~ '^#[0-9A-Fa-f]{6}$'),
+  is_admin boolean NOT NULL DEFAULT false,
   is_banned boolean NOT NULL DEFAULT false,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
+
+ALTER TABLE users
+  ADD COLUMN IF NOT EXISTS is_admin boolean NOT NULL DEFAULT false;
 
 CREATE INDEX IF NOT EXISTS users_location_ix
   ON users(country_code, region_code, city_code);

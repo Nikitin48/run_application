@@ -299,6 +299,10 @@ class _MapPageBodyState extends ConsumerState<_MapPageBody> {
     final meProfileAsync = ref.watch(meProfileProvider);
     final hasUnread = ref.watch(hasUnreadNotificationsProvider);
     final runState = ref.watch(runTrackerProvider);
+    final isAdmin = meProfileAsync.maybeWhen(
+      data: (profile) => profile.isAdmin,
+      orElse: () => false,
+    );
     final latestTerritories = territoriesAsync.valueOrNull;
     if (latestTerritories != null) {
       _territoriesCache = latestTerritories;
@@ -330,35 +334,36 @@ class _MapPageBodyState extends ConsumerState<_MapPageBody> {
       appBar: AppBar(
         title: Text(l10n.mapTitle),
         actions: [
-          PopupMenuButton<_TileStyle>(
-            tooltip: 'Стиль карты',
-            initialValue: _selectedTileStyle,
-            onSelected: (style) => setState(() => _selectedTileStyle = style),
-            itemBuilder: (context) {
-              return _tileStyles
-                  .map(
-                    (style) => PopupMenuItem<_TileStyle>(
-                      value: style,
-                      child: Row(
-                        children: [
-                          if (style == _selectedTileStyle)
-                            Icon(
-                              Icons.check,
-                              size: 18,
-                              color: Theme.of(context).colorScheme.secondary,
-                            )
-                          else
-                            const SizedBox(width: 18),
-                          const SizedBox(width: 8),
-                          Text(style.title),
-                        ],
+          if (isAdmin)
+            PopupMenuButton<_TileStyle>(
+              tooltip: 'Стиль карты',
+              initialValue: _selectedTileStyle,
+              onSelected: (style) => setState(() => _selectedTileStyle = style),
+              itemBuilder: (context) {
+                return _tileStyles
+                    .map(
+                      (style) => PopupMenuItem<_TileStyle>(
+                        value: style,
+                        child: Row(
+                          children: [
+                            if (style == _selectedTileStyle)
+                              Icon(
+                                Icons.check,
+                                size: 18,
+                                color: Theme.of(context).colorScheme.secondary,
+                              )
+                            else
+                              const SizedBox(width: 18),
+                            const SizedBox(width: 8),
+                            Text(style.title),
+                          ],
+                        ),
                       ),
-                    ),
-                  )
-                  .toList(growable: false);
-            },
-            icon: const Icon(Icons.layers_outlined),
-          ),
+                    )
+                    .toList(growable: false);
+              },
+              icon: const Icon(Icons.layers_outlined),
+            ),
           IconButton(
             tooltip: 'Уведомления',
             onPressed: () => context.push('/notifications'),
@@ -386,24 +391,25 @@ class _MapPageBodyState extends ConsumerState<_MapPageBody> {
               ],
             ),
           ),
-          IconButton(
-            tooltip: _testMode ? l10n.testModeOn : l10n.testModeOff,
-            onPressed: () async {
-              if (!_testMode && _currentLocation == null) {
-                await _loadCurrentLocation();
-              }
-              if (!mounted) return;
-              if (_currentLocation == null) {
-                _showSnack(l10n.enableLocationFirst);
-                return;
-              }
-              setState(() => _testMode = !_testMode);
-            },
-            icon: Icon(
-              _testMode ? Icons.gamepad : Icons.gamepad_outlined,
-              color: _testMode ? AppColors.secondPrimary : AppColors.text,
+          if (isAdmin)
+            IconButton(
+              tooltip: _testMode ? l10n.testModeOn : l10n.testModeOff,
+              onPressed: () async {
+                if (!_testMode && _currentLocation == null) {
+                  await _loadCurrentLocation();
+                }
+                if (!mounted) return;
+                if (_currentLocation == null) {
+                  _showSnack(l10n.enableLocationFirst);
+                  return;
+                }
+                setState(() => _testMode = !_testMode);
+              },
+              icon: Icon(
+                _testMode ? Icons.gamepad : Icons.gamepad_outlined,
+                color: _testMode ? AppColors.secondPrimary : AppColors.text,
+              ),
             ),
-          ),
           IconButton(
             tooltip: _followMe ? l10n.followOn : l10n.followOff,
             onPressed: () {
@@ -516,7 +522,7 @@ class _MapPageBodyState extends ConsumerState<_MapPageBody> {
               }(),
             ],
           ),
-          if (_testMode)
+          if (_testMode && isAdmin)
             Positioned(
               right: 12,
               bottom: 170 + bottomBarInset,

@@ -49,6 +49,7 @@ class UserOut(BaseModel):
     display_name: str
     avatar_url: str | None = None
     territory_color: str
+    is_admin: bool = False
     created_at: datetime
 
 
@@ -112,6 +113,7 @@ class MeProfileOut(BaseModel):
     region_name: str | None = None
     city_code: str | None = None
     city_name: str | None = None
+    is_admin: bool = False
     created_at: datetime
     stats: UserStatsOut
 

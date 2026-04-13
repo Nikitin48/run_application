@@ -94,6 +94,7 @@ class ProfileRepositoryImpl implements ProfileRepository {
       regionName: json['region_name'] as String?,
       cityCode: json['city_code'] as String?,
       cityName: json['city_name'] as String?,
+      isAdmin: (json['is_admin'] as bool?) ?? false,
       createdAt:
           DateTime.tryParse((json['created_at'] as String?) ?? '') ??
           DateTime.now(),

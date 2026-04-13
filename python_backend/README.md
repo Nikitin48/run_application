@@ -93,6 +93,26 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 Перед запуском примените SQL из `db/` (в корне репозитория): `db/schema.sql`, `db/functions.sql`.
 
+### Админ-доступ (скрытые кнопки на карте)
+
+По умолчанию любой новый пользователь регистрируется с `is_admin = false`.
+
+Управление админами через консоль:
+
+```bash
+# выдать админа по email
+DATABASE_URL=... python scripts/manage_admin.py grant --email user@example.com
+
+# выдать админа по user id
+DATABASE_URL=... python scripts/manage_admin.py grant --user-id <uuid>
+
+# снять админа
+DATABASE_URL=... python scripts/manage_admin.py revoke --email user@example.com
+
+# список админов
+DATABASE_URL=... python scripts/manage_admin.py list
+```
+
 ## Runs / Territories
 
 - `POST /runs/finish` — загрузить завершённую пробежку (points + pauses), сохранить в БД и выполнить захват территорий.

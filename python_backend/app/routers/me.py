@@ -83,7 +83,7 @@ def me(user_id: str = Depends(current_user_id)) -> UserOut:
         with conn.cursor() as cur:
             cur.execute(
                 """
-                SELECT id::text, username, display_name, avatar_url, territory_color, created_at
+                SELECT id::text, username, display_name, avatar_url, territory_color, is_admin, created_at
                 FROM users
                 WHERE id = %s
                 """,
@@ -98,7 +98,8 @@ def me(user_id: str = Depends(current_user_id)) -> UserOut:
                 display_name=row[2],
                 avatar_url=row[3],
                 territory_color=row[4] or DEFAULT_TERRITORY_COLOR,
-                created_at=row[5],
+                is_admin=bool(row[5]),
+                created_at=row[6],
             )
 
 
@@ -126,6 +127,7 @@ def me_profile(user_id: str = Depends(current_user_id)) -> MeProfileOut:
                   r.name AS region_name,
                   u.city_code,
                   ct.name AS city_name,
+                  u.is_admin,
                   u.created_at,
                   COALESCE(us.run_count, 0),
                   COALESCE(us.total_distance_m, 0),
@@ -163,19 +165,20 @@ def me_profile(user_id: str = Depends(current_user_id)) -> MeProfileOut:
                 region_name=row[9],
                 city_code=row[10],
                 city_name=row[11],
-                created_at=row[12],
+                is_admin=bool(row[12]),
+                created_at=row[13],
                 stats=UserStatsOut(
-                    run_count=int(row[13]),
-                    total_distance_m=float(row[14]),
-                    total_elapsed_s=int(row[15]),
-                    total_paused_s=int(row[16]),
-                    total_moving_s=int(row[17]),
-                    successful_captures_count=int(row[18]),
-                    total_captured_area_m2=float(row[19]),
-                    total_victims_count=int(row[20]),
-                    owned_area_m2=float(row[21]),
-                    profile_xp=int(row[22]),
-                    profile_level=int(row[23]),
+                    run_count=int(row[14]),
+                    total_distance_m=float(row[15]),
+                    total_elapsed_s=int(row[16]),
+                    total_paused_s=int(row[17]),
+                    total_moving_s=int(row[18]),
+                    successful_captures_count=int(row[19]),
+                    total_captured_area_m2=float(row[20]),
+                    total_victims_count=int(row[21]),
+                    owned_area_m2=float(row[22]),
+                    profile_xp=int(row[23]),
+                    profile_level=int(row[24]),
                 ),
             )
 
