@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:run_application/l10n/app_localizations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../features/histories/application/run_history_provider.dart';
 import '../features/notifications/application/last_notification_provider.dart';
@@ -23,6 +24,10 @@ class HomeShellPage extends ConsumerStatefulWidget {
 }
 
 class _HomeShellPageState extends ConsumerState<HomeShellPage> {
+  static const _alwaysPermissionHintLastShownKey =
+      'always_permission_hint_last_shown_at_ms';
+  static const _alwaysPermissionHintCooldown = Duration(hours: 24);
+
   bool _fabExpanded = false;
 
   Future<void> _finishRunFromFab() async {
@@ -35,20 +40,49 @@ class _HomeShellPageState extends ConsumerState<HomeShellPage> {
     ref.invalidate(territoriesForBboxProvider);
   }
 
-  Future<void> _showAlwaysLocationHintIfNeededBeforeStart() async {
+  Future<void> _ensureAlwaysLocationPermissionBeforeStart() async {
     if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) return;
+    LocationPermission perm;
     try {
-      final perm = await Geolocator.checkPermission();
+      perm = await Geolocator.checkPermission();
+      if (perm == LocationPermission.denied) {
+        perm = await Geolocator.requestPermission();
+      }
+      // On many Android devices, a second request from whileInUse can trigger
+      // the "Allow all the time" choice.
+      if (perm == LocationPermission.whileInUse) {
+        perm = await Geolocator.requestPermission();
+      }
       if (perm == LocationPermission.always) return;
     } catch (_) {
       return;
     }
+    if (!mounted) return;
+    final shouldShowHint = await _shouldShowAlwaysPermissionHint();
+    if (!shouldShowHint || !mounted) return;
+    await _rememberAlwaysPermissionHintShownNow();
     if (!mounted) return;
     await showModalBottomSheet<void>(
       context: context,
       useRootNavigator: true,
       showDragHandle: true,
       builder: (context) => const _AlwaysLocationPermissionHintSheet(),
+    );
+  }
+
+  Future<bool> _shouldShowAlwaysPermissionHint() async {
+    final prefs = await SharedPreferences.getInstance();
+    final lastShownAtMs = prefs.getInt(_alwaysPermissionHintLastShownKey);
+    if (lastShownAtMs == null) return true;
+    final nowMs = DateTime.now().millisecondsSinceEpoch;
+    return (nowMs - lastShownAtMs) >= _alwaysPermissionHintCooldown.inMilliseconds;
+  }
+
+  Future<void> _rememberAlwaysPermissionHintShownNow() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(
+      _alwaysPermissionHintLastShownKey,
+      DateTime.now().millisecondsSinceEpoch,
     );
   }
 
@@ -160,7 +194,7 @@ class _HomeShellPageState extends ConsumerState<HomeShellPage> {
                           return;
                         }
                         if (runPhase == RunPhase.idle) {
-                          await _showAlwaysLocationHintIfNeededBeforeStart();
+                          await _ensureAlwaysLocationPermissionBeforeStart();
                           if (!mounted) return;
                           await ref.read(runTrackerProvider.notifier).start();
                           if (!mounted) return;
@@ -309,7 +343,7 @@ class _AlwaysLocationPermissionHintSheet extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Без этого на некоторых устройствах маршрут при свернутом приложении или выключенном экране может записываться с пропусками.',
+              'После выдачи этого разрешения подсказка больше не будет показываться.',
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: 14),
@@ -317,6 +351,7 @@ class _AlwaysLocationPermissionHintSheet extends StatelessWidget {
               width: double.infinity,
               child: FilledButton.icon(
                 onPressed: () async {
+                  Navigator.of(context).pop();
                   await Geolocator.openAppSettings();
                 },
                 icon: const Icon(Icons.settings_outlined),

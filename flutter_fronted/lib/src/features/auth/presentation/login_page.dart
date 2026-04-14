@@ -1,7 +1,10 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:run_application/l10n/app_localizations.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../../../core/config/legal_documents_config.dart';
 import '../../../core/utils/user_friendly_error.dart';
 import '../application/auth_controller.dart';
 import '../domain/validation/auth_form_validation.dart';
@@ -40,6 +43,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   bool _isRegister = false;
   bool _loading = false;
+  late final TapGestureRecognizer _privacyTapRecognizer;
+  late final TapGestureRecognizer _termsTapRecognizer;
 
   void _onLoginControllersChanged() => _onLoginCredentialsTextChanged();
 
@@ -48,6 +53,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   @override
   void initState() {
     super.initState();
+    _privacyTapRecognizer = TapGestureRecognizer()
+      ..onTap = () {
+        _openLegalUrl(LegalDocumentsConfig.privacyPolicyUrl);
+      };
+    _termsTapRecognizer = TapGestureRecognizer()
+      ..onTap = () {
+        _openLegalUrl(LegalDocumentsConfig.termsOfUseUrl);
+      };
     _loginEmail.addListener(_onLoginControllersChanged);
     _loginPassword.addListener(_onLoginControllersChanged);
     _registerEmail.addListener(_onRegisterControllersChanged);
@@ -78,6 +91,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     _registerEmailFocus.dispose();
     _registerDisplayNameFocus.dispose();
     _registerPasswordFocus.dispose();
+    _privacyTapRecognizer.dispose();
+    _termsTapRecognizer.dispose();
     super.dispose();
   }
 
@@ -217,6 +232,15 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       _isRegister = !_isRegister;
     });
     _refreshValidation();
+  }
+
+  Future<void> _openLegalUrl(Uri url) async {
+    final openedInApp = await launchUrl(
+      url,
+      mode: LaunchMode.inAppBrowserView,
+    );
+    if (openedInApp || !mounted) return;
+    await launchUrl(url, mode: LaunchMode.externalApplication);
   }
 
   @override
@@ -463,6 +487,42 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                     _isRegister
                                         ? l10n.switchToLogin
                                         : l10n.switchToRegister,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                RichText(
+                                  textAlign: TextAlign.center,
+                                  text: TextSpan(
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.bodySmall?.copyWith(
+                                      fontSize: 11.5,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
+                                    ),
+                                    children: [
+                                      TextSpan(text: '${l10n.authLegalNotice} '),
+                                      TextSpan(
+                                        text: l10n.authTermsOfUseAction,
+                                        style: TextStyle(
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.primary,
+                                        ),
+                                        recognizer: _termsTapRecognizer,
+                                      ),
+                                      const TextSpan(text: ' и '),
+                                      TextSpan(
+                                        text: l10n.authPrivacyPolicyAction,
+                                        style: TextStyle(
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.primary,
+                                        ),
+                                        recognizer: _privacyTapRecognizer,
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ],

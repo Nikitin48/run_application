@@ -1,0 +1,17 @@
+class LegalDocumentsConfig {
+  LegalDocumentsConfig._();
+
+  static final Uri privacyPolicyUrl = Uri.parse(
+    const String.fromEnvironment(
+      'PRIVACY_POLICY_URL',
+      defaultValue: 'https://georunapp.ru/privacy-policy',
+    ),
+  );
+
+  static final Uri termsOfUseUrl = Uri.parse(
+    const String.fromEnvironment(
+      'TERMS_OF_USE_URL',
+      defaultValue: 'https://georunapp.ru/terms-of-use',
+    ),
+  );
+}

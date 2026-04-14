@@ -188,6 +188,24 @@ abstract class AppLocalizations {
   /// **'Invalid email or password'**
   String get authInvalidCredentials;
 
+  /// No description provided for @authLegalNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'By continuing, you accept the service terms.'**
+  String get authLegalNotice;
+
+  /// No description provided for @authPrivacyPolicyAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy policy'**
+  String get authPrivacyPolicyAction;
+
+  /// No description provided for @authTermsOfUseAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of use'**
+  String get authTermsOfUseAction;
+
   /// No description provided for @mapTitle.
   ///
   /// In en, this message translates to:

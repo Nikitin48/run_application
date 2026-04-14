@@ -55,6 +55,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get authInvalidCredentials => 'Неверные учетные данные';
 
   @override
+  String get authLegalNotice => 'Продолжая, вы соглашаетесь с';
+
+  @override
+  String get authPrivacyPolicyAction => 'Политикой конфиденциальности.';
+
+  @override
+  String get authTermsOfUseAction => 'Правилами пользования';
+
+  @override
   String get mapTitle => 'Карта';
 
   @override

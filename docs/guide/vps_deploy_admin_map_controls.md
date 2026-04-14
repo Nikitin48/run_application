@@ -212,3 +212,23 @@ docker compose -f docker-compose.prod.yml -f docker-compose.fcm.yml exec -T back
 - Через `manage_admin.py` можно выдать/снять админку.
 - В клиенте обычный пользователь не видит `layers` и `gamepad`.
 - В клиенте админ видит и использует эти controls.
+
+Поиск юзеров пока что email
+docker compose -f docker-compose.prod.yml exec -T db sh -lc '
+psql -U claus -d run_app -c "
+SELECT id, username, display_name, is_admin
+FROM users
+ORDER BY created_at DESC
+LIMIT 30;
+"'
+
+смена по email
+docker compose -f docker-compose.prod.yml exec -T db sh -lc '
+psql -U claus -d run_app -c "
+UPDATE users u
+SET is_admin = true, updated_at = now()
+FROM auth_identities ai
+WHERE ai.user_id = u.id
+  AND ai.provider = '\''email'\''
+  AND ai.identifier = '\''almitkins2003@gmail.com'\'';
+"'

@@ -55,6 +55,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authInvalidCredentials => 'Invalid email or password';
 
   @override
+  String get authLegalNotice => 'By continuing, you accept the service terms.';
+
+  @override
+  String get authPrivacyPolicyAction => 'Privacy policy';
+
+  @override
+  String get authTermsOfUseAction => 'Terms of use';
+
+  @override
   String get mapTitle => 'Map';
 
   @override
