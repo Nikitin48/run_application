@@ -4,29 +4,30 @@ import 'app_colors.dart';
 
 class AppTheme {
   static ThemeData theme() {
-    final colorScheme = ColorScheme.fromSeed(
-      seedColor: AppColors.blue3399,
-      brightness: Brightness.dark,
-    ).copyWith(
-      surface: AppColors.background,
-      onSurface: AppColors.text,
-      onSurfaceVariant: AppColors.text,
-      primary: AppColors.blue3399,
-      onPrimary: Color(0xFFFFFFFF),
-      primaryContainer: Color(0xFF243040),
-      onPrimaryContainer: AppColors.secondPrimary,
-      secondary: AppColors.secondPrimary,
-      onSecondary: AppColors.background,
-      tertiary: AppColors.purple8C3,
-      onTertiary: Color(0xFFFFFFFF),
-      surfaceContainerLowest: AppColors.background,
-      surfaceContainerLow: Color(0xFF191D24),
-      surfaceContainer: Color(0xFF1C2028),
-      surfaceContainerHigh: Color(0xFF1F242C),
-      surfaceContainerHighest: Color(0xFF252B34),
-      outline: Color(0xFF3D4450),
-      outlineVariant: Color(0xFF2E343F),
-    );
+    final colorScheme =
+        ColorScheme.fromSeed(
+          seedColor: AppColors.blue3399,
+          brightness: Brightness.dark,
+        ).copyWith(
+          surface: AppColors.background,
+          onSurface: AppColors.text,
+          onSurfaceVariant: AppColors.text,
+          primary: AppColors.blue3399,
+          onPrimary: Color(0xFFFFFFFF),
+          primaryContainer: Color(0xFF243040),
+          onPrimaryContainer: AppColors.secondPrimary,
+          secondary: AppColors.secondPrimary,
+          onSecondary: AppColors.background,
+          tertiary: AppColors.purple8C3,
+          onTertiary: Color(0xFFFFFFFF),
+          surfaceContainerLowest: AppColors.background,
+          surfaceContainerLow: Color(0xFF191D24),
+          surfaceContainer: Color(0xFF1C2028),
+          surfaceContainerHigh: Color(0xFF1F242C),
+          surfaceContainerHighest: Color(0xFF252B34),
+          outline: Color(0xFF3D4450),
+          outlineVariant: Color(0xFF2E343F),
+        );
 
     final base = ThemeData(
       useMaterial3: true,
@@ -107,7 +108,10 @@ class AppTheme {
           }
           return AppColors.text;
         }),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 14,
+        ),
       ),
       cardTheme: base.cardTheme.copyWith(
         elevation: 0,
@@ -121,7 +125,9 @@ class AppTheme {
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           minimumSize: const Size.fromHeight(48),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
           textStyle: const TextStyle(fontWeight: FontWeight.w600),
         ),
       ),

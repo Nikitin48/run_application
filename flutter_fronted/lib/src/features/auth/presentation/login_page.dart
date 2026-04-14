@@ -235,10 +235,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   }
 
   Future<void> _openLegalUrl(Uri url) async {
-    final openedInApp = await launchUrl(
-      url,
-      mode: LaunchMode.inAppBrowserView,
-    );
+    final openedInApp = await launchUrl(url, mode: LaunchMode.inAppBrowserView);
     if (openedInApp || !mounted) return;
     await launchUrl(url, mode: LaunchMode.externalApplication);
   }
@@ -493,16 +490,17 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                 RichText(
                                   textAlign: TextAlign.center,
                                   text: TextSpan(
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.bodySmall?.copyWith(
-                                      fontSize: 11.5,
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.onSurfaceVariant,
-                                    ),
+                                    style: Theme.of(context).textTheme.bodySmall
+                                        ?.copyWith(
+                                          fontSize: 11.5,
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.onSurfaceVariant,
+                                        ),
                                     children: [
-                                      TextSpan(text: '${l10n.authLegalNotice} '),
+                                      TextSpan(
+                                        text: '${l10n.authLegalNotice} ',
+                                      ),
                                       TextSpan(
                                         text: l10n.authTermsOfUseAction,
                                         style: TextStyle(
