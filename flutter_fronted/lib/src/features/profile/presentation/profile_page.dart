@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:run_application/l10n/app_localizations.dart';
 
+import '../../../core/ui/app_labeled_text_field.dart';
 import '../../../core/utils/color_utils.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/formatters.dart';
@@ -215,43 +216,123 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               padding: const EdgeInsets.all(16),
               children: [
                 Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(14),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          l10n.profilePersonalSection,
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        const SizedBox(height: 12),
-                        Center(
-                          child: CircleAvatar(
-                            radius: 42,
-                            backgroundImage:
-                                (profile.avatarUrl?.isNotEmpty ?? false)
-                                ? NetworkImage(profile.avatarUrl!)
-                                : null,
-                            child: (profile.avatarUrl?.isNotEmpty ?? false)
-                                ? null
-                                : const Icon(Icons.person_outline, size: 40),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      color: AppColors.background,
+                      border: Border.all(
+                        color: Theme.of(context).colorScheme.outlineVariant,
+                      ),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l10n.profilePersonalSection,
+                            style: Theme.of(context).textTheme.headlineSmall
+                                ?.copyWith(fontWeight: FontWeight.w700),
                           ),
-                        ),
-                        const SizedBox(height: 10),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: OutlinedButton.icon(
+                          const SizedBox(height: 16),
+                          Center(
+                            child: Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                Container(
+                                  width: 128,
+                                  height: 128,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.surfaceContainerLow,
+                                    border: Border.all(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.outlineVariant,
+                                    ),
+                                  ),
+                                  child: CircleAvatar(
+                                    radius: 60,
+                                    backgroundColor: Colors.transparent,
+                                    backgroundImage:
+                                        (profile.avatarUrl?.isNotEmpty ?? false)
+                                        ? NetworkImage(profile.avatarUrl!)
+                                        : null,
+                                    child:
+                                        (profile.avatarUrl?.isNotEmpty ?? false)
+                                        ? null
+                                        : Icon(
+                                            Icons.person_outline,
+                                            size: 52,
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.secondary,
+                                          ),
+                                  ),
+                                ),
+                                Positioned(
+                                  right: -4,
+                                  bottom: -4,
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      onTap: isSaving
+                                          ? null
+                                          : _pickAndUploadAvatar,
+                                      borderRadius: BorderRadius.circular(20),
+                                      child: Ink(
+                                        width: 38,
+                                        height: 38,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.secondary,
+                                          border: Border.all(
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.surface,
+                                            width: 2,
+                                          ),
+                                        ),
+                                        child: Icon(
+                                          Icons.camera_alt_outlined,
+                                          size: 20,
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.onSecondary,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              TextButton.icon(
                                 onPressed: isSaving
                                     ? null
                                     : _pickAndUploadAvatar,
                                 icon: const Icon(Icons.photo_library_outlined),
                                 label: Text(l10n.profileUploadAvatarAction),
                               ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: TextButton.icon(
+                              Container(
+                                margin: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                ),
+                                width: 1,
+                                height: 18,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.outlineVariant,
+                              ),
+                              TextButton.icon(
                                 onPressed: isSaving || profile.avatarUrl == null
                                     ? null
                                     : () async {
@@ -264,47 +345,41 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                                 icon: const Icon(Icons.delete_outline),
                                 label: Text(l10n.profileDeleteAvatarAction),
                               ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        TextField(
-                          controller: _displayNameController,
-                          enabled: !isSaving,
-                          decoration: InputDecoration(
-                            labelText: l10n.displayNameLabel,
-                            prefixIcon: const Icon(Icons.badge_outlined),
+                            ],
                           ),
-                        ),
-                        const SizedBox(height: 10),
-                        TextField(
-                          readOnly: true,
-                          enabled: false,
-                          controller: _emailController,
-                          decoration: InputDecoration(
-                            labelText: l10n.emailLabel,
-                            prefixIcon: const Icon(Icons.alternate_email),
+                          const SizedBox(height: 12),
+                          AppLabeledTextField(
+                            label: l10n.displayNameLabel,
+                            controller: _displayNameController,
+                            enabled: !isSaving,
+                            prefixIcon: Icons.person_outline,
                           ),
-                        ),
-                        const SizedBox(height: 14),
-                        Text(
-                          'Локация для рейтинга',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        const SizedBox(height: 8),
-                        ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          title: const Text('Страна'),
-                          subtitle: Text(_countryName),
-                          leading: const Icon(Icons.flag_outlined),
-                        ),
-                        ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          leading: const Icon(Icons.map_outlined),
-                          title: const Text('Область'),
-                          subtitle: Text(_regionName ?? 'Не выбрано'),
-                          trailing: OutlinedButton(
-                            onPressed: isSaving
+                          const SizedBox(height: 10),
+                          AppLabeledTextField(
+                            label: l10n.emailLabel,
+                            controller: _emailController,
+                            prefixIcon: Icons.mail_outline,
+                            interactive: false,
+                          ),
+                          const SizedBox(height: 24),
+                          Text(
+                            'Локация для рейтинга',
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(fontWeight: FontWeight.w700),
+                          ),
+                          const SizedBox(height: 10),
+                          _ProfileLocationTile(
+                            icon: Icons.flag_outlined,
+                            title: 'Страна',
+                            value: _countryName,
+                          ),
+                          const SizedBox(height: 8),
+                          _ProfileLocationTile(
+                            icon: Icons.map_outlined,
+                            title: 'Область',
+                            value: _regionName ?? 'Не выбрано',
+                            enabled: !isSaving,
+                            onTap: isSaving
                                 ? null
                                 : () async {
                                     final region = await _pickRegion();
@@ -318,16 +393,14 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                                       _clearCityOnSave = false;
                                     });
                                   },
-                            child: const Text('Выбрать'),
                           ),
-                        ),
-                        ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          leading: const Icon(Icons.location_city_outlined),
-                          title: const Text('Город'),
-                          subtitle: Text(_cityName ?? 'Не выбрано'),
-                          trailing: OutlinedButton(
-                            onPressed: isSaving || _regionCode == null
+                          const SizedBox(height: 8),
+                          _ProfileLocationTile(
+                            icon: Icons.location_city_outlined,
+                            title: 'Город',
+                            value: _cityName ?? 'Не выбрано',
+                            enabled: !isSaving && _regionCode != null,
+                            onTap: isSaving || _regionCode == null
                                 ? null
                                 : () async {
                                     final city = await _pickCity();
@@ -338,37 +411,39 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                                       _clearCityOnSave = false;
                                     });
                                   },
-                            child: const Text('Выбрать'),
                           ),
-                        ),
-                        const SizedBox(height: 14),
-                        FilledButton(
-                          onPressed: isSaving
-                              ? null
-                              : () async {
-                                  final displayName = _displayNameController
-                                      .text
-                                      .trim();
-                                  await ref
-                                      .read(profileActionsProvider.notifier)
-                                      .saveProfile(
-                                        displayName: displayName,
-                                        countryCode: _countryCode,
-                                        regionCode: _regionCode,
-                                        cityCode: _cityCode,
-                                        clearRegion: _clearRegionOnSave,
-                                        clearCity: _clearCityOnSave,
-                                      );
-                                  _clearRegionOnSave = false;
-                                  _clearCityOnSave = false;
-                                },
-                          child: Text(
-                            isSaving
-                                ? l10n.loading
-                                : l10n.profileSaveProfileAction,
+                          const SizedBox(height: 18),
+                          SizedBox(
+                            width: double.infinity,
+                            child: FilledButton(
+                              onPressed: isSaving
+                                  ? null
+                                  : () async {
+                                      final displayName = _displayNameController
+                                          .text
+                                          .trim();
+                                      await ref
+                                          .read(profileActionsProvider.notifier)
+                                          .saveProfile(
+                                            displayName: displayName,
+                                            countryCode: _countryCode,
+                                            regionCode: _regionCode,
+                                            cityCode: _cityCode,
+                                            clearRegion: _clearRegionOnSave,
+                                            clearCity: _clearCityOnSave,
+                                          );
+                                      _clearRegionOnSave = false;
+                                      _clearCityOnSave = false;
+                                    },
+                              child: Text(
+                                isSaving
+                                    ? l10n.loading
+                                    : l10n.profileSaveProfileAction,
+                              ),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -640,6 +715,77 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             textAlign: TextAlign.center,
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _ProfileLocationTile extends StatelessWidget {
+  const _ProfileLocationTile({
+    required this.icon,
+    required this.title,
+    required this.value,
+    this.enabled = true,
+    this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String value;
+  final bool enabled;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
+    final hasAction = enabled && onTap != null;
+    final content = Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      child: Row(
+        children: [
+          Icon(
+            icon,
+            color: hasAction ? colorScheme.secondary : colorScheme.onSurface,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(title, style: textTheme.bodyLarge),
+                const SizedBox(height: 1),
+                Text(
+                  value,
+                  style: textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurface.withValues(alpha: 0.88),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (hasAction)
+            Icon(Icons.chevron_right, color: colorScheme.secondary),
+        ],
+      ),
+    );
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.68),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: colorScheme.outlineVariant),
+      ),
+      child: Material(
+        type: MaterialType.transparency,
+        child: hasAction
+            ? InkWell(
+                onTap: onTap,
+                borderRadius: BorderRadius.circular(14),
+                child: content,
+              )
+            : content,
       ),
     );
   }
