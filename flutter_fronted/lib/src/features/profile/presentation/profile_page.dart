@@ -207,6 +207,10 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           _syncForm(profile);
           final currentColor =
               (_selectedTerritoryColor ?? profile.territoryColor).toUpperCase();
+          final isRussian = Localizations.localeOf(context).languageCode == 'ru';
+          final progressSectionTitle = isRussian ? 'Прогресс' : 'Progress';
+          final activitySectionTitle = isRussian ? 'Активность' : 'Activity';
+          final resultsSectionTitle = isRussian ? 'Результаты' : 'Results';
           return RefreshIndicator(
             onRefresh: () async {
               ref.invalidate(meProfileProvider);
@@ -643,56 +647,79 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                       children: [
                         Text(
                           l10n.profileStatsSection,
-                          style: Theme.of(context).textTheme.titleMedium,
+                          style: Theme.of(context).textTheme.headlineSmall
+                              ?.copyWith(fontWeight: FontWeight.w700),
                         ),
                         const SizedBox(height: 12),
-                        _MetricRow(
-                          label: l10n.profileLevelLabel,
-                          value: '${profile.stats.profileLevel}',
+                        _StatsSectionCard(
+                          title: progressSectionTitle,
+                          items: [
+                            _StatsSectionItem(
+                              icon: Icons.stars_rounded,
+                              label: l10n.profileLevelLabel,
+                              value: '${profile.stats.profileLevel}',
+                            ),
+                            _StatsSectionItem(
+                              icon: Icons.bolt_rounded,
+                              label: l10n.profileXpLabel,
+                              value: '${profile.stats.profileXp} XP',
+                            ),
+                          ],
                         ),
-                        _MetricRow(
-                          label: l10n.profileXpLabel,
-                          value: '${profile.stats.profileXp} XP',
+                        const SizedBox(height: 16),
+                        _StatsSectionCard(
+                          title: activitySectionTitle,
+                          items: [
+                            _StatsSectionItem(
+                              icon: Icons.directions_run_rounded,
+                              label: l10n.profileRunsCount,
+                              value: '${profile.stats.runCount}',
+                            ),
+                            _StatsSectionItem(
+                              icon: Icons.location_on_outlined,
+                              label: l10n.distance,
+                              value: formatMeters(profile.stats.totalDistanceM),
+                            ),
+                            _StatsSectionItem(
+                              icon: Icons.schedule_rounded,
+                              label: l10n.elapsed,
+                              value: formatDurationMmSs(
+                                profile.stats.totalElapsedS,
+                              ),
+                            ),
+                            _StatsSectionItem(
+                              icon: Icons.pause_circle_outline_rounded,
+                              label: l10n.paused,
+                              value: formatDurationMmSs(
+                                profile.stats.totalPausedS,
+                              ),
+                            ),
+                            _StatsSectionItem(
+                              icon: Icons.directions_walk_rounded,
+                              label: l10n.moving,
+                              value: formatDurationMmSs(
+                                profile.stats.totalMovingS,
+                              ),
+                            ),
+                          ],
                         ),
-                        _MetricRow(
-                          label: l10n.profileRunsCount,
-                          value: '${profile.stats.runCount}',
-                        ),
-                        _MetricRow(
-                          label: l10n.distance,
-                          value: formatMeters(profile.stats.totalDistanceM),
-                        ),
-                        _MetricRow(
-                          label: l10n.elapsed,
-                          value: formatDurationMmSs(
-                            profile.stats.totalElapsedS,
-                          ),
-                        ),
-                        _MetricRow(
-                          label: l10n.paused,
-                          value: formatDurationMmSs(profile.stats.totalPausedS),
-                        ),
-                        _MetricRow(
-                          label: l10n.moving,
-                          value: formatDurationMmSs(profile.stats.totalMovingS),
-                        ),
-                        _MetricRow(
-                          label: l10n.profileSuccessfulCapturesLabel,
-                          value: '${profile.stats.successfulCapturesCount}',
-                        ),
-                        _MetricRow(
-                          label: l10n.profileTotalCapturedLabel,
-                          value: formatAreaM2(
-                            profile.stats.totalCapturedAreaM2,
-                          ),
-                        ),
-                        _MetricRow(
-                          label: l10n.profileTotalVictimsLabel,
-                          value: '${profile.stats.totalVictimsCount}',
-                        ),
-                        _MetricRow(
-                          label: l10n.profileOwnedArea,
-                          value: formatAreaM2(profile.stats.ownedAreaM2),
+                        const SizedBox(height: 16),
+                        _StatsSectionCard(
+                          title: resultsSectionTitle,
+                          items: [
+                            _StatsSectionItem(
+                              icon: Icons.flag_outlined,
+                              label: l10n.profileSuccessfulCapturesLabel,
+                              value: '${profile.stats.successfulCapturesCount}',
+                            ),
+                            _StatsSectionItem(
+                              icon: Icons.track_changes_rounded,
+                              label: l10n.profileTotalCapturedLabel,
+                              value: formatAreaM2(
+                                profile.stats.totalCapturedAreaM2,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -982,24 +1009,107 @@ class _PaginatedPickerSheetState<T> extends State<_PaginatedPickerSheet<T>> {
   }
 }
 
-class _MetricRow extends StatelessWidget {
-  const _MetricRow({required this.label, required this.value});
+class _StatsSectionItem {
+  const _StatsSectionItem({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
 
+  final IconData icon;
   final String label;
   final String value;
+}
+
+class _StatsSectionCard extends StatelessWidget {
+  const _StatsSectionCard({required this.title, required this.items});
+
+  final String title;
+  final List<_StatsSectionItem> items;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(label, style: Theme.of(context).textTheme.bodyMedium),
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: theme.textTheme.titleSmall?.copyWith(
+            color: colorScheme.onSurface.withValues(alpha: 0.78),
           ),
-          Text(value, style: Theme.of(context).textTheme.titleMedium),
-        ],
-      ),
+        ),
+        const SizedBox(height: 8),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.34),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: colorScheme.outlineVariant.withValues(alpha: 0.68),
+            ),
+          ),
+          child: Column(
+            children: List.generate(items.length, (index) {
+              final item = items[index];
+              return Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: colorScheme.secondary.withValues(alpha: 0.14),
+                          ),
+                          child: Icon(
+                            item.icon,
+                            color: AppColors.secondPrimary,
+                            size: 23,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            item.label,
+                            style: theme.textTheme.bodyLarge?.copyWith(
+                              color: colorScheme.onSurface.withValues(
+                                alpha: 0.94,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          item.value,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            color: AppColors.secondPrimary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (index != items.length - 1)
+                    Divider(
+                      height: 1,
+                      color: colorScheme.outlineVariant.withValues(alpha: 0.42),
+                    ),
+                ],
+              );
+            }),
+          ),
+        ),
+      ],
     );
   }
 }

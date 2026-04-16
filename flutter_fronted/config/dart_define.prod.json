@@ -1,3 +1,5 @@
 {
-  "API_BASE_URL": "https://api.georunapp.ru"
+  "API_BASE_URL": "https://api.georunapp.ru",
+  "PRIVACY_POLICY_URL": "https://api.georunapp.ru/legal/privacy-policy.pdf",
+  "TERMS_OF_USE_URL": "https://api.georunapp.ru/legal/terms-of-use.pdf"
 }
