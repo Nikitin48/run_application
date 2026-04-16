@@ -53,6 +53,7 @@ services:
       - certbot-www:/var/www/certbot:ro
       - certbot-conf:/etc/letsencrypt:ro
       - media_data:/srv/media:ro
+      - ./deploy/legal:/srv/legal:ro
     depends_on:
       backend:
         condition: service_healthy
