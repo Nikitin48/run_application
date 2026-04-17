@@ -207,6 +207,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           _syncForm(profile);
           final currentColor =
               (_selectedTerritoryColor ?? profile.territoryColor).toUpperCase();
+          final territoryColor = colorFromHexOrDefault(currentColor);
           final isRussian = Localizations.localeOf(context).languageCode == 'ru';
           final progressSectionTitle = isRussian ? 'Прогресс' : 'Progress';
           final activitySectionTitle = isRussian ? 'Активность' : 'Activity';
@@ -252,10 +253,25 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                                       context,
                                     ).colorScheme.surfaceContainerLow,
                                     border: Border.all(
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.outlineVariant,
+                                      color: territoryColor,
+                                      width: 2.6,
                                     ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: territoryColor.withValues(
+                                          alpha: 0.75,
+                                        ),
+                                        blurRadius: 22,
+                                        spreadRadius: 1.2,
+                                      ),
+                                      BoxShadow(
+                                        color: territoryColor.withValues(
+                                          alpha: 0.38,
+                                        ),
+                                        blurRadius: 34,
+                                        spreadRadius: 3.5,
+                                      ),
+                                    ],
                                   ),
                                   child: CircleAvatar(
                                     radius: 60,

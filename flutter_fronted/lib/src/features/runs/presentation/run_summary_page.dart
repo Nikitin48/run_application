@@ -16,14 +16,25 @@ class RunSummaryPage extends ConsumerStatefulWidget {
 
 class _RunSummaryPageState extends ConsumerState<RunSummaryPage> {
   bool _didShowAchievementsPopup = false;
+  bool _didRedirectToMap = false;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final finish = ref.watch(runTrackerProvider).lastFinish;
 
+    if (finish == null) {
+      if (!_didRedirectToMap) {
+        _didRedirectToMap = true;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          context.go('/map');
+        });
+      }
+      return const Scaffold(body: SizedBox.shrink());
+    }
+
     if (!_didShowAchievementsPopup &&
-        finish != null &&
         (finish.newAchievements.isNotEmpty || finish.levelUp != null)) {
       _didShowAchievementsPopup = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -47,63 +58,51 @@ class _RunSummaryPageState extends ConsumerState<RunSummaryPage> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
-        child: finish == null
-            ? Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(l10n.runSummaryNoData),
-                  const SizedBox(height: 12),
-                  FilledButton(
-                    onPressed: () => context.go('/map'),
-                    child: Text(l10n.backToMap),
-                  ),
-                ],
-              )
-            : Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _MetricRow(
-                    label: l10n.distance,
-                    value: formatMeters(finish.distanceM),
-                  ),
-                  _MetricRow(
-                    label: l10n.elapsed,
-                    value: formatDurationMmSs(finish.elapsedS),
-                  ),
-                  _MetricRow(
-                    label: l10n.paused,
-                    value: formatDurationMmSs(finish.pausedS),
-                  ),
-                  _MetricRow(
-                    label: l10n.moving,
-                    value: formatDurationMmSs(finish.movingS),
-                  ),
-                  _MetricRow(
-                    label: l10n.avgPaceMoving,
-                    value: formatPace(
-                      distanceM: finish.distanceM,
-                      movingS: finish.movingS,
-                    ),
-                  ),
-                  const Divider(height: 32),
-                  _MetricRow(
-                    label: l10n.capturedArea,
-                    value: formatAreaM2(finish.captureAreaM2),
-                  ),
-                  _MetricRow(
-                    label: l10n.victims,
-                    value: '${finish.victimsCount}',
-                  ),
-                  const Spacer(),
-                  FilledButton(
-                    onPressed: () {
-                      ref.read(runTrackerProvider.notifier).clearLastFinish();
-                      context.go('/map');
-                    },
-                    child: Text(l10n.done),
-                  ),
-                ],
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _MetricRow(
+              label: l10n.distance,
+              value: formatMeters(finish.distanceM),
+            ),
+            _MetricRow(
+              label: l10n.elapsed,
+              value: formatDurationMmSs(finish.elapsedS),
+            ),
+            _MetricRow(
+              label: l10n.paused,
+              value: formatDurationMmSs(finish.pausedS),
+            ),
+            _MetricRow(
+              label: l10n.moving,
+              value: formatDurationMmSs(finish.movingS),
+            ),
+            _MetricRow(
+              label: l10n.avgPaceMoving,
+              value: formatPace(
+                distanceM: finish.distanceM,
+                movingS: finish.movingS,
               ),
+            ),
+            const Divider(height: 32),
+            _MetricRow(
+              label: l10n.capturedArea,
+              value: formatAreaM2(finish.captureAreaM2),
+            ),
+            _MetricRow(
+              label: l10n.victims,
+              value: '${finish.victimsCount}',
+            ),
+            const Spacer(),
+            FilledButton(
+              onPressed: () {
+                context.go('/map');
+                ref.read(runTrackerProvider.notifier).clearLastFinish();
+              },
+              child: Text(l10n.done),
+            ),
+          ],
+        ),
       ),
     );
   }

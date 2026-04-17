@@ -78,10 +78,13 @@ class _HistoriesPageState extends ConsumerState<HistoriesPage> {
             return ListView.separated(
               controller: _scrollController,
               padding: const EdgeInsets.all(12),
-              itemCount: data.items.length + (data.isLoadingMore ? 1 : 0),
+              itemCount: data.items.length + 1 + (data.isLoadingMore ? 1 : 0),
               separatorBuilder: (context, index) => const SizedBox(height: 10),
               itemBuilder: (context, index) {
-                if (index >= data.items.length) {
+                if (index == data.items.length) {
+                  return const SizedBox(height: 80);
+                }
+                if (index == data.items.length + 1) {
                   return const Padding(
                     padding: EdgeInsets.symmetric(vertical: 10),
                     child: Center(

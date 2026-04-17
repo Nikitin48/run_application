@@ -29,6 +29,7 @@ class _HomeShellPageState extends ConsumerState<HomeShellPage> {
   static const _alwaysPermissionHintCooldown = Duration(hours: 24);
 
   bool _fabExpanded = false;
+  bool _startingRun = false;
 
   Future<void> _finishRunFromFab() async {
     if (mounted) {
@@ -75,7 +76,8 @@ class _HomeShellPageState extends ConsumerState<HomeShellPage> {
     final lastShownAtMs = prefs.getInt(_alwaysPermissionHintLastShownKey);
     if (lastShownAtMs == null) return true;
     final nowMs = DateTime.now().millisecondsSinceEpoch;
-    return (nowMs - lastShownAtMs) >= _alwaysPermissionHintCooldown.inMilliseconds;
+    return (nowMs - lastShownAtMs) >=
+        _alwaysPermissionHintCooldown.inMilliseconds;
   }
 
   Future<void> _rememberAlwaysPermissionHintShownNow() async {
@@ -110,6 +112,10 @@ class _HomeShellPageState extends ConsumerState<HomeShellPage> {
         mapSelected &&
         _fabExpanded &&
         (runPhase == RunPhase.running || runPhase == RunPhase.paused);
+    final fabLocked =
+        runPhase == RunPhase.finishing ||
+        _startingRun ||
+        (mapSelected && runState.countdownSeconds != null);
 
     return Scaffold(
       extendBody: true,
@@ -183,7 +189,7 @@ class _HomeShellPageState extends ConsumerState<HomeShellPage> {
                 backgroundColor: colors.primary,
                 foregroundColor: colors.onPrimary,
                 shape: const CircleBorder(),
-                onPressed: runPhase == RunPhase.finishing
+                onPressed: fabLocked
                     ? null
                     : () async {
                         if (!mapSelected) {
@@ -194,16 +200,24 @@ class _HomeShellPageState extends ConsumerState<HomeShellPage> {
                           return;
                         }
                         if (runPhase == RunPhase.idle) {
-                          await _ensureAlwaysLocationPermissionBeforeStart();
-                          if (!mounted) return;
-                          await ref.read(runTrackerProvider.notifier).start();
-                          if (!mounted) return;
-                          final phaseAfterStart = ref
-                              .read(runTrackerProvider)
-                              .phase;
-                          if (phaseAfterStart == RunPhase.running ||
-                              phaseAfterStart == RunPhase.paused) {
-                            setState(() => _fabExpanded = true);
+                          if (_startingRun) return;
+                          setState(() => _startingRun = true);
+                          try {
+                            await _ensureAlwaysLocationPermissionBeforeStart();
+                            if (!mounted) return;
+                            await ref.read(runTrackerProvider.notifier).start();
+                            if (!mounted) return;
+                            final phaseAfterStart = ref
+                                .read(runTrackerProvider)
+                                .phase;
+                            if (phaseAfterStart == RunPhase.running ||
+                                phaseAfterStart == RunPhase.paused) {
+                              setState(() => _fabExpanded = true);
+                            }
+                          } finally {
+                            if (mounted) {
+                              setState(() => _startingRun = false);
+                            }
                           }
                           return;
                         }
@@ -257,6 +271,7 @@ class _HomeShellPageState extends ConsumerState<HomeShellPage> {
                   Expanded(
                     child: _SideNavButton(
                       tooltip: l10n.historiesTitle,
+                      label: 'Истории',
                       icon: Icons.history_outlined,
                       activeIcon: Icons.history,
                       selected: navigationShell.currentIndex == 1,
@@ -272,6 +287,7 @@ class _HomeShellPageState extends ConsumerState<HomeShellPage> {
                   Expanded(
                     child: _SideNavButton(
                       tooltip: l10n.achievementsPageTitle,
+                      label: 'Трофеи',
                       icon: Icons.emoji_events_outlined,
                       activeIcon: Icons.emoji_events,
                       selected: navigationShell.currentIndex == 3,
@@ -288,6 +304,7 @@ class _HomeShellPageState extends ConsumerState<HomeShellPage> {
                   Expanded(
                     child: _SideNavButton(
                       tooltip: 'Рейтинг',
+                      label: 'Лидеры',
                       icon: Icons.leaderboard_outlined,
                       activeIcon: Icons.leaderboard,
                       selected: navigationShell.currentIndex == 4,
@@ -303,6 +320,7 @@ class _HomeShellPageState extends ConsumerState<HomeShellPage> {
                   Expanded(
                     child: _SideNavButton(
                       tooltip: l10n.profileTitle,
+                      label: 'Профиль',
                       icon: Icons.person_outline,
                       activeIcon: Icons.person,
                       selected: navigationShell.currentIndex == 2,
@@ -458,6 +476,7 @@ class _ActionCircleButton extends StatelessWidget {
 class _SideNavButton extends StatelessWidget {
   const _SideNavButton({
     required this.tooltip,
+    required this.label,
     required this.icon,
     required this.activeIcon,
     required this.selected,
@@ -465,6 +484,7 @@ class _SideNavButton extends StatelessWidget {
   });
 
   final String tooltip;
+  final String label;
   final IconData icon;
   final IconData activeIcon;
   final bool selected;
@@ -472,13 +492,33 @@ class _SideNavButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final foreground = selected ? AppColors.secondPrimary : AppColors.text;
     return Center(
-      child: IconButton(
-        tooltip: tooltip,
-        onPressed: onTap,
-        icon: Icon(
-          selected ? activeIcon : icon,
-          color: selected ? AppColors.secondPrimary : AppColors.text,
+      child: Tooltip(
+        message: tooltip,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(selected ? activeIcon : icon, color: foreground),
+                const SizedBox(height: 1),
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: textTheme.labelSmall?.copyWith(
+                    color: foreground,
+                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

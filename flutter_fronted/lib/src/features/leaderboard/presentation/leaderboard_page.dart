@@ -127,9 +127,12 @@ class _LeaderboardPageState extends ConsumerState<LeaderboardPage> {
                     controller: _scrollController,
                     padding: const EdgeInsets.fromLTRB(12, 4, 12, 16),
                     itemCount:
-                        data.entries.length + 1 + (data.isLoadingMore ? 1 : 0),
+                        data.entries.length + 2 + (data.isLoadingMore ? 1 : 0),
                     itemBuilder: (context, index) {
                       if (index == data.entries.length + 1) {
+                        return const SizedBox(height: 80);
+                      }
+                      if (index == data.entries.length + 2) {
                         return const Padding(
                           padding: EdgeInsets.symmetric(vertical: 16),
                           child: Center(
