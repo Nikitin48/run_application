@@ -35,4 +35,13 @@ String formatPace({required double distanceM, required int movingS}) {
   return '$m:$s /км';
 }
 
+String formatSpeedKmh({required double distanceM, required int seconds}) {
+  if (distanceM <= 0 || seconds <= 0) return '—';
+  final kmh = (distanceM / 1000.0) / (seconds / 3600.0);
+  final formatter = NumberFormat.decimalPattern('ru_RU')
+    ..minimumFractionDigits = 1
+    ..maximumFractionDigits = 1;
+  return '${formatter.format(kmh)} км/ч';
+}
+
 

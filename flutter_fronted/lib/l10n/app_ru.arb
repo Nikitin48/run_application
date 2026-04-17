@@ -58,8 +58,9 @@
   "paused": "Пауза",
   "moving": "В движении",
   "avgPaceMoving": "Средний темп",
+  "avgSpeedOverall": "Средняя скорость",
   "capturedArea": "Захваченная площадь",
-  "victims": "Отжато у пользователей",
+  "victims": "Затронуто пользователей",
 
   "noLocationYet": "Местоположение ещё не получено",
   "enableLocationFirst": "Сначала включите геолокацию",

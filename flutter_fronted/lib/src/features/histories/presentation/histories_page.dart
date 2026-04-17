@@ -135,53 +135,82 @@ class _RunHistoryCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final startedLabel = _formatDateTime(item.startedAt) ?? '—';
     final endedLabel = _formatDateTime(item.endedAt) ?? '—';
+    final colorScheme = Theme.of(context).colorScheme;
+    final cardRadius = BorderRadius.circular(24);
 
-    return Card(
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: cardRadius,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            colorScheme.surfaceContainerHighest.withValues(alpha: 0.56),
+            colorScheme.surfaceContainerHigh.withValues(alpha: 0.78),
+          ],
+        ),
+        border: Border.all(
+          color: colorScheme.outline.withValues(alpha: 0.25),
+          width: 1,
+        ),
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              '${l10n.historiesStartedAt}: $startedLabel',
-              style: Theme.of(context).textTheme.titleSmall,
+            _HeaderInfoRow(
+              icon: Icons.calendar_today_rounded,
+              label: l10n.historiesStartedAt,
+              value: startedLabel,
             ),
-            const SizedBox(height: 4),
-            Text(
-              '${l10n.historiesEndedAt}: $endedLabel',
-              style: Theme.of(context).textTheme.bodyMedium,
+            const SizedBox(height: 10),
+            _HeaderInfoRow(
+              icon: Icons.flag_outlined,
+              label: l10n.historiesEndedAt,
+              value: endedLabel,
             ),
             if (item.capturePolygons.isNotEmpty ||
                 item.trackPoints.length >= 2) ...[
-              const SizedBox(height: 12),
+              const SizedBox(height: 14),
               _RunCapturePreview(
                 polygons: item.capturePolygons,
                 trackPoints: item.trackPoints,
                 accent: previewAccent,
               ),
             ],
-            const SizedBox(height: 10),
-            _MetricRow(
+            const SizedBox(height: 14),
+            _MetricTileRow(
+              icon: Icons.location_on_outlined,
               label: l10n.distance,
               value: formatMeters(item.distanceM),
             ),
-            _MetricRow(
+            _MetricTileRow(
+              icon: Icons.schedule_rounded,
               label: l10n.elapsed,
               value: formatDurationMmSs(item.elapsedS),
             ),
-            _MetricRow(
+            _MetricTileRow(
+              icon: Icons.pause_circle_outline_rounded,
               label: l10n.paused,
               value: formatDurationMmSs(item.pausedS),
             ),
-            _MetricRow(
-              label: l10n.moving,
-              value: formatDurationMmSs(item.movingS),
+            _MetricTileRow(
+              icon: Icons.speed_rounded,
+              label: l10n.avgSpeedOverall,
+              value: formatSpeedKmh(distanceM: item.distanceM, seconds: item.elapsedS),
             ),
-            _MetricRow(
+            _MetricTileRow(
+              icon: Icons.square_outlined,
               label: l10n.capturedArea,
               value: formatAreaM2(item.captureAreaM2),
             ),
-            _MetricRow(label: l10n.victims, value: '${item.victimsCount}'),
+            _MetricTileRow(
+              icon: Icons.person_outline_rounded,
+              label: l10n.victims,
+              value: '${item.victimsCount}',
+              isLast: true,
+            ),
           ],
         ),
       ),
@@ -321,23 +350,81 @@ class _RunCapturePreviewState extends State<_RunCapturePreview> {
   }
 }
 
-class _MetricRow extends StatelessWidget {
-  const _MetricRow({required this.label, required this.value});
+class _HeaderInfoRow extends StatelessWidget {
+  const _HeaderInfoRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
 
+  final IconData icon;
   final String label;
   final String value;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(label, style: Theme.of(context).textTheme.bodyMedium),
+    final colorScheme = Theme.of(context).colorScheme;
+    return Row(
+      children: [
+        Container(
+          width: 34,
+          height: 34,
+          decoration: BoxDecoration(
+            color: colorScheme.primary.withValues(alpha: 0.14),
+            borderRadius: BorderRadius.circular(10),
           ),
-          Text(value, style: Theme.of(context).textTheme.titleMedium),
-        ],
+          child: Icon(icon, size: 18, color: colorScheme.primary),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label, style: Theme.of(context).textTheme.bodySmall),
+              const SizedBox(height: 1),
+              Text(value, style: Theme.of(context).textTheme.titleMedium),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _MetricTileRow extends StatelessWidget {
+  const _MetricTileRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+    this.isLast = false,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+  final bool isLast;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      margin: EdgeInsets.only(bottom: isLast ? 0 : 6),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerLow.withValues(alpha: 0.66),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        child: Row(
+          children: [
+            Icon(icon, size: 20, color: colorScheme.primary),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(label, style: Theme.of(context).textTheme.bodyMedium),
+            ),
+            Text(value, style: Theme.of(context).textTheme.titleMedium),
+          ],
+        ),
       ),
     );
   }

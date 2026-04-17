@@ -398,6 +398,12 @@ abstract class AppLocalizations {
   /// **'Avg pace (moving)'**
   String get avgPaceMoving;
 
+  /// No description provided for @avgSpeedOverall.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg speed'**
+  String get avgSpeedOverall;
+
   /// No description provided for @capturedArea.
   ///
   /// In en, this message translates to:

@@ -166,6 +166,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get avgPaceMoving => 'Avg pace (moving)';
 
   @override
+  String get avgSpeedOverall => 'Avg speed';
+
+  @override
   String get capturedArea => 'Captured area';
 
   @override

@@ -58,6 +58,7 @@
   "paused": "Paused",
   "moving": "Moving",
   "avgPaceMoving": "Avg pace (moving)",
+  "avgSpeedOverall": "Avg speed",
   "capturedArea": "Captured area",
   "victims": "Victims",
 

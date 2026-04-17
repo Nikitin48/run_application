@@ -166,10 +166,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get avgPaceMoving => 'Средний темп';
 
   @override
+  String get avgSpeedOverall => 'Средняя скорость';
+
+  @override
   String get capturedArea => 'Захваченная площадь';
 
   @override
-  String get victims => 'Отжато у пользователей';
+  String get victims => 'Затронуто пользователей';
 
   @override
   String get noLocationYet => 'Местоположение ещё не получено';
