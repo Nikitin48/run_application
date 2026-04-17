@@ -29,11 +29,12 @@ class NotificationsPage extends ConsumerWidget {
           ref
               .read(notificationsReadStateProvider.notifier)
               .markAsRead(items.first.id);
+          final bottomInset = MediaQuery.viewPaddingOf(context).bottom;
           return RefreshIndicator(
             onRefresh: () async => ref.invalidate(notificationsHistoryProvider),
             child: ListView.separated(
               physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.all(12),
+              padding: EdgeInsets.fromLTRB(12, 12, 12, 12 + bottomInset),
               itemCount: items.length,
               separatorBuilder: (_, index) => const SizedBox(height: 8),
               itemBuilder: (context, i) {

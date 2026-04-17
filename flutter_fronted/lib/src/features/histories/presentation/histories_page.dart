@@ -7,6 +7,8 @@ import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:run_application/l10n/app_localizations.dart';
 
+import '../../../app/home_shell_page.dart'
+    show kShellBottomBarHeight, shellBottomSystemInset;
 import '../../../core/utils/color_utils.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/utils/user_friendly_error.dart';
@@ -52,6 +54,8 @@ class _HistoriesPageState extends ConsumerState<HistoriesPage> {
       data: (profile) => colorFromHexOrDefault(profile.territoryColor),
       orElse: () => Theme.of(context).colorScheme.primary,
     );
+    final bottomClearance =
+        kShellBottomBarHeight + shellBottomSystemInset(context) + 24;
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.historiesTitle)),
@@ -82,7 +86,7 @@ class _HistoriesPageState extends ConsumerState<HistoriesPage> {
               separatorBuilder: (context, index) => const SizedBox(height: 10),
               itemBuilder: (context, index) {
                 if (index == data.items.length) {
-                  return const SizedBox(height: 80);
+                  return SizedBox(height: bottomClearance);
                 }
                 if (index == data.items.length + 1) {
                   return const Padding(
@@ -198,7 +202,10 @@ class _RunHistoryCard extends StatelessWidget {
             _MetricTileRow(
               icon: Icons.speed_rounded,
               label: l10n.avgSpeedOverall,
-              value: formatSpeedKmh(distanceM: item.distanceM, seconds: item.elapsedS),
+              value: formatSpeedKmh(
+                distanceM: item.distanceM,
+                seconds: item.elapsedS,
+              ),
             ),
             _MetricTileRow(
               icon: Icons.square_outlined,

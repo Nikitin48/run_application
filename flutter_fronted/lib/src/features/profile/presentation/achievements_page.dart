@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:run_application/l10n/app_localizations.dart';
 
+import '../../../app/home_shell_page.dart'
+    show kShellBottomBarHeight, shellBottomSystemInset;
 import '../../../core/ui/achievement_badge_card.dart';
 import '../../../core/utils/achievement_localization.dart';
 import '../../../core/utils/user_friendly_error.dart';
@@ -15,6 +17,8 @@ class AchievementsPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final achievementsAsync = ref.watch(myAchievementsProvider);
+    final bottomClearance =
+        kShellBottomBarHeight + shellBottomSystemInset(context) + 24;
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.achievementsPageTitle)),
@@ -67,7 +71,7 @@ class AchievementsPage extends ConsumerWidget {
                   );
                 }
                 if (index == overview.items.length + 1) {
-                  return const SizedBox(height: 40);
+                  return SizedBox(height: bottomClearance);
                 }
                 final item = overview.items[index - 1];
                 return AchievementBadgeCard(

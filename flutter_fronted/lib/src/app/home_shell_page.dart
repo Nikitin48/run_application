@@ -14,6 +14,39 @@ import '../features/runs/application/run_tracker_controller.dart';
 import '../features/territories/application/territories_controller.dart';
 import '../core/theme/app_colors.dart';
 
+/// Visual height of the shell's bottom navigation bar content (without
+/// system navigation bar padding). Tab pages that need to reserve space
+/// below their scrollable content should use this as a base and add
+/// [shellBottomSystemInset] for the current device.
+const double kShellBottomBarHeight = 52.0;
+
+/// Below this value the bottom [MediaQuery.viewPadding] is treated as a
+/// gesture-navigation hint, which looks fine overlayed by the bar's blur.
+/// At/above this value it's treated as 3-button nav, which needs the bar
+/// to be lifted above the system buttons so tabs stay tappable.
+const double _gestureNavInsetThreshold = 32.0;
+
+/// Extra breathing room below the painted bar in gesture-nav mode. Lifts
+/// the bar a bit above the absolute screen edge so the gesture hint has a
+/// small strip of its own instead of overlapping the bar's blur.
+const double _gestureNavBottomPadding = 10.0;
+
+/// Amount by which the shell's bottom bar (and tab content) must be lifted
+/// above the system navigation area.
+///
+/// In gesture-nav modes this is [_gestureNavBottomPadding], so the bar is
+/// lifted slightly above the screen edge.
+///
+/// In 3-button nav mode this equals the system inset, so the painted bar
+/// ends flush with the top of the system buttons (no map strip between
+/// them).
+double shellBottomSystemInset(BuildContext context) {
+  final bottom = MediaQuery.viewPaddingOf(context).bottom;
+  return bottom >= _gestureNavInsetThreshold
+      ? bottom
+      : _gestureNavBottomPadding;
+}
+
 class HomeShellPage extends ConsumerStatefulWidget {
   const HomeShellPage({super.key, required this.navigationShell});
 
@@ -27,6 +60,20 @@ class _HomeShellPageState extends ConsumerState<HomeShellPage> {
   static const _alwaysPermissionHintLastShownKey =
       'always_permission_hint_last_shown_at_ms';
   static const _alwaysPermissionHintCooldown = Duration(hours: 24);
+
+  /// Vertical offset applied to the main FAB on top of Scaffold's default
+  /// docked position (FAB center aligned with the bar's top edge).
+  ///
+  /// In 3-button nav mode we lift the FAB up ([-5]) so there's a ~10 px
+  /// gap between the FAB's bottom edge and the painted bar top — the FAB
+  /// reads as "floating" above the bar.
+  ///
+  /// In gesture-nav mode the bar stands flush with the screen edge, which
+  /// makes the floating FAB look too detached from the rest of the UI.
+  /// Dropping the FAB a little deeper ([8]) makes it sit closer to the
+  /// bar's notch without actually embedding it there.
+  static const _fabBottomOffsetGestureNav = 8.0;
+  static const _fabBottomOffsetButtonNav = -5.0;
 
   bool _fabExpanded = false;
   bool _startingRun = false;
@@ -116,7 +163,12 @@ class _HomeShellPageState extends ConsumerState<HomeShellPage> {
         runPhase == RunPhase.finishing ||
         _startingRun ||
         (mapSelected && runState.countdownSeconds != null);
-
+    final systemBottomInset = shellBottomSystemInset(context);
+    final isGestureNav =
+        MediaQuery.viewPaddingOf(context).bottom < _gestureNavInsetThreshold;
+    final fabBottomOffset = isGestureNav
+        ? _fabBottomOffsetGestureNav
+        : _fabBottomOffsetButtonNav;
     return Scaffold(
       extendBody: true,
       body: navigationShell,
@@ -179,7 +231,7 @@ class _HomeShellPageState extends ConsumerState<HomeShellPage> {
               curve: Curves.easeOutCubic,
               builder: (context, scale, child) {
                 return Transform.translate(
-                  offset: const Offset(0, 36),
+                  offset: Offset(0, fabBottomOffset),
                   child: Transform.scale(scale: scale, child: child),
                 );
               },
@@ -245,7 +297,48 @@ class _HomeShellPageState extends ConsumerState<HomeShellPage> {
           ],
         ),
       ),
-      bottomNavigationBar: ClipPath(
+      bottomNavigationBar: _ShellBottomBar(
+        navigationShell: navigationShell,
+        tabsLocked: tabsLocked,
+        systemBottomInset: systemBottomInset,
+      ),
+    );
+  }
+}
+
+/// Shell's bottom navigation bar with a docked FAB notch.
+///
+/// Layout strategy:
+/// - In 3-button nav mode [systemBottomInset] equals the system nav inset
+///   and is applied as *outer* bottom padding — it lifts the painted bar
+///   above the system buttons. The painted bar itself stays at
+///   [kShellBottomBarHeight].
+/// - In gesture-nav mode [systemBottomInset] is the extra
+///   [_gestureNavBottomPadding], and we absorb it into the painted
+///   bar instead of padding it out. The bar ends up taller and still
+///   sits at the absolute bottom of the screen (original design — the
+///   gesture hint overlays the bar's blur).
+class _ShellBottomBar extends StatelessWidget {
+  const _ShellBottomBar({
+    required this.navigationShell,
+    required this.tabsLocked,
+    required this.systemBottomInset,
+  });
+
+  final StatefulNavigationShell navigationShell;
+  final bool tabsLocked;
+  final double systemBottomInset;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final isGestureNav =
+        MediaQuery.viewPaddingOf(context).bottom < _gestureNavInsetThreshold;
+    final externalLift = isGestureNav ? 0.0 : systemBottomInset;
+    final paintedExtra = isGestureNav ? systemBottomInset : 0.0;
+    return Padding(
+      padding: EdgeInsets.only(bottom: externalLift),
+      child: ClipPath(
         clipper: const _SoftNotchClipper(
           topRadius: 18,
           notchRadius: 33,
@@ -265,7 +358,7 @@ class _HomeShellPageState extends ConsumerState<HomeShellPage> {
               ],
             ),
             child: SizedBox(
-              height: 52,
+              height: kShellBottomBarHeight + paintedExtra,
               child: Row(
                 children: [
                   Expanded(

@@ -14,6 +14,8 @@ import '../../profile/application/profile_controller.dart';
 import '../application/territories_controller.dart';
 import '../domain/territory.dart';
 import '../../runs/application/run_tracker_controller.dart';
+import '../../../app/home_shell_page.dart'
+    show kShellBottomBarHeight, shellBottomSystemInset;
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/color_utils.dart';
 import '../../../core/utils/formatters.dart';
@@ -317,7 +319,11 @@ class _MapPageBodyState extends ConsumerState<_MapPageBody> {
             ring: t.polygons[i],
           ),
     ];
-    final bottomBarInset = 52.0 + 10.0;
+    // Reserve space for the shell's bottom bar (notch + tabs) plus the
+    // system navigation bar so floating overlays (TestPad etc.) never sit
+    // under the bar regardless of gesture vs 3-button mode.
+    final bottomBarInset =
+        kShellBottomBarHeight + 10.0 + shellBottomSystemInset(context);
     final myTrackColor = meProfileAsync.maybeWhen(
       data: (profile) => colorFromHexOrDefault(profile.territoryColor),
       orElse: () => Theme.of(context).colorScheme.primary,

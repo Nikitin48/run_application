@@ -6,6 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:run_application/l10n/app_localizations.dart';
 
+import '../../../app/home_shell_page.dart'
+    show kShellBottomBarHeight, shellBottomSystemInset;
 import '../../../core/ui/app_labeled_text_field.dart';
 import '../../../core/utils/color_utils.dart';
 import '../../../core/theme/app_colors.dart';
@@ -179,6 +181,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     final profileAsync = ref.watch(meProfileProvider);
     final actionState = ref.watch(profileActionsProvider);
     final isSaving = actionState.isLoading;
+    final bottomClearance =
+        kShellBottomBarHeight + shellBottomSystemInset(context) + 24;
 
     ref.listen<AsyncValue<void>>(profileActionsProvider, (previous, next) {
       if (next.hasError) {
@@ -208,7 +212,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           final currentColor =
               (_selectedTerritoryColor ?? profile.territoryColor).toUpperCase();
           final territoryColor = colorFromHexOrDefault(currentColor);
-          final isRussian = Localizations.localeOf(context).languageCode == 'ru';
+          final isRussian =
+              Localizations.localeOf(context).languageCode == 'ru';
           final progressSectionTitle = isRussian ? 'Прогресс' : 'Progress';
           final activitySectionTitle = isRussian ? 'Активность' : 'Activity';
           final resultsSectionTitle = isRussian ? 'Результаты' : 'Results';
@@ -742,7 +747,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                const SizedBox(height: 40),
+                SizedBox(height: bottomClearance),
               ],
             ),
           );
@@ -1083,7 +1088,9 @@ class _StatsSectionCard extends StatelessWidget {
                           height: 44,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: colorScheme.secondary.withValues(alpha: 0.14),
+                            color: colorScheme.secondary.withValues(
+                              alpha: 0.14,
+                            ),
                           ),
                           child: Icon(
                             item.icon,

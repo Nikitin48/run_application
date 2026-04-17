@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
 
+import '../../../app/home_shell_page.dart'
+    show kShellBottomBarHeight, shellBottomSystemInset;
 import '../../../core/utils/user_friendly_error.dart';
 import '../../../core/utils/formatters.dart';
 import '../application/leaderboard_controller.dart';
@@ -41,6 +43,8 @@ class _LeaderboardPageState extends ConsumerState<LeaderboardPage> {
     final ref = this.ref;
     final leaderboardAsync = ref.watch(leaderboardPagingProvider);
     final filter = ref.watch(leaderboardFilterProvider);
+    final bottomClearance =
+        kShellBottomBarHeight + shellBottomSystemInset(context) + 24;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Рейтинг')),
@@ -130,7 +134,7 @@ class _LeaderboardPageState extends ConsumerState<LeaderboardPage> {
                         data.entries.length + 2 + (data.isLoadingMore ? 1 : 0),
                     itemBuilder: (context, index) {
                       if (index == data.entries.length + 1) {
-                        return const SizedBox(height: 80);
+                        return SizedBox(height: bottomClearance);
                       }
                       if (index == data.entries.length + 2) {
                         return const Padding(

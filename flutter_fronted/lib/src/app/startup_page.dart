@@ -44,7 +44,7 @@ class _StartupPageState extends ConsumerState<StartupPage> {
           Positioned(
             left: 0,
             right: 0,
-            bottom: 56,
+            bottom: 56 + MediaQuery.viewPaddingOf(context).bottom,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
