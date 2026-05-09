@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math' as math;
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -14,6 +15,7 @@ import '../../profile/application/profile_controller.dart';
 import '../application/territories_controller.dart';
 import '../domain/territory.dart';
 import '../../runs/application/run_tracker_controller.dart';
+import '../../runs/domain/run_models.dart';
 import '../../../app/home_shell_page.dart'
     show kShellBottomBarHeight, shellBottomSystemInset;
 import '../../../core/theme/app_colors.dart';
@@ -539,6 +541,13 @@ class _MapPageBodyState extends ConsumerState<_MapPageBody> {
                 onMoveStop: _stopSimulatedMove,
               ),
             ),
+          if (runState.phase == RunPhase.running ||
+              runState.phase == RunPhase.paused)
+            Positioned(
+              top: 12,
+              left: 12,
+              child: _RunLiveStatsCard(runState: runState),
+            ),
           if (runState.phase == RunPhase.finishing)
             Positioned.fill(
               child: ColoredBox(
@@ -754,6 +763,148 @@ class _TileStyle {
 
   @override
   int get hashCode => id.hashCode;
+}
+
+class _RunLiveStatsCard extends StatelessWidget {
+  const _RunLiveStatsCard({required this.runState});
+
+  final RunTrackerState runState;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final valueStyle = Theme.of(context).textTheme.bodySmall?.copyWith(
+      color: Colors.white.withValues(alpha: 0.97),
+      fontWeight: FontWeight.w700,
+      fontSize: 14,
+    );
+    final labelStyle = Theme.of(context).textTheme.bodySmall?.copyWith(
+      color: Colors.white.withValues(alpha: 0.82),
+      fontSize: 14,
+      fontWeight: FontWeight.w500,
+    );
+    return IgnorePointer(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(14),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.36),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.24)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.2),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              child: StreamBuilder<int>(
+                stream: Stream<int>.periodic(const Duration(seconds: 1), (x) => x),
+                initialData: 0,
+                builder: (context, _) {
+                  final now = DateTime.now().toUtc();
+                  final elapsedS = _elapsedSeconds(runState.startedAt, now);
+                  final pausedS = _pausedSeconds(runState.pauses, now);
+                  final movingS = (elapsedS - pausedS).clamp(0, elapsedS);
+                  final distanceM = _distanceMeters(runState.points);
+                  final pace = formatPace(distanceM: distanceM, movingS: movingS);
+                  return Table(
+                    columnWidths: const {
+                      0: IntrinsicColumnWidth(),
+                      1: IntrinsicColumnWidth(),
+                    },
+                    defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+                    children: [
+                      _buildLiveMetricRow(
+                        icon: Icons.directions_run_rounded,
+                        label: l10n.avgPaceMoving,
+                        value: pace,
+                        labelStyle: labelStyle,
+                        valueStyle: valueStyle,
+                      ),
+                      _buildLiveMetricRow(
+                        icon: Icons.straighten_rounded,
+                        label: l10n.distance,
+                        value: formatMeters(distanceM),
+                        labelStyle: labelStyle,
+                        valueStyle: valueStyle,
+                      ),
+                      _buildLiveMetricRow(
+                        icon: Icons.timer_outlined,
+                        label: l10n.elapsed,
+                        value: formatDurationMmSs(elapsedS),
+                        labelStyle: labelStyle,
+                        valueStyle: valueStyle,
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+TableRow _buildLiveMetricRow({
+  required IconData icon,
+  required String label,
+  required String value,
+  required TextStyle? labelStyle,
+  required TextStyle? valueStyle,
+}) {
+  return TableRow(
+    children: [
+      Padding(
+        padding: const EdgeInsets.only(bottom: 4, right: 12),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 14, color: Colors.white.withValues(alpha: 0.88)),
+            const SizedBox(width: 6),
+            Text(label, style: labelStyle),
+          ],
+        ),
+      ),
+      Padding(
+        padding: const EdgeInsets.only(bottom: 4),
+        child: Text(value, style: valueStyle),
+      ),
+    ],
+  );
+}
+
+int _elapsedSeconds(DateTime? startedAt, DateTime nowUtc) {
+  if (startedAt == null) return 0;
+  return nowUtc.difference(startedAt).inSeconds.clamp(0, 1 << 31);
+}
+
+int _pausedSeconds(List<RunPause> pauses, DateTime nowUtc) {
+  var total = 0;
+  for (final pause in pauses) {
+    final endedAt = pause.endedAt ?? nowUtc;
+    final part = endedAt.difference(pause.startedAt).inSeconds;
+    if (part > 0) total += part;
+  }
+  return total;
+}
+
+double _distanceMeters(List<RunPoint> points) {
+  if (points.length < 2) return 0;
+  var sum = 0.0;
+  for (var i = 1; i < points.length; i++) {
+    final prev = points[i - 1];
+    final curr = points[i];
+    sum += Geolocator.distanceBetween(prev.lat, prev.lng, curr.lat, curr.lng);
+  }
+  return sum;
 }
 
 class _TerritoryAreaTapTarget {

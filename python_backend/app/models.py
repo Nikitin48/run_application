@@ -207,12 +207,16 @@ class RunFinishRequest(BaseModel):
 
 class RunFinishResponse(BaseModel):
     run_id: str
+    started_at: datetime | None = None
+    ended_at: datetime | None = None
     distance_m: float
     elapsed_s: int
     paused_s: int
     moving_s: int
     capture_area_m2: float
     victims_count: int
+    capture_geojson: dict[str, Any] | None = None
+    track_geojson: dict[str, Any] | None = None
     new_achievements: list[AchievementUnlockedOut] = Field(default_factory=list)
     level_up: LevelUpOut | None = None
     profile_xp: int = 0

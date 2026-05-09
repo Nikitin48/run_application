@@ -175,6 +175,17 @@ def finish_run(payload: RunFinishRequest, user_id: str = Depends(current_user_id
                 """,
                 (float(cap_area), int(victims), run_id),
             )
+            cur.execute(
+                """
+                SELECT
+                  ST_AsGeoJSON(capture_geom)::jsonb,
+                  ST_AsGeoJSON(track_line)::jsonb
+                FROM runs
+                WHERE id = %s
+                """,
+                (run_id,),
+            )
+            capture_geojson, track_geojson = cur.fetchone()
         achievements_result = evaluate_user_achievements(
             conn,
             user_id=user_id,
@@ -208,12 +219,16 @@ def finish_run(payload: RunFinishRequest, user_id: str = Depends(current_user_id
 
     return RunFinishResponse(
         run_id=str(run_id),
+        started_at=payload.started_at,
+        ended_at=payload.ended_at,
         distance_m=float(distance_m),
         elapsed_s=elapsed_s,
         paused_s=paused_s,
         moving_s=moving_s,
         capture_area_m2=float(cap_area),
         victims_count=int(victims),
+        capture_geojson=capture_geojson,
+        track_geojson=track_geojson,
         new_achievements=[
             AchievementUnlockedOut(
                 code=item.code,

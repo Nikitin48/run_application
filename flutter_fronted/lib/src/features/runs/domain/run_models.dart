@@ -74,12 +74,16 @@ class FinishRunRequest {
 class FinishRunResponse {
   const FinishRunResponse({
     required this.runId,
+    required this.startedAt,
+    required this.endedAt,
     required this.distanceM,
     required this.elapsedS,
     required this.pausedS,
     required this.movingS,
     required this.captureAreaM2,
     required this.victimsCount,
+    required this.capturePolygons,
+    required this.trackPoints,
     required this.newAchievements,
     required this.levelUp,
     required this.profileXp,
@@ -87,12 +91,16 @@ class FinishRunResponse {
   });
 
   final String runId;
+  final DateTime? startedAt;
+  final DateTime? endedAt;
   final double distanceM;
   final int elapsedS;
   final int pausedS;
   final int movingS;
   final double captureAreaM2;
   final int victimsCount;
+  final List<List<RunGeoPoint>> capturePolygons;
+  final List<RunGeoPoint> trackPoints;
   final List<UnlockedAchievement> newAchievements;
   final LevelUpInfo? levelUp;
   final int profileXp;
@@ -100,14 +108,22 @@ class FinishRunResponse {
 
   static FinishRunResponse fromJson(Map<String, Object?> json) {
     final newAchievementsRaw = (json['new_achievements'] as List?) ?? const [];
+    final startedAtRaw = json['started_at'] as String?;
+    final endedAtRaw = json['ended_at'] as String?;
     return FinishRunResponse(
       runId: json['run_id'] as String,
+      startedAt: startedAtRaw == null
+          ? null
+          : DateTime.tryParse(startedAtRaw)?.toLocal(),
+      endedAt: endedAtRaw == null ? null : DateTime.tryParse(endedAtRaw)?.toLocal(),
       distanceM: (json['distance_m'] as num).toDouble(),
       elapsedS: (json['elapsed_s'] as num).toInt(),
       pausedS: (json['paused_s'] as num).toInt(),
       movingS: (json['moving_s'] as num).toInt(),
       captureAreaM2: (json['capture_area_m2'] as num).toDouble(),
       victimsCount: (json['victims_count'] as num).toInt(),
+      capturePolygons: _parseCapturePolygonsGeoJson(json['capture_geojson']),
+      trackPoints: _parseTrackPointsGeoJson(json['track_geojson']),
       newAchievements: newAchievementsRaw
           .whereType<Map<String, Object?>>()
           .map(UnlockedAchievement.fromJson)
@@ -227,70 +243,11 @@ class RunHistoryItem {
   }
 
   static List<List<RunGeoPoint>> _parseCapturePolygons(Object? rawGeoJson) {
-    if (rawGeoJson is! Map) return const <List<RunGeoPoint>>[];
-    final geoJson = rawGeoJson.cast<Object?, Object?>();
-    final type = (geoJson['type'] as String?)?.toLowerCase();
-    final coordinates = geoJson['coordinates'];
-    if (coordinates is! List) return const <List<RunGeoPoint>>[];
-
-    if (type == 'polygon') {
-      if (coordinates.isEmpty) return const <List<RunGeoPoint>>[];
-      final ring = _parseRing(coordinates.first);
-      return ring.isEmpty
-          ? const <List<RunGeoPoint>>[]
-          : <List<RunGeoPoint>>[ring];
-    }
-
-    if (type == 'multipolygon') {
-      final rings = <List<RunGeoPoint>>[];
-      for (final polygonRaw in coordinates) {
-        if (polygonRaw is! List || polygonRaw.isEmpty) continue;
-        final ring = _parseRing(polygonRaw.first);
-        if (ring.isNotEmpty) rings.add(ring);
-      }
-      return List.unmodifiable(rings);
-    }
-
-    return const <List<RunGeoPoint>>[];
-  }
-
-  static List<RunGeoPoint> _parseRing(Object? rawRing) {
-    if (rawRing is! List) return const <RunGeoPoint>[];
-    final points = <RunGeoPoint>[];
-    for (final pointRaw in rawRing) {
-      if (pointRaw is! List || pointRaw.length < 2) continue;
-      final lng = _toDouble(pointRaw[0]);
-      final lat = _toDouble(pointRaw[1]);
-      if (lng == null || lat == null) continue;
-      points.add(RunGeoPoint(lat: lat, lng: lng));
-    }
-    if (points.length < 3) return const <RunGeoPoint>[];
-    return List.unmodifiable(points);
-  }
-
-  static double? _toDouble(Object? value) {
-    if (value is num) return value.toDouble();
-    if (value is String) return double.tryParse(value);
-    return null;
+    return _parseCapturePolygonsGeoJson(rawGeoJson);
   }
 
   static List<RunGeoPoint> _parseTrackPoints(Object? rawGeoJson) {
-    if (rawGeoJson is! Map) return const <RunGeoPoint>[];
-    final geoJson = rawGeoJson.cast<Object?, Object?>();
-    final type = (geoJson['type'] as String?)?.toLowerCase();
-    if (type != 'linestring') return const <RunGeoPoint>[];
-    final coordinates = geoJson['coordinates'];
-    if (coordinates is! List) return const <RunGeoPoint>[];
-    final points = <RunGeoPoint>[];
-    for (final pointRaw in coordinates) {
-      if (pointRaw is! List || pointRaw.length < 2) continue;
-      final lng = _toDouble(pointRaw[0]);
-      final lat = _toDouble(pointRaw[1]);
-      if (lng == null || lat == null) continue;
-      points.add(RunGeoPoint(lat: lat, lng: lng));
-    }
-    if (points.length < 2) return const <RunGeoPoint>[];
-    return List.unmodifiable(points);
+    return _parseTrackPointsGeoJson(rawGeoJson);
   }
 }
 
@@ -299,4 +256,69 @@ class RunGeoPoint {
 
   final double lat;
   final double lng;
+}
+
+List<List<RunGeoPoint>> _parseCapturePolygonsGeoJson(Object? rawGeoJson) {
+  if (rawGeoJson is! Map) return const <List<RunGeoPoint>>[];
+  final geoJson = rawGeoJson.cast<Object?, Object?>();
+  final type = (geoJson['type'] as String?)?.toLowerCase();
+  final coordinates = geoJson['coordinates'];
+  if (coordinates is! List) return const <List<RunGeoPoint>>[];
+
+  if (type == 'polygon') {
+    if (coordinates.isEmpty) return const <List<RunGeoPoint>>[];
+    final ring = _parseRingGeoJson(coordinates.first);
+    return ring.isEmpty ? const <List<RunGeoPoint>>[] : <List<RunGeoPoint>>[ring];
+  }
+
+  if (type == 'multipolygon') {
+    final rings = <List<RunGeoPoint>>[];
+    for (final polygonRaw in coordinates) {
+      if (polygonRaw is! List || polygonRaw.isEmpty) continue;
+      final ring = _parseRingGeoJson(polygonRaw.first);
+      if (ring.isNotEmpty) rings.add(ring);
+    }
+    return List.unmodifiable(rings);
+  }
+
+  return const <List<RunGeoPoint>>[];
+}
+
+List<RunGeoPoint> _parseTrackPointsGeoJson(Object? rawGeoJson) {
+  if (rawGeoJson is! Map) return const <RunGeoPoint>[];
+  final geoJson = rawGeoJson.cast<Object?, Object?>();
+  final type = (geoJson['type'] as String?)?.toLowerCase();
+  if (type != 'linestring') return const <RunGeoPoint>[];
+  final coordinates = geoJson['coordinates'];
+  if (coordinates is! List) return const <RunGeoPoint>[];
+  final points = <RunGeoPoint>[];
+  for (final pointRaw in coordinates) {
+    if (pointRaw is! List || pointRaw.length < 2) continue;
+    final lng = _toDoubleGeoJson(pointRaw[0]);
+    final lat = _toDoubleGeoJson(pointRaw[1]);
+    if (lng == null || lat == null) continue;
+    points.add(RunGeoPoint(lat: lat, lng: lng));
+  }
+  if (points.length < 2) return const <RunGeoPoint>[];
+  return List.unmodifiable(points);
+}
+
+List<RunGeoPoint> _parseRingGeoJson(Object? rawRing) {
+  if (rawRing is! List) return const <RunGeoPoint>[];
+  final points = <RunGeoPoint>[];
+  for (final pointRaw in rawRing) {
+    if (pointRaw is! List || pointRaw.length < 2) continue;
+    final lng = _toDoubleGeoJson(pointRaw[0]);
+    final lat = _toDoubleGeoJson(pointRaw[1]);
+    if (lng == null || lat == null) continue;
+    points.add(RunGeoPoint(lat: lat, lng: lng));
+  }
+  if (points.length < 3) return const <RunGeoPoint>[];
+  return List.unmodifiable(points);
+}
+
+double? _toDoubleGeoJson(Object? value) {
+  if (value is num) return value.toDouble();
+  if (value is String) return double.tryParse(value);
+  return null;
 }
