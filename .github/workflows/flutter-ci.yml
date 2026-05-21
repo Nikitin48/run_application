@@ -70,7 +70,10 @@ jobs:
             echo "GOOGLE_SERVICES_JSON_BASE64 secret is not set" >&2
             exit 1
           fi
-          echo "$GOOGLE_SERVICES_JSON_BASE64" | base64 --decode > android/app/google-services.json
+          mkdir -p android/app
+          printf '%s' "$GOOGLE_SERVICES_JSON_BASE64" | base64 --decode > android/app/google-services.json
+          test -s android/app/google-services.json
+          ls -lh android/app/google-services.json
 
       - name: Build release APK
         run: bash ./build_release.sh apk
