@@ -17,7 +17,8 @@ class AuthState {
 
   const AuthState.unknown() : this._(AuthStatus.unknown, null);
   const AuthState.unauthenticated() : this._(AuthStatus.unauthenticated, null);
-  const AuthState.authenticated(AuthTokens t) : this._(AuthStatus.authenticated, t);
+  const AuthState.authenticated(AuthTokens t)
+    : this._(AuthStatus.authenticated, t);
 }
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
@@ -32,7 +33,9 @@ final registerUseCaseProvider = Provider<RegisterUseCase>((ref) {
   return RegisterUseCase(ref.watch(authRepositoryProvider));
 });
 
-final authControllerProvider = NotifierProvider<AuthController, AuthState>(AuthController.new);
+final authControllerProvider = NotifierProvider<AuthController, AuthState>(
+  AuthController.new,
+);
 
 class AuthController extends Notifier<AuthState> {
   @override
@@ -61,7 +64,11 @@ class AuthController extends Notifier<AuthState> {
     required String password,
     required String displayName,
   }) async {
-    final tokens = await ref.read(registerUseCaseProvider)(email, password, displayName);
+    final tokens = await ref.read(registerUseCaseProvider)(
+      email,
+      password,
+      displayName,
+    );
     await ref.read(tokenStorageProvider).write(tokens);
     state = AuthState.authenticated(tokens);
   }
@@ -71,5 +78,3 @@ class AuthController extends Notifier<AuthState> {
     state = const AuthState.unauthenticated();
   }
 }
-
-

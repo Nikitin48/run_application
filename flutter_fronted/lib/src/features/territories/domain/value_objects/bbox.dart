@@ -23,5 +23,3 @@ class Bbox {
   @override
   int get hashCode => Object.hash(minLng, minLat, maxLng, maxLat);
 }
-
-

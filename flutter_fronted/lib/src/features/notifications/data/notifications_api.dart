@@ -36,11 +36,6 @@ class NotificationsApi {
   }
 
   Future<void> unregisterPushToken(String token) async {
-    await _dio.delete<void>(
-      '/push-tokens',
-      data: {'token': token},
-    );
+    await _dio.delete<void>('/push-tokens', data: {'token': token});
   }
 }
-
-

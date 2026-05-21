@@ -6,7 +6,6 @@ class LoginUseCase {
 
   final AuthRepository _repo;
 
-  Future<AuthTokens> call(String email, String password) => _repo.login(email, password);
+  Future<AuthTokens> call(String email, String password) =>
+      _repo.login(email, password);
 }
-
-

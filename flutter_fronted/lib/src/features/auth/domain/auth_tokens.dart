@@ -10,10 +10,10 @@ class AuthTokens {
   final String refreshToken;
 
   Map<String, Object?> toJson() => {
-        'access_token': accessToken,
-        'access_expires_at': accessExpiresAt,
-        'refresh_token': refreshToken,
-      };
+    'access_token': accessToken,
+    'access_expires_at': accessExpiresAt,
+    'refresh_token': refreshToken,
+  };
 
   static AuthTokens fromJson(Map<String, Object?> json) {
     return AuthTokens(
@@ -23,5 +23,3 @@ class AuthTokens {
     );
   }
 }
-
-

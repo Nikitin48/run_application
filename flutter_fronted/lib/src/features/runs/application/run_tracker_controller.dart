@@ -253,14 +253,15 @@ class RunTrackerController extends Notifier<RunTrackerState> {
   /// iOS / Web: geolocator stream in the main isolate.
   /// On iOS `allowBackgroundLocationUpdates: true` keeps the stream alive.
   void _startDirectTracking() {
-    _posSub = Geolocator.getPositionStream(
-      locationSettings: _buildLocationSettings(),
-    ).listen(
-      (pos) => _appendPointIfNeeded(pos),
-      onError: (error) {
-        state = state.copyWith(error: 'Location stream error: $error');
-      },
-    );
+    _posSub =
+        Geolocator.getPositionStream(
+          locationSettings: _buildLocationSettings(),
+        ).listen(
+          (pos) => _appendPointIfNeeded(pos),
+          onError: (error) {
+            state = state.copyWith(error: 'Location stream error: $error');
+          },
+        );
   }
 
   LocationSettings _buildLocationSettings() {
@@ -301,7 +302,10 @@ class RunTrackerController extends Notifier<RunTrackerState> {
       final dtMs = ts.difference(last.ts).inMilliseconds.abs();
       if (dtMs < 800) return;
       final distanceM = Geolocator.distanceBetween(
-        last.lat, last.lng, pt.lat, pt.lng,
+        last.lat,
+        last.lng,
+        pt.lat,
+        pt.lng,
       );
       if (distanceM < 1.5 && accuracy > 25) return;
     }

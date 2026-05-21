@@ -6,7 +6,6 @@ class FinishRunUseCase {
 
   final RunsRepository _repo;
 
-  Future<FinishRunResponse> call(FinishRunRequest request) => _repo.finish(request);
+  Future<FinishRunResponse> call(FinishRunRequest request) =>
+      _repo.finish(request);
 }
-
-

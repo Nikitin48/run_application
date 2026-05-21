@@ -8,5 +8,3 @@ class GetLastNotificationUseCase {
 
   Future<LastNotification?> call() => _repo.last();
 }
-
-

@@ -16,7 +16,9 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 }
 
 final pushMessagingControllerProvider =
-    NotifierProvider<PushMessagingController, void>(PushMessagingController.new);
+    NotifierProvider<PushMessagingController, void>(
+      PushMessagingController.new,
+    );
 
 class PushMessagingController extends Notifier<void> {
   StreamSubscription<String>? _tokenRefreshSub;
@@ -51,7 +53,9 @@ class PushMessagingController extends Notifier<void> {
     _onMessageOpenedSub = FirebaseMessaging.onMessageOpenedApp.listen((_) {
       ref.invalidate(notificationsHistoryProvider);
     });
-    _tokenRefreshSub = FirebaseMessaging.instance.onTokenRefresh.listen((token) {
+    _tokenRefreshSub = FirebaseMessaging.instance.onTokenRefresh.listen((
+      token,
+    ) {
       _registerToken(token);
     });
     _initAndRegister();
@@ -116,4 +120,3 @@ class PushMessagingController extends Notifier<void> {
     }
   }
 }
-

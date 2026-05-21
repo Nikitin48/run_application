@@ -43,5 +43,3 @@ String formatSpeedKmh({required double distanceM, required int seconds}) {
     ..maximumFractionDigits = 1;
   return '${formatter.format(kmh)} км/ч';
 }
-
-

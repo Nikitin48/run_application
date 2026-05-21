@@ -41,7 +41,9 @@ final meProfileProvider = FutureProvider<MeProfile>((ref) async {
   return ref.watch(getMeProfileUseCaseProvider)();
 });
 
-final myAchievementsProvider = FutureProvider<AchievementsOverview>((ref) async {
+final myAchievementsProvider = FutureProvider<AchievementsOverview>((
+  ref,
+) async {
   return ref.watch(profileRepositoryProvider).getMyAchievements();
 });
 

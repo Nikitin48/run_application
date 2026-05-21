@@ -75,7 +75,8 @@ class BackgroundLocationService {
     final flnPlugin = FlutterLocalNotificationsPlugin();
     final androidImpl = flnPlugin
         .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>();
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     if (androidImpl != null) {
       await androidImpl.createNotificationChannel(
         const AndroidNotificationChannel(
@@ -176,25 +177,26 @@ void bgOnStart(ServiceInstance service) async {
     await posSub?.cancel();
     buffer.clear();
 
-    posSub = Geolocator.getPositionStream(
-      locationSettings: AndroidSettings(
-        accuracy: LocationAccuracy.bestForNavigation,
-        distanceFilter: 3,
-        intervalDuration: const Duration(seconds: 2),
-        forceLocationManager: true,
-      ),
-    ).listen((pos) {
-      final data = <String, dynamic>{
-        'lat': pos.latitude,
-        'lng': pos.longitude,
-        'ts': pos.timestamp.millisecondsSinceEpoch,
-        'acc': pos.accuracy,
-        'spd': pos.speed,
-        'alt': pos.altitude,
-      };
-      buffer.add(data);
-      service.invoke('loc', data);
-    });
+    posSub =
+        Geolocator.getPositionStream(
+          locationSettings: AndroidSettings(
+            accuracy: LocationAccuracy.bestForNavigation,
+            distanceFilter: 3,
+            intervalDuration: const Duration(seconds: 2),
+            forceLocationManager: true,
+          ),
+        ).listen((pos) {
+          final data = <String, dynamic>{
+            'lat': pos.latitude,
+            'lng': pos.longitude,
+            'ts': pos.timestamp.millisecondsSinceEpoch,
+            'acc': pos.accuracy,
+            'spd': pos.speed,
+            'alt': pos.altitude,
+          };
+          buffer.add(data);
+          service.invoke('loc', data);
+        });
   });
 
   service.on('flush').listen((_) {

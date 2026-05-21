@@ -10,4 +10,3 @@ class GetNotificationsHistoryUseCase {
     return _repo.history(limit: limit);
   }
 }
-

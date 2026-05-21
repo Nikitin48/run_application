@@ -4,7 +4,9 @@ import 'package:flutter/foundation.dart';
 // For this project we focus on Android/iOS; web can be configured via dart-define.
 
 class ApiConfig {
-  static const String _dartDefineBaseUrl = String.fromEnvironment('API_BASE_URL');
+  static const String _dartDefineBaseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+  );
 
   /// Base URL for backend API.
   ///
@@ -24,5 +26,3 @@ class ApiConfig {
     return 'http://127.0.0.1:8000';
   }
 }
-
-

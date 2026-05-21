@@ -15,13 +15,19 @@ final notificationsApiProvider = Provider<NotificationsApi>((ref) {
   return NotificationsApi(ref.watch(dioProvider));
 });
 
-final notificationsRepositoryProvider = Provider<NotificationsRepository>((ref) {
+final notificationsRepositoryProvider = Provider<NotificationsRepository>((
+  ref,
+) {
   return NotificationsRepositoryImpl(ref.watch(notificationsApiProvider));
 });
 
-final getLastNotificationUseCaseProvider = Provider<GetLastNotificationUseCase>((ref) {
-  return GetLastNotificationUseCase(ref.watch(notificationsRepositoryProvider));
-});
+final getLastNotificationUseCaseProvider = Provider<GetLastNotificationUseCase>(
+  (ref) {
+    return GetLastNotificationUseCase(
+      ref.watch(notificationsRepositoryProvider),
+    );
+  },
+);
 
 final getNotificationsHistoryUseCaseProvider =
     Provider<GetNotificationsHistoryUseCase>((ref) {
@@ -75,4 +81,3 @@ class NotificationsPollingController extends Notifier<void> {
     }
   }
 }
-

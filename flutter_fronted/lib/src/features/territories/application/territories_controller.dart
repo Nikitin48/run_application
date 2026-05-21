@@ -16,12 +16,15 @@ final territoriesRepositoryProvider = Provider<TerritoriesRepository>((ref) {
   return TerritoriesRepositoryImpl(ref.watch(territoriesApiProvider));
 });
 
-final getTerritoriesForBboxUseCaseProvider = Provider<GetTerritoriesForBboxUseCase>((ref) {
-  return GetTerritoriesForBboxUseCase(ref.watch(territoriesRepositoryProvider));
-});
+final getTerritoriesForBboxUseCaseProvider =
+    Provider<GetTerritoriesForBboxUseCase>((ref) {
+      return GetTerritoriesForBboxUseCase(
+        ref.watch(territoriesRepositoryProvider),
+      );
+    });
 
-final territoriesForBboxProvider = FutureProvider.family<List<Territory>, Bbox>((ref, bbox) async {
-  return ref.watch(getTerritoriesForBboxUseCaseProvider)(bbox);
-});
-
-
+final territoriesForBboxProvider = FutureProvider.family<List<Territory>, Bbox>(
+  (ref, bbox) async {
+    return ref.watch(getTerritoriesForBboxUseCaseProvider)(bbox);
+  },
+);

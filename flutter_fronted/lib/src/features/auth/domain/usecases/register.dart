@@ -9,5 +9,3 @@ class RegisterUseCase {
   Future<AuthTokens> call(String email, String password, String displayName) =>
       _repo.register(email, password, displayName);
 }
-
-

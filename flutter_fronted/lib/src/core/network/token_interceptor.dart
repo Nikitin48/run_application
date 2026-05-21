@@ -20,7 +20,10 @@ class TokenInterceptor extends QueuedInterceptorsWrapper {
   Future<AuthTokens?> _cachedTokens() => tokenStorage.read();
 
   @override
-  void onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
+  void onRequest(
+    RequestOptions options,
+    RequestInterceptorHandler handler,
+  ) async {
     final tokens = await _cachedTokens();
     if (tokens != null && options.headers['Authorization'] == null) {
       options.headers['Authorization'] = 'Bearer ${tokens.accessToken}';
@@ -73,5 +76,3 @@ class TokenInterceptor extends QueuedInterceptorsWrapper {
     }
   }
 }
-
-

@@ -38,5 +38,3 @@ class AuthApi {
     return AuthTokens.fromJson(res.data!);
   }
 }
-
-

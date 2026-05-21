@@ -115,7 +115,9 @@ class FinishRunResponse {
       startedAt: startedAtRaw == null
           ? null
           : DateTime.tryParse(startedAtRaw)?.toLocal(),
-      endedAt: endedAtRaw == null ? null : DateTime.tryParse(endedAtRaw)?.toLocal(),
+      endedAt: endedAtRaw == null
+          ? null
+          : DateTime.tryParse(endedAtRaw)?.toLocal(),
       distanceM: (json['distance_m'] as num).toDouble(),
       elapsedS: (json['elapsed_s'] as num).toInt(),
       pausedS: (json['paused_s'] as num).toInt(),
@@ -268,7 +270,9 @@ List<List<RunGeoPoint>> _parseCapturePolygonsGeoJson(Object? rawGeoJson) {
   if (type == 'polygon') {
     if (coordinates.isEmpty) return const <List<RunGeoPoint>>[];
     final ring = _parseRingGeoJson(coordinates.first);
-    return ring.isEmpty ? const <List<RunGeoPoint>>[] : <List<RunGeoPoint>>[ring];
+    return ring.isEmpty
+        ? const <List<RunGeoPoint>>[]
+        : <List<RunGeoPoint>>[ring];
   }
 
   if (type == 'multipolygon') {

@@ -37,7 +37,8 @@ class AuthFormValidation {
     required String? password,
     required bool isRegister,
   }) {
-    if ((email?.trim().isNotEmpty ?? false) && (password?.isNotEmpty ?? false) &&
+    if ((email?.trim().isNotEmpty ?? false) &&
+        (password?.isNotEmpty ?? false) &&
         validateEmail(email) == null) {
       if (isRegister) return validatePassword(password) == null;
       return true;

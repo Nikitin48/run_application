@@ -52,10 +52,7 @@ class RunHistoryPagingController extends AsyncNotifier<RunHistoryPagingState> {
       limit: RunHistoryPagingState.pageSize,
       offset: offset,
     );
-    final merged = <RunHistoryItem>[
-      ...previous,
-      ...page,
-    ];
+    final merged = <RunHistoryItem>[...previous, ...page];
     return RunHistoryPagingState(
       items: merged,
       offset: merged.length,

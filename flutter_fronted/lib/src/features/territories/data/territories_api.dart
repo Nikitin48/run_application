@@ -23,5 +23,3 @@ class TerritoriesApi {
     return res.data!;
   }
 }
-
-

@@ -99,11 +99,14 @@ class _MapPageBodyState extends ConsumerState<_MapPageBody> {
         perm = await Geolocator.requestPermission();
       }
       if (perm == LocationPermission.denied ||
-          perm == LocationPermission.deniedForever)
+          perm == LocationPermission.deniedForever) {
         return;
+      }
 
       final pos = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.best,
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.best,
+        ),
       );
       final ll = LatLng(pos.latitude, pos.longitude);
       if (!mounted) return;
@@ -144,8 +147,9 @@ class _MapPageBodyState extends ConsumerState<_MapPageBody> {
 
             // If a run is in progress, map marker follows the run's last point anyway.
             final runPhase = ref.read(runTrackerProvider).phase;
-            if (runPhase == RunPhase.running || runPhase == RunPhase.paused)
+            if (runPhase == RunPhase.running || runPhase == RunPhase.paused) {
               return;
+            }
 
             final ll = LatLng(pos.latitude, pos.longitude);
             setState(() => _currentLocation = ll);
@@ -804,7 +808,10 @@ class _RunLiveStatsCard extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
               child: StreamBuilder<int>(
-                stream: Stream<int>.periodic(const Duration(seconds: 1), (x) => x),
+                stream: Stream<int>.periodic(
+                  const Duration(seconds: 1),
+                  (x) => x,
+                ),
                 initialData: 0,
                 builder: (context, _) {
                   final now = DateTime.now().toUtc();
@@ -812,7 +819,10 @@ class _RunLiveStatsCard extends StatelessWidget {
                   final pausedS = _pausedSeconds(runState.pauses, now);
                   final movingS = (elapsedS - pausedS).clamp(0, elapsedS);
                   final distanceM = _distanceMeters(runState.points);
-                  final pace = formatPace(distanceM: distanceM, movingS: movingS);
+                  final pace = formatPace(
+                    distanceM: distanceM,
+                    movingS: movingS,
+                  );
                   return Table(
                     columnWidths: const {
                       0: IntrinsicColumnWidth(),

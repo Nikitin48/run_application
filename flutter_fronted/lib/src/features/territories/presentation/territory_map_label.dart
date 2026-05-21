@@ -7,8 +7,9 @@ import '../../../core/utils/color_utils.dart';
 LatLng? polygonRingCentroid(List<LatLng> ring) {
   if (ring.isEmpty) return null;
   final closed =
-      ring.length > 1 && ring.first.latitude == ring.last.latitude &&
-          ring.first.longitude == ring.last.longitude;
+      ring.length > 1 &&
+      ring.first.latitude == ring.last.latitude &&
+      ring.first.longitude == ring.last.longitude;
   final pts = closed ? ring.sublist(0, ring.length - 1) : ring;
   if (pts.isEmpty) return null;
 
@@ -53,8 +54,16 @@ class TerritoryDisplayNameMapLabel extends StatelessWidget {
           fontWeight: FontWeight.w600,
           height: 1.1,
           shadows: const [
-            Shadow(color: Color(0xE6000000), blurRadius: 3, offset: Offset(0, 0)),
-            Shadow(color: Color(0xB3000000), blurRadius: 8, offset: Offset(0, 1)),
+            Shadow(
+              color: Color(0xE6000000),
+              blurRadius: 3,
+              offset: Offset(0, 0),
+            ),
+            Shadow(
+              color: Color(0xB3000000),
+              blurRadius: 8,
+              offset: Offset(0, 1),
+            ),
           ],
         ),
       ),

@@ -34,7 +34,10 @@ class AchievementBadgeCard extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [palette.background, palette.background.withValues(alpha: 0.82)],
+          colors: [
+            palette.background,
+            palette.background.withValues(alpha: 0.82),
+          ],
         ),
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: palette.border, width: 1.2),
@@ -104,7 +107,9 @@ class AchievementBadgeCard extends StatelessWidget {
                         ),
                         _BadgePill(
                           label: achievementTierLabel(l10n, xp),
-                          background: palette.pillBackground.withValues(alpha: 0.8),
+                          background: palette.pillBackground.withValues(
+                            alpha: 0.8,
+                          ),
                           foreground: palette.pillForeground,
                         ),
                       ],

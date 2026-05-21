@@ -168,10 +168,7 @@ class _RunCapturePreviewState extends State<_RunCapturePreview> {
   Widget build(BuildContext context) {
     final polygons = _latLngPolygons;
     final track = _latLngTrackPoints;
-    final points = <LatLng>[
-      for (final ring in polygons) ...ring,
-      ...track,
-    ];
+    final points = <LatLng>[for (final ring in polygons) ...ring, ...track];
     if (points.isEmpty) return const SizedBox.shrink();
 
     final bounds = _expandedBounds(_boundsFromPoints(points));

@@ -39,7 +39,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
-      GoRoute(path: '/startup', builder: (context, state) => const StartupPage()),
+      GoRoute(
+        path: '/startup',
+        builder: (context, state) => const StartupPage(),
+      ),
       GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {

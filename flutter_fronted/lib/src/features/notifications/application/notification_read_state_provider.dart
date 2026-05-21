@@ -47,4 +47,3 @@ class NotificationsReadState extends Notifier<String?> {
     state = id;
   }
 }
-

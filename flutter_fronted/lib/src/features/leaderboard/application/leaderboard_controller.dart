@@ -20,10 +20,7 @@ final getLeaderboardUseCaseProvider = Provider<GetLeaderboardUseCase>((ref) {
 });
 
 class LeaderboardFilterState {
-  const LeaderboardFilterState({
-    required this.scope,
-    required this.metric,
-  });
+  const LeaderboardFilterState({required this.scope, required this.metric});
 
   final LeaderboardScope scope;
   final LeaderboardMetric metric;
@@ -113,7 +110,8 @@ final leaderboardPagingProvider =
       LeaderboardPagingController.new,
     );
 
-class LeaderboardPagingController extends AsyncNotifier<LeaderboardPagingState> {
+class LeaderboardPagingController
+    extends AsyncNotifier<LeaderboardPagingState> {
   Future<LeaderboardPagingState> _loadPage({
     required LeaderboardScope scope,
     required LeaderboardMetric metric,
@@ -126,10 +124,7 @@ class LeaderboardPagingController extends AsyncNotifier<LeaderboardPagingState> 
       limit: LeaderboardPagingState.pageSize,
       offset: offset,
     );
-    final merged = <LeaderboardEntry>[
-      ...previous,
-      ...page.entries,
-    ];
+    final merged = <LeaderboardEntry>[...previous, ...page.entries];
     return LeaderboardPagingState(
       scope: scope,
       metric: metric,

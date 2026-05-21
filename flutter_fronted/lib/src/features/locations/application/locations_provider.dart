@@ -44,10 +44,7 @@ final regionsSearchProvider = FutureProvider.family<List<RegionItem>, String>((
 });
 
 class CitiesSearchParams {
-  const CitiesSearchParams({
-    required this.regionCode,
-    required this.query,
-  });
+  const CitiesSearchParams({required this.regionCode, required this.query});
 
   final String regionCode;
   final String query;
@@ -65,7 +62,10 @@ class CitiesSearchParams {
 }
 
 final citiesSearchProvider =
-    FutureProvider.family<List<CityItem>, CitiesSearchParams>((ref, params) async {
+    FutureProvider.family<List<CityItem>, CitiesSearchParams>((
+      ref,
+      params,
+    ) async {
       if (params.regionCode.isEmpty) {
         return const [];
       }

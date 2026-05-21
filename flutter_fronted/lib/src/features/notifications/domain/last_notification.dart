@@ -17,5 +17,3 @@ class LastNotification {
   final double stolenAreaM2;
   final DateTime createdAt;
 }
-
-
