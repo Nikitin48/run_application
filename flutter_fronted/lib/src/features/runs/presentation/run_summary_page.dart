@@ -85,6 +85,7 @@ class _RunSummaryPageState extends ConsumerState<RunSummaryPage> {
                 child: Text(l10n.done),
               ),
             ),
+            const SizedBox(height: 40),
           ],
         ),
       ),
