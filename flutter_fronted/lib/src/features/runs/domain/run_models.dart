@@ -106,6 +106,26 @@ class FinishRunResponse {
   final int profileXp;
   final int profileLevel;
 
+  FinishRunResponse copyWith({List<RunGeoPoint>? trackPoints}) {
+    return FinishRunResponse(
+      runId: runId,
+      startedAt: startedAt,
+      endedAt: endedAt,
+      distanceM: distanceM,
+      elapsedS: elapsedS,
+      pausedS: pausedS,
+      movingS: movingS,
+      captureAreaM2: captureAreaM2,
+      victimsCount: victimsCount,
+      capturePolygons: capturePolygons,
+      trackPoints: trackPoints ?? this.trackPoints,
+      newAchievements: newAchievements,
+      levelUp: levelUp,
+      profileXp: profileXp,
+      profileLevel: profileLevel,
+    );
+  }
+
   static FinishRunResponse fromJson(Map<String, Object?> json) {
     final newAchievementsRaw = (json['new_achievements'] as List?) ?? const [];
     final startedAtRaw = json['started_at'] as String?;

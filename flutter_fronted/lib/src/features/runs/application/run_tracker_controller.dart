@@ -415,9 +415,10 @@ class RunTrackerController extends Notifier<RunTrackerState> {
     state = state.copyWith(phase: RunPhase.finishing, error: null);
     try {
       final res = await ref.read(finishRunUseCaseProvider)(req);
+      final finish = _withFallbackTrackPoints(res, req.points);
       ref.invalidate(meProfileProvider);
       ref.invalidate(myAchievementsProvider);
-      state = const RunTrackerState.idle().copyWith(lastFinish: res);
+      state = const RunTrackerState.idle().copyWith(lastFinish: finish);
       completed = true;
     } catch (e) {
       state = state.copyWith(phase: RunPhase.running, error: e.toString());
@@ -430,6 +431,19 @@ class RunTrackerController extends Notifier<RunTrackerState> {
 
   void clearLastFinish() {
     state = state.copyWith(clearLastFinish: true);
+  }
+
+  FinishRunResponse _withFallbackTrackPoints(
+    FinishRunResponse response,
+    List<RunPoint> sourcePoints,
+  ) {
+    if (response.trackPoints.length >= 2 || sourcePoints.length < 2) {
+      return response;
+    }
+    final trackPoints = sourcePoints
+        .map((p) => RunGeoPoint(lat: p.lat, lng: p.lng))
+        .toList(growable: false);
+    return response.copyWith(trackPoints: trackPoints);
   }
 
   /// Adds a simulated point (for emulator / test mode).

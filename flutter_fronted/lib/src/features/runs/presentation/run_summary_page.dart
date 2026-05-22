@@ -58,36 +58,34 @@ class _RunSummaryPageState extends ConsumerState<RunSummaryPage> {
       ),
       body: SafeArea(
         top: false,
-        child: Padding(
+        child: ListView(
           padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              RunStatsCard(
-                startedAt: finish.startedAt,
-                endedAt: finish.endedAt,
-                capturePolygons: finish.capturePolygons,
-                trackPoints: finish.trackPoints,
-                previewAccent: Theme.of(context).colorScheme.primary,
-                distanceM: finish.distanceM,
-                elapsedS: finish.elapsedS,
-                pausedS: finish.pausedS,
-                movingS: finish.movingS,
-                captureAreaM2: finish.captureAreaM2,
-                victimsCount: finish.victimsCount,
+          children: [
+            RunStatsCard(
+              startedAt: finish.startedAt,
+              endedAt: finish.endedAt,
+              capturePolygons: finish.capturePolygons,
+              trackPoints: finish.trackPoints,
+              previewAccent: Theme.of(context).colorScheme.primary,
+              distanceM: finish.distanceM,
+              elapsedS: finish.elapsedS,
+              pausedS: finish.pausedS,
+              movingS: finish.movingS,
+              captureAreaM2: finish.captureAreaM2,
+              victimsCount: finish.victimsCount,
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: () {
+                  context.go('/map');
+                  ref.read(runTrackerProvider.notifier).clearLastFinish();
+                },
+                child: Text(l10n.done),
               ),
-              const Spacer(),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: () {
-                    context.go('/map');
-                    ref.read(runTrackerProvider.notifier).clearLastFinish();
-                  },
-                  child: Text(l10n.done),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

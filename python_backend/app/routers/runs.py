@@ -56,6 +56,15 @@ def _calc_paused_s(
     return int(round(total))
 
 
+def _track_geojson_from_coords(coords: list[tuple[float, float]]) -> dict[str, object] | None:
+    if len(coords) < 2:
+        return None
+    return {
+        "type": "LineString",
+        "coordinates": [[lng, lat] for lat, lng in coords],
+    }
+
+
 @router.post("/finish", response_model=RunFinishResponse)
 def finish_run(payload: RunFinishRequest, user_id: str = Depends(current_user_id)) -> RunFinishResponse:
     if payload.ended_at <= payload.started_at:
@@ -99,6 +108,7 @@ def finish_run(payload: RunFinishRequest, user_id: str = Depends(current_user_id
         )
 
     track_wkt = wkt_linestring(coords)
+    track_geojson = _track_geojson_from_coords(coords)
     points_jsonb = Jsonb([p.model_dump(mode="json") for p in points])
 
     with db_conn() as conn:
@@ -177,15 +187,13 @@ def finish_run(payload: RunFinishRequest, user_id: str = Depends(current_user_id
             )
             cur.execute(
                 """
-                SELECT
-                  ST_AsGeoJSON(capture_geom)::jsonb,
-                  ST_AsGeoJSON(track_line)::jsonb
+                SELECT ST_AsGeoJSON(capture_geom)::jsonb
                 FROM runs
                 WHERE id = %s
                 """,
                 (run_id,),
             )
-            capture_geojson, track_geojson = cur.fetchone()
+            capture_geojson = cur.fetchone()[0]
         achievements_result = evaluate_user_achievements(
             conn,
             user_id=user_id,
