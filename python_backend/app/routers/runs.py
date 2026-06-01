@@ -7,11 +7,12 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from psycopg.types.json import Jsonb
 
 from ..db import db_conn
+from ..dependencies.auth import current_user_id
 from ..geo import clip_interval, haversine_m, seconds_between, wkt_linestring
 from ..models import AchievementUnlockedOut, LevelUpOut, RunFinishRequest, RunFinishResponse, RunHistoryItemOut
 from ..push import send_territory_attacked_pushes
 from ..services.achievements_service import evaluate_user_achievements
-from .me import current_user_id
+from ..services.run_speed_validation import RunSpeedValidationError, validate_run_speed
 
 
 router = APIRouter(prefix="/runs", tags=["runs"])
@@ -85,6 +86,11 @@ def finish_run(payload: RunFinishRequest, user_id: str = Depends(current_user_id
     elapsed_s = seconds_between(payload.started_at, payload.ended_at)
     paused_s = _calc_paused_s(started_at=payload.started_at, ended_at=payload.ended_at, pauses=pauses)
     moving_s = max(0, elapsed_s - paused_s)
+
+    try:
+        validate_run_speed(points, pauses=pauses)
+    except RunSpeedValidationError as e:
+        raise HTTPException(status_code=422, detail=str(e))
 
     # Distance: sum segment distances; MVP ignores pause masking of segments
     # (we rely on the client not recording points while paused).

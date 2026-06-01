@@ -174,8 +174,9 @@ def refresh(payload: RefreshRequest, request: Request) -> AuthResponse:
         with conn.cursor() as cur:
             cur.execute(
                 """
-                SELECT rt.user_id, rt.expires_at, rt.revoked_at
+                SELECT rt.user_id, rt.expires_at, rt.revoked_at, u.is_banned
                 FROM refresh_tokens rt
+                JOIN users u ON u.id = rt.user_id
                 WHERE rt.token_hash = %s
                 """,
                 (incoming_hash,),
@@ -184,7 +185,17 @@ def refresh(payload: RefreshRequest, request: Request) -> AuthResponse:
             if row is None:
                 raise HTTPException(status_code=401, detail="invalid refresh token")
 
-            user_id, expires_at, revoked_at = row
+            user_id, expires_at, revoked_at, is_banned = row
+            if is_banned:
+                cur.execute(
+                    """
+                    UPDATE refresh_tokens
+                    SET revoked_at = now()
+                    WHERE user_id = %s AND revoked_at IS NULL
+                    """,
+                    (user_id,),
+                )
+                raise HTTPException(status_code=403, detail="user banned")
             if revoked_at is not None:
                 raise HTTPException(status_code=401, detail="refresh token revoked")
             if expires_at is not None and int(expires_at.timestamp()) < int(time.time()):

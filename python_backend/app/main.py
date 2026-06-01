@@ -8,6 +8,7 @@ from fastapi import FastAPI
 
 from .background.territory_contest_resolver import run_territory_contest_resolver
 from .settings import settings
+from .routers import admin as admin_router
 from .routers import auth as auth_router
 from .routers import leaderboard as leaderboard_router
 from .routers import locations as locations_router
@@ -64,9 +65,11 @@ app = FastAPI(
         {"name": "push-tokens", "description": "Register/remove device push tokens (requires Bearer token)."},
         {"name": "locations", "description": "Reference locations for country/region/city profile selection."},
         {"name": "leaderboard", "description": "Leaderboard by city/region/country and metric."},
+        {"name": "admin", "description": "Admin-only user management."},
     ],
 )
 
+app.include_router(admin_router.router)
 app.include_router(auth_router.router)
 app.include_router(me_router.router)
 app.include_router(runs_router.router)

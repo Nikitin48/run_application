@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:run_application/l10n/app_localizations.dart';
 
+import '../../../core/utils/user_friendly_error.dart';
 import '../application/run_tracker_controller.dart';
 import 'widgets/achievements_popup.dart';
 import 'widgets/run_stats_card.dart';
@@ -21,9 +22,14 @@ class _RunSummaryPageState extends ConsumerState<RunSummaryPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final finish = ref.watch(runTrackerProvider).lastFinish;
+    final runState = ref.watch(runTrackerProvider);
+    final finish = runState.lastFinish;
+    final error = runState.error;
 
     if (finish == null) {
+      if (error != null && error.trim().isNotEmpty) {
+        return _RunRejectedView(error: error);
+      }
       if (!_didRedirectToMap) {
         _didRedirectToMap = true;
         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -86,6 +92,70 @@ class _RunSummaryPageState extends ConsumerState<RunSummaryPage> {
               ),
             ),
             const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RunRejectedView extends ConsumerWidget {
+  const _RunRejectedView({required this.error});
+
+  final String error;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Пробежка не засчитана'),
+        leading: IconButton(
+          onPressed: () {
+            ref.read(runTrackerProvider.notifier).clearLastFinish();
+            context.go('/map');
+          },
+          icon: const Icon(Icons.arrow_back),
+        ),
+      ),
+      body: SafeArea(
+        top: false,
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      size: 40,
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      toUserFriendlyError(
+                        error,
+                        fallbackMessage: 'Пробежка не засчитана.',
+                      ),
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: () {
+                  ref.read(runTrackerProvider.notifier).clearLastFinish();
+                  context.go('/map');
+                },
+                child: const Text('Готово'),
+              ),
+            ),
           ],
         ),
       ),

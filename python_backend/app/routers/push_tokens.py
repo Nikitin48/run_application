@@ -3,8 +3,8 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends
 
 from ..db import db_conn
+from ..dependencies.auth import current_user_id
 from ..models import PushTokenDeleteRequest, PushTokenUpsertRequest
-from .me import current_user_id
 
 router = APIRouter(prefix="/push-tokens", tags=["push-tokens"])
 

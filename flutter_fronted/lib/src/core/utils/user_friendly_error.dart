@@ -83,5 +83,20 @@ String? _mapBackendDetail(String? detail) {
   if (d == 'invalid city_code') {
     return 'Выбранный город недоступен. Выберите город заново.';
   }
+  if (d == 'user banned') {
+    return 'Аккаунт заблокирован. Вход в игру недоступен.';
+  }
+  if (d == 'admin required') {
+    return 'Недостаточно прав администратора.';
+  }
+  if (d == 'cannot ban yourself') {
+    return 'Нельзя забанить самого себя.';
+  }
+  if (d == 'cannot revoke own admin') {
+    return 'Нельзя снять права администратора у самого себя.';
+  }
+  if (d == 'run speed invalid') {
+    return 'Пробежка не засчитана: скорость на части маршрута слишком высокая.';
+  }
   return null;
 }

@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import 'home_shell_page.dart';
 import 'startup_page.dart';
+import '../features/admin/presentation/admin_users_page.dart';
 import '../features/auth/presentation/login_page.dart';
 import '../features/histories/presentation/histories_page.dart';
 import '../features/notifications/presentation/notifications_page.dart';
@@ -115,6 +116,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/notifications',
         builder: (context, state) => const NotificationsPage(),
+      ),
+      GoRoute(
+        path: '/admin/users',
+        builder: (context, state) => const AdminUsersPage(),
       ),
     ],
   );

@@ -60,8 +60,13 @@ CREATE TABLE IF NOT EXISTS users (
 ALTER TABLE users
   ADD COLUMN IF NOT EXISTS is_admin boolean NOT NULL DEFAULT false;
 
+ALTER TABLE users
+  ADD COLUMN IF NOT EXISTS is_banned boolean NOT NULL DEFAULT false;
+
 CREATE INDEX IF NOT EXISTS users_location_ix
   ON users(country_code, region_code, city_code);
+CREATE INDEX IF NOT EXISTS users_is_banned_ix
+  ON users(is_banned);
 
 -- Auth identities (email/phone). Password hash stored as text (algorithm handled by backend).
 CREATE TABLE IF NOT EXISTS auth_identities (

@@ -3,8 +3,8 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from ..db import db_conn
+from ..dependencies.auth import current_user_id
 from ..models import CityItemOut, CountryItemOut, RegionItemOut
-from .me import current_user_id
 
 router = APIRouter(prefix="/locations", tags=["locations"])
 

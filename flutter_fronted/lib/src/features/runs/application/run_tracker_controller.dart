@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -421,7 +422,14 @@ class RunTrackerController extends Notifier<RunTrackerState> {
       state = const RunTrackerState.idle().copyWith(lastFinish: finish);
       completed = true;
     } catch (e) {
-      state = state.copyWith(phase: RunPhase.running, error: e.toString());
+      if (_isRunSpeedInvalidError(e)) {
+        await _stopRunSession();
+        state = const RunTrackerState.idle().copyWith(
+          error: 'run speed invalid',
+        );
+      } else {
+        state = state.copyWith(phase: RunPhase.running, error: e.toString());
+      }
     } finally {
       if (completed) {
         await _stopRunSession();
@@ -431,6 +439,16 @@ class RunTrackerController extends Notifier<RunTrackerState> {
 
   void clearLastFinish() {
     state = state.copyWith(clearLastFinish: true);
+  }
+
+  bool _isRunSpeedInvalidError(Object error) {
+    if (error is! DioException) return false;
+    final data = error.response?.data;
+    if (data is Map && data['detail'] is String) {
+      return (data['detail'] as String).trim().toLowerCase() ==
+          'run speed invalid';
+    }
+    return false;
   }
 
   FinishRunResponse _withFallbackTrackPoints(

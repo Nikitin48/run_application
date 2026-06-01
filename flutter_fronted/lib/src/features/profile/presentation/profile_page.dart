@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:run_application/l10n/app_localizations.dart';
 
@@ -225,6 +226,18 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             child: ListView(
               padding: const EdgeInsets.all(16),
               children: [
+                if (profile.isAdmin) ...[
+                  Card(
+                    child: ListTile(
+                      leading: const Icon(Icons.admin_panel_settings_outlined),
+                      title: const Text('Администрирование'),
+                      subtitle: const Text('Бан игроков и назначение админов'),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () => context.push('/admin/users'),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
                 Card(
                   child: Container(
                     decoration: BoxDecoration(

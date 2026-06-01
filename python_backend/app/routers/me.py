@@ -5,8 +5,8 @@ from urllib.parse import unquote, urlparse
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile, status
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
+from ..dependencies.auth import current_user_id
 from ..db import db_conn
 from ..models import (
     AchievementsResponseOut,
@@ -23,11 +23,10 @@ from ..models import (
 )
 from ..services.achievements_service import list_user_achievements
 from ..settings import settings
-from ..security import decode_access_token, hash_password, verify_password
+from ..security import hash_password, verify_password
 
 
 router = APIRouter(tags=["me"])
-bearer = HTTPBearer(auto_error=False)
 DEFAULT_TERRITORY_COLOR = "#3B82F6"
 AVATAR_SUBDIR = "avatars"
 MIME_EXTENSIONS = {
@@ -63,18 +62,6 @@ def _extract_local_avatar_path(avatar_url: str | None) -> Path | None:
 def _build_avatar_url(request: Request, filename: str) -> str:
     base = str(request.base_url).rstrip("/")
     return f"{base}{settings.media_url_prefix}/{AVATAR_SUBDIR}/{filename}"
-
-
-def current_user_id(
-    creds: HTTPAuthorizationCredentials | None = Depends(bearer),
-) -> str:
-    if creds is None or not creds.credentials:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="missing token")
-    try:
-        payload = decode_access_token(creds.credentials)
-    except Exception:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid token")
-    return str(payload["sub"])
 
 
 @router.get("/me", response_model=UserOut)

@@ -36,6 +36,14 @@ class TokenInterceptor extends QueuedInterceptorsWrapper {
     final response = err.response;
     final request = err.requestOptions;
 
+    if (response?.statusCode == 403 &&
+        _backendDetail(response?.data) == 'user banned') {
+      await tokenStorage.clear();
+      sessionExpiredListener?.onSessionExpired();
+      handler.next(err);
+      return;
+    }
+
     final is401 = response?.statusCode == 401;
     final alreadyRetried = (request.extra['__retried'] == true);
     final isRefreshCall = request.path.contains('/auth/refresh');
@@ -74,5 +82,12 @@ class TokenInterceptor extends QueuedInterceptorsWrapper {
       sessionExpiredListener?.onSessionExpired();
       handler.next(err);
     }
+  }
+
+  String? _backendDetail(dynamic data) {
+    if (data is Map && data['detail'] is String) {
+      return (data['detail'] as String).trim().toLowerCase();
+    }
+    return null;
   }
 }

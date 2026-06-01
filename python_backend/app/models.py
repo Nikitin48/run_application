@@ -250,6 +250,24 @@ class PushTokenDeleteRequest(BaseModel):
     token: str = Field(min_length=16, max_length=4096)
 
 
+class AdminUserOut(BaseModel):
+    id: str
+    username: str
+    display_name: str
+    email: EmailStr | None = None
+    avatar_url: str | None = None
+    is_admin: bool
+    is_banned: bool
+    owned_area_m2: float
+    created_at: datetime
+
+
+class AdminUserActionOut(BaseModel):
+    user: AdminUserOut
+    revoked_sessions_count: int = 0
+    deleted_territories_count: int = 0
+
+
 LeaderboardScope = Literal["city", "region", "country"]
 LeaderboardMetric = Literal["area", "distance"]
 

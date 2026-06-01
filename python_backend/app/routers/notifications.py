@@ -3,7 +3,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends
 
 from ..db import db_conn
-from .me import current_user_id
+from ..dependencies.auth import current_user_id
 
 
 router = APIRouter(prefix="/notifications", tags=["notifications"])

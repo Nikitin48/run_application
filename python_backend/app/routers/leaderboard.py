@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, Query
 
+from ..dependencies.auth import current_user_id
 from ..models import (
     LeaderboardEntryOut,
     LeaderboardMetric,
@@ -9,7 +10,6 @@ from ..models import (
     LeaderboardScope,
 )
 from ..services.leaderboard_service import LeaderboardService
-from .me import current_user_id
 
 router = APIRouter(prefix="/leaderboard", tags=["leaderboard"])
 service = LeaderboardService()
