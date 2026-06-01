@@ -6,6 +6,8 @@ import 'startup_page.dart';
 import '../features/auth/presentation/login_page.dart';
 import '../features/histories/presentation/histories_page.dart';
 import '../features/notifications/presentation/notifications_page.dart';
+import '../features/onboarding/application/onboarding_controller.dart';
+import '../features/onboarding/presentation/onboarding_page.dart';
 import '../features/profile/presentation/achievements_page.dart';
 import '../features/leaderboard/presentation/leaderboard_page.dart';
 import '../features/profile/presentation/profile_page.dart';
@@ -17,31 +19,46 @@ final startupDelayPassedProvider = StateProvider<bool>((ref) => false);
 
 final goRouterProvider = Provider<GoRouter>((ref) {
   final auth = ref.watch(authControllerProvider);
+  final onboarding = ref.watch(onboardingControllerProvider);
   final startupDelayPassed = ref.watch(startupDelayPassedProvider);
   return GoRouter(
     initialLocation: '/startup',
     redirect: (context, state) {
       final onStartup = state.matchedLocation == '/startup';
       final loggingIn = state.matchedLocation == '/login';
+      final onboardingRoute = state.matchedLocation == '/onboarding';
 
       if (!startupDelayPassed) {
         return onStartup ? null : '/startup';
       }
 
-      if (auth.status == AuthStatus.unknown) {
+      if (auth.status == AuthStatus.unknown ||
+          onboarding == OnboardingStatus.unknown) {
         return onStartup ? null : '/startup';
       }
 
       final isAuthed = auth.status == AuthStatus.authenticated;
-      if (onStartup) return isAuthed ? '/map' : '/login';
-      if (!isAuthed && !loggingIn) return '/login';
-      if (isAuthed && loggingIn) return '/map';
+      final onboardingSeen = onboarding == OnboardingStatus.seen;
+      if (onStartup) {
+        if (isAuthed) return '/map';
+        return onboardingSeen ? '/login' : '/onboarding';
+      }
+      if (isAuthed && (loggingIn || onboardingRoute)) return '/map';
+      if (!isAuthed && !onboardingSeen && !onboardingRoute) {
+        return '/onboarding';
+      }
+      if (!isAuthed && onboardingSeen && onboardingRoute) return '/login';
+      if (!isAuthed && !loggingIn && !onboardingRoute) return '/login';
       return null;
     },
     routes: [
       GoRoute(
         path: '/startup',
         builder: (context, state) => const StartupPage(),
+      ),
+      GoRoute(
+        path: '/onboarding',
+        builder: (context, state) => const OnboardingPage(),
       ),
       GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
       StatefulShellRoute.indexedStack(
