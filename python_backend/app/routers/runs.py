@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from psycopg.types.json import Jsonb
 
 from ..db import db_conn
-from ..dependencies.auth import current_user_id
+from ..dependencies.auth import CurrentUser, current_active_user, current_user_id
 from ..geo import clip_interval, haversine_m, seconds_between, wkt_linestring
 from ..models import AchievementUnlockedOut, LevelUpOut, RunFinishRequest, RunFinishResponse, RunHistoryItemOut
 from ..push import send_territory_attacked_pushes
@@ -68,7 +68,11 @@ def _track_geojson_from_coords(coords: list[tuple[float, float]]) -> dict[str, o
 
 
 @router.post("/finish", response_model=RunFinishResponse)
-def finish_run(payload: RunFinishRequest, user_id: str = Depends(current_user_id)) -> RunFinishResponse:
+def finish_run(
+    payload: RunFinishRequest,
+    user: CurrentUser = Depends(current_active_user),
+) -> RunFinishResponse:
+    user_id = user.id
     if payload.ended_at <= payload.started_at:
         raise HTTPException(status_code=422, detail="ended_at must be after started_at")
 
@@ -87,10 +91,11 @@ def finish_run(payload: RunFinishRequest, user_id: str = Depends(current_user_id
     paused_s = _calc_paused_s(started_at=payload.started_at, ended_at=payload.ended_at, pauses=pauses)
     moving_s = max(0, elapsed_s - paused_s)
 
-    try:
-        validate_run_speed(points, pauses=pauses)
-    except RunSpeedValidationError as e:
-        raise HTTPException(status_code=422, detail=str(e))
+    if not user.is_admin:
+        try:
+            validate_run_speed(points, pauses=pauses)
+        except RunSpeedValidationError as e:
+            raise HTTPException(status_code=422, detail=str(e))
 
     # Distance: sum segment distances; MVP ignores pause masking of segments
     # (we rely on the client not recording points while paused).
