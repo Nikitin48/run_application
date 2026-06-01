@@ -18,14 +18,15 @@ router = APIRouter(prefix="/runs", tags=["runs"])
 log = logging.getLogger(__name__)
 
 
-def _collect_push_targets_for_run(run_id: str) -> list[tuple[str, str]]:
+def _collect_push_targets_for_run(run_id: str) -> list[tuple[str, str, str]]:
     with db_conn() as conn:
         with conn.cursor() as cur:
             cur.execute(
                 """
                 SELECT DISTINCT
                   upt.token,
-                  COALESCE(att.display_name, 'Игрок') AS attacker_name
+                  COALESCE(att.display_name, 'Игрок') AS attacker_name,
+                  un.kind
                 FROM user_notifications un
                 JOIN user_push_tokens upt ON upt.user_id = un.user_id
                 LEFT JOIN users att ON att.id = un.attacker_user_id
@@ -35,7 +36,7 @@ def _collect_push_targets_for_run(run_id: str) -> list[tuple[str, str]]:
             )
             rows = cur.fetchall()
             log.info("Push targets loaded for run %s: %d rows", run_id, len(rows))
-            return [(str(row[0]), str(row[1])) for row in rows]
+            return [(str(row[0]), str(row[1]), str(row[2])) for row in rows]
 
 
 def _delete_invalid_tokens(tokens: list[str]) -> None:
@@ -203,18 +204,22 @@ def finish_run(payload: RunFinishRequest, user_id: str = Depends(current_user_id
     push_targets = _collect_push_targets_for_run(str(run_id))
     if not push_targets:
         log.info("No push targets for run %s", run_id)
-    by_attacker: dict[str, list[str]] = {}
-    for token, attacker_name in push_targets:
-        by_attacker.setdefault(attacker_name, []).append(token)
+    by_message: dict[tuple[str, str], list[str]] = {}
+    for token, attacker_name, kind in push_targets:
+        by_message.setdefault((attacker_name, kind), []).append(token)
     invalid_tokens: list[str] = []
-    for attacker_name, tokens in by_attacker.items():
+    for (attacker_name, kind), tokens in by_message.items():
         log.info(
             "Sending territory attacked push for run %s attacker=%s tokens=%d",
             run_id,
             attacker_name,
             len(tokens),
         )
-        result = send_territory_attacked_pushes(tokens=tokens, attacker_name=attacker_name)
+        result = send_territory_attacked_pushes(
+            tokens=tokens,
+            attacker_name=attacker_name,
+            kind=kind,
+        )
         invalid_tokens.extend(result.invalid_tokens)
         if result.invalid_tokens:
             log.warning(

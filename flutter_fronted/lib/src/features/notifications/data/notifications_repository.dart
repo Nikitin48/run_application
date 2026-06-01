@@ -31,6 +31,11 @@ class NotificationsRepositoryImpl implements NotificationsRepository {
     final createdAt = createdAtRaw == null
         ? DateTime.now()
         : DateTime.parse(createdAtRaw);
+    final payload = (json['payload'] as Map?)?.cast<String, dynamic>() ?? {};
+    final affectedAreaM2 =
+        (payload['affected_area_m2'] as num?)?.toDouble() ??
+        (json['stolen_area_m2'] as num?)?.toDouble() ??
+        0.0;
     return LastNotification(
       id: (json['id'] as String?) ?? '',
       kind: (json['kind'] as String?) ?? 'unknown',
@@ -38,6 +43,7 @@ class NotificationsRepositoryImpl implements NotificationsRepository {
       attackerDisplayName: json['attacker_display_name'] as String?,
       runId: json['run_id'] as String?,
       stolenAreaM2: (json['stolen_area_m2'] as num?)?.toDouble() ?? 0.0,
+      affectedAreaM2: affectedAreaM2,
       createdAt: createdAt,
     );
   }

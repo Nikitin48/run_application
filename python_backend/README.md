@@ -52,7 +52,9 @@ FCM_SERVICE_ACCOUNT_JSON_PATH=/absolute/path/to/firebase-service-account.json
 | Локальная (разработка) | `./run.sh` или `./run.sh local` |
 | Облачная (релиз, Yandex Cloud) | `./run.sh release` |
 
-Скрипт выводит в консоль выбранный режим и передаёт его в uvicorn. В логах при старте видно, с каким хостом БД подключились.
+Скрипт выводит в консоль выбранный режим и передаёт его в uvicorn. В логах при старте видно, с каким хостом БД подключились, и строку `Territory contest background resolver started`.
+
+**Фоновые задачи:** пока backend запущен, каждые ~15 с вызывается `resolve_expired_territory_contests()` для споров с истёкшим `resolve_at`. Настройки: `TERRITORY_CONTEST_RESOLVE_ENABLED`, `TERRITORY_CONTEST_RESOLVE_INTERVAL_SECONDS` (см. `env.example`).
 
 **Через uvicorn напрямую:**
 

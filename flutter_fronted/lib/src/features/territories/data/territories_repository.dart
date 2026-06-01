@@ -30,12 +30,29 @@ class TerritoriesRepositoryImpl implements TerritoriesRepository {
       if (f is! Map<String, dynamic>) continue;
       final props =
           (f['properties'] as Map?)?.cast<String, dynamic>() ?? const {};
+      final featureKind = _parseFeatureKind(props['feature_kind'] as String?);
+      final territoryId = (props['territory_id'] as String?) ?? '';
+      final contestedAreaId = props['contested_area_id'] as String?;
       final userId = (props['user_id'] ?? '') as String;
       final displayName = (props['display_name'] as String?) ?? '';
       final areaM2 = (props['area_m2'] as num?)?.toDouble() ?? 0.0;
       final territoryColorHex =
           (props['territory_color'] as String?) ?? '#3B82F6';
       final avatarUrl = props['avatar_url'] as String?;
+      final status = _parseStatus(props['status'] as String?);
+      final participantsRaw = props['participants'] as List? ?? const [];
+      final participants = participantsRaw
+          .whereType<Map>()
+          .map((p) {
+            final json = p.cast<String, dynamic>();
+            return TerritoryParticipant(
+              userId: (json['user_id'] as String?) ?? '',
+              displayName: (json['display_name'] as String?) ?? '',
+              territoryColorHex:
+                  (json['territory_color'] as String?) ?? '#3B82F6',
+            );
+          })
+          .toList(growable: false);
       final statsJson =
           (props['stats'] as Map?)?.cast<String, dynamic>() ?? const {};
       final polygonAreasRaw = (props['polygon_areas_m2'] as List?) ?? const [];
@@ -72,10 +89,23 @@ class TerritoriesRepositoryImpl implements TerritoriesRepository {
 
       out.add(
         Territory(
+          featureKind: featureKind,
+          territoryId: territoryId,
+          contestedAreaId: contestedAreaId,
           userId: userId,
           displayName: displayName,
           areaM2: areaM2,
           territoryColorHex: territoryColorHex,
+          status: status,
+          capturedAt: _parseDate(props['captured_at'] as String?),
+          protectedUntil: _parseDate(props['protected_until'] as String?),
+          resolveAt: _parseDate(props['resolve_at'] as String?),
+          currentWinnerUserId: props['current_winner_user_id'] as String?,
+          currentWinnerDisplayName:
+              props['current_winner_display_name'] as String?,
+          currentWinnerTerritoryColorHex:
+              props['current_winner_territory_color'] as String?,
+          participants: participants,
           polygons: polygons,
           polygonAreasM2: polygonAreasM2,
           avatarUrl: avatarUrl,
@@ -86,14 +116,32 @@ class TerritoriesRepositoryImpl implements TerritoriesRepository {
             totalElapsedS: (statsJson['total_elapsed_s'] as num?)?.toInt() ?? 0,
             totalPausedS: (statsJson['total_paused_s'] as num?)?.toInt() ?? 0,
             totalMovingS: (statsJson['total_moving_s'] as num?)?.toInt() ?? 0,
-            ownedAreaM2:
-                (statsJson['owned_area_m2'] as num?)?.toDouble() ?? areaM2,
+            ownedAreaM2: (statsJson['owned_area_m2'] as num?)?.toDouble() ?? 0,
           ),
         ),
       );
     }
 
     return out;
+  }
+
+  TerritoryFeatureKind _parseFeatureKind(String? raw) {
+    return raw == 'contested_area'
+        ? TerritoryFeatureKind.contestedArea
+        : TerritoryFeatureKind.territory;
+  }
+
+  TerritoryStatus _parseStatus(String? raw) {
+    return switch (raw) {
+      'contested' => TerritoryStatus.contested,
+      'vulnerable' => TerritoryStatus.vulnerable,
+      _ => TerritoryStatus.protected,
+    };
+  }
+
+  DateTime? _parseDate(String? raw) {
+    if (raw == null || raw.isEmpty) return null;
+    return DateTime.tryParse(raw);
   }
 
   List<LatLng> _ringToLatLngs(List ring) {

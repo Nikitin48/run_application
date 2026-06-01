@@ -13,6 +13,7 @@ import '../features/notifications/application/last_notification_provider.dart';
 import '../features/runs/application/run_tracker_controller.dart';
 import '../features/territories/application/territories_controller.dart';
 import '../core/theme/app_colors.dart';
+import '../core/utils/user_friendly_error.dart';
 
 /// Visual height of the shell's bottom navigation bar content (without
 /// system navigation bar padding). Tab pages that need to reserve space
@@ -83,6 +84,28 @@ class _HomeShellPageState extends ConsumerState<HomeShellPage> {
       setState(() => _fabExpanded = false);
     }
     await ref.read(runTrackerProvider.notifier).finish();
+    final stateAfterFinish = ref.read(runTrackerProvider);
+    if (stateAfterFinish.lastFinish == null) {
+      if (mounted &&
+          (stateAfterFinish.phase == RunPhase.running ||
+              stateAfterFinish.phase == RunPhase.paused)) {
+        setState(() => _fabExpanded = true);
+        final error = stateAfterFinish.error;
+        if (error != null && error.trim().isNotEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                toUserFriendlyError(
+                  error,
+                  fallbackMessage: 'Не удалось завершить пробежку.',
+                ),
+              ),
+            ),
+          );
+        }
+      }
+      return;
+    }
     ref.invalidate(notificationsHistoryProvider);
     ref.invalidate(runHistoryProvider);
     ref.invalidate(territoriesForBboxProvider);

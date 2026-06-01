@@ -74,13 +74,20 @@ class _NotificationTile extends StatelessWidget {
     final attacker = (item.attackerDisplayName ?? '').trim().isEmpty
         ? 'Игрок'
         : item.attackerDisplayName!;
-    final area = formatAreaM2(item.stolenAreaM2);
+    final area = formatAreaM2(item.affectedAreaM2);
+    final isStolen = item.kind == 'territory_stolen';
 
     return Card(
       child: ListTile(
         leading: const Icon(Icons.warning_amber_rounded),
-        title: Text('$attacker захватил вашу территорию'),
-        subtitle: Text('Потеряно: $area\n$timestamp'),
+        title: Text(
+          isStolen
+              ? '$attacker захватил уязвимую часть территории'
+              : '$attacker оспаривает часть вашей территории',
+        ),
+        subtitle: Text(
+          isStolen ? 'Потеряно: $area\n$timestamp' : 'Спорная область: $area\n$timestamp',
+        ),
         isThreeLine: true,
       ),
     );

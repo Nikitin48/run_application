@@ -94,7 +94,7 @@ SET title = EXCLUDED.title,
 CREATE OR REPLACE FUNCTION finalize_run_capture(
   p_run_id uuid,
   p_tol_m double precision DEFAULT 10,
-  p_min_area_m2 double precision DEFAULT 150
+  p_min_area_m2 double precision DEFAULT 5000
 )
 RETURNS TABLE(
   capture_area_m2 double precision,

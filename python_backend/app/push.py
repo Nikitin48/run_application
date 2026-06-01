@@ -87,6 +87,7 @@ def send_territory_attacked_pushes(
     *,
     tokens: Iterable[str],
     attacker_name: str,
+    kind: str = "territory_contested",
 ) -> PushDeliveryResult:
     if not _ensure_firebase_ready():
         return PushDeliveryResult(invalid_tokens=[])
@@ -95,13 +96,20 @@ def send_territory_attacked_pushes(
     if not token_list:
         return PushDeliveryResult(invalid_tokens=[])
 
+    if kind == "territory_stolen":
+        title = "Часть территории захвачена"
+        body = f"{attacker_name} забрал уязвимую часть вашей территории"
+    else:
+        title = "Часть территории стала спорной"
+        body = f"{attacker_name} оспаривает часть вашей территории"
+
     msg = messaging.MulticastMessage(
         notification=messaging.Notification(
-            title="Ваша территория была атакована",
-            body=f"{attacker_name} захватил вашу территорию",
+            title=title,
+            body=body,
         ),
         data={
-            "kind": "territory_stolen",
+            "kind": kind,
             "attacker_display_name": attacker_name,
         },
         tokens=token_list,

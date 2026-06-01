@@ -1,7 +1,7 @@
 -- Final DB schema for:
 -- - users + basic auth identities
 -- - runs (track line + optional points)
--- - territories (ONE MultiPolygon per user)
+-- - territories (protected / contested / vulnerable owned fragments)
 -- - user_stats (aggregates)
 -- - user_notifications (history up to last N notifications per user)
 --
@@ -152,14 +152,53 @@ CREATE TABLE IF NOT EXISTS run_pauses (
 
 CREATE INDEX IF NOT EXISTS run_pauses_run_started_ix ON run_pauses(run_id, started_at);
 
--- Territories: ONE row per user with their current owned area.
+-- Territories: owned fragments with their own protection timer.
 CREATE TABLE IF NOT EXISTS territories (
-  user_id uuid PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   geom geometry(MultiPolygon, 4326) NOT NULL,
+  captured_at timestamptz NOT NULL DEFAULT now(),
+  protected_until timestamptz NOT NULL DEFAULT (now() + interval '6 hours'),
+  protection_duration_hours integer NOT NULL DEFAULT 6 CHECK (protection_duration_hours BETWEEN 2 AND 6),
+  status text NOT NULL DEFAULT 'protected' CHECK (status IN ('protected', 'vulnerable')),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 
+CREATE INDEX IF NOT EXISTS territories_user_ix ON territories(user_id);
 CREATE INDEX IF NOT EXISTS territories_geom_gix ON territories USING GIST (geom);
+CREATE INDEX IF NOT EXISTS territories_status_protected_until_ix
+  ON territories(status, protected_until);
+
+-- Contested areas belong to one protected territory fragment. Participants are
+-- normalized so the UI can show everyone involved while current_winner_user_id
+-- tracks the last valid claimant for that contested geometry.
+CREATE TABLE IF NOT EXISTS territory_contested_areas (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  territory_id uuid NOT NULL REFERENCES territories(id) ON DELETE CASCADE,
+  geom geometry(MultiPolygon, 4326) NOT NULL,
+  current_winner_user_id uuid REFERENCES users(id) ON DELETE SET NULL,
+  resolve_at timestamptz NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS territory_contested_areas_territory_ix
+  ON territory_contested_areas(territory_id);
+CREATE INDEX IF NOT EXISTS territory_contested_areas_geom_gix
+  ON territory_contested_areas USING GIST (geom);
+CREATE INDEX IF NOT EXISTS territory_contested_areas_resolve_ix
+  ON territory_contested_areas(resolve_at);
+
+CREATE TABLE IF NOT EXISTS territory_contested_area_participants (
+  contested_area_id uuid NOT NULL REFERENCES territory_contested_areas(id) ON DELETE CASCADE,
+  user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  first_joined_at timestamptz NOT NULL DEFAULT now(),
+  last_joined_at timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (contested_area_id, user_id)
+);
+
+CREATE INDEX IF NOT EXISTS territory_contested_area_participants_user_ix
+  ON territory_contested_area_participants(user_id);
 
 -- Aggregated stats
 CREATE TABLE IF NOT EXISTS user_stats (

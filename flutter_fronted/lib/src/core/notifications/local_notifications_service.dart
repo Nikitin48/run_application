@@ -124,7 +124,10 @@ class LocalNotificationsService {
     _initialized = true;
   }
 
-  Future<void> showTerritoryAttacked({required String attackerName}) async {
+  Future<void> showTerritoryAttacked({
+    required String attackerName,
+    String kind = 'territory_contested',
+  }) async {
     await ensureInitialized();
     const androidDetails = AndroidNotificationDetails(
       'territory_attacked',
@@ -140,8 +143,12 @@ class LocalNotificationsService {
     );
     await _plugin.show(
       1001,
-      'Ваша территория была атакована',
-      '$attackerName захватил вашу территорию',
+      kind == 'territory_stolen'
+          ? 'Часть территории захвачена'
+          : 'Часть территории стала спорной',
+      kind == 'territory_stolen'
+          ? '$attackerName забрал уязвимую часть вашей территории'
+          : '$attackerName оспаривает часть вашей территории',
       details,
     );
   }

@@ -66,7 +66,14 @@ docker compose -f docker-compose.prod.yml restart backend
 
 При деплое `BACKEND_IMAGE` задаётся на runner и передаётся в SSH-сессию; дублировать в `.env` на сервере не обязательно.
 
-## 5. Резервные копии
+## 6. Фоновые задачи в backend
+
+Отдельных serverless/cron-сервисов в проекте нет — всё крутится в контейнере **backend** на VPS.
+
+- **Спорные территории:** каждые ~15 с вызывается `resolve_expired_territory_contests()` (см. `TERRITORY_CONTEST_RESOLVE_*` в `python_backend/env.example`). Пока `backend` жив и `restart: unless-stopped`, споры закрываются по `resolve_at` без действий пользователя.
+- Проверка в логах: `docker compose -f docker-compose.prod.yml logs -f backend` → строки `Territory contest background resolver started` и `Territory contest resolve tick (interval=15s): resolved=N`.
+
+## 7. Резервные копии
 
 - Снимки диска в панели Beget (если доступны).
 - Регулярный `pg_dump` с выгрузкой на внешнее хранилище — по мере роста ценности данных.

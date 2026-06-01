@@ -52,6 +52,10 @@ class Settings(BaseSettings):
     max_avatar_size_mb: int = 5
     allowed_avatar_mime_types: list[str] = ["image/jpeg", "image/png"]
 
+    # Background resolver for territory_contested_areas past resolve_at.
+    territory_contest_resolve_enabled: bool = True
+    territory_contest_resolve_interval_seconds: int = 15
+
 
 settings = Settings()
 

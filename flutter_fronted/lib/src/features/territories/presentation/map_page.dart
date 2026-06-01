@@ -497,8 +497,21 @@ class _MapPageBodyState extends ConsumerState<_MapPageBody> {
                 ),
               ...() {
                 final polygons = <Polygon>[];
+                final contestedGridPolylines = <Polyline>[];
                 final labelMarkers = <Marker>[];
-                for (final t in territories) {
+                final ownerTerritories = territories
+                    .where(
+                      (t) => t.featureKind == TerritoryFeatureKind.territory,
+                    )
+                    .toList(growable: false);
+                final contestedAreas = territories
+                    .where(
+                      (t) =>
+                          t.featureKind == TerritoryFeatureKind.contestedArea,
+                    )
+                    .toList(growable: false);
+
+                for (final t in ownerTerritories) {
                   final baseColor = colorFromHexOrDefault(t.territoryColorHex);
                   for (var i = 0; i < t.polygons.length; i++) {
                     final ring = t.polygons[i];
@@ -509,25 +522,50 @@ class _MapPageBodyState extends ConsumerState<_MapPageBody> {
                     );
                     final anchor = polygonRingCentroid(ring);
                     if (anchor != null && t.displayName.isNotEmpty) {
+                      final isProtected = _isTerritoryProtected(t);
                       labelMarkers.add(
                         Marker(
-                          key: ValueKey('territory-label-${t.userId}-$i'),
+                          key: ValueKey('territory-label-${t.territoryId}-$i'),
                           point: anchor,
-                          width: 132,
+                          width: isProtected ? 148 : 132,
                           height: 28,
                           alignment: Alignment.center,
                           rotate: true,
                           child: TerritoryDisplayNameMapLabel(
                             displayName: t.displayName,
                             territoryColorHex: t.territoryColorHex,
+                            isProtected: isProtected,
                           ),
                         ),
                       );
                     }
                   }
                 }
+
+                for (final t in contestedAreas) {
+                  for (var i = 0; i < t.polygons.length; i++) {
+                    final ring = t.polygons[i];
+                    final participantColors = <Color>{
+                      colorFromHexOrDefault(t.territoryColorHex),
+                      for (final p in t.participants)
+                        colorFromHexOrDefault(p.territoryColorHex),
+                    }.toList(growable: false);
+                    appendContestedTerritoryRing(
+                      polygons,
+                      ring: ring,
+                      participantColors: participantColors,
+                    );
+                    appendContestedTerritoryGrid(
+                      contestedGridPolylines,
+                      ring: ring,
+                    );
+                  }
+                }
+
                 return <Widget>[
                   PolygonLayer(polygons: polygons),
+                  if (contestedGridPolylines.isNotEmpty)
+                    PolylineLayer(polylines: contestedGridPolylines),
                   if (labelMarkers.isNotEmpty)
                     MarkerLayer(markers: labelMarkers),
                 ];
@@ -937,6 +975,64 @@ class _TerritoryAreaTapTarget {
   }
 }
 
+bool _isTerritoryProtected(Territory territory) {
+  final until = territory.protectedUntil;
+  if (until == null) return false;
+  return until.isAfter(DateTime.now());
+}
+
+String _formatTimeLeft(DateTime target) {
+  final left = target.difference(DateTime.now());
+  if (left.isNegative) return 'скоро';
+  final hours = left.inHours;
+  final minutes = left.inMinutes.remainder(60);
+  if (hours > 0) return '$hoursч $minutesм';
+  return '$minutesм';
+}
+
+String _formatDateTime(DateTime value) {
+  final local = value.toLocal();
+  final day = local.day.toString().padLeft(2, '0');
+  final month = local.month.toString().padLeft(2, '0');
+  final hour = local.hour.toString().padLeft(2, '0');
+  final minute = local.minute.toString().padLeft(2, '0');
+  return '$day.$month $hour:$minute';
+}
+
+String _territoryStatusHeadline(Territory territory) {
+  if (territory.featureKind == TerritoryFeatureKind.contestedArea) {
+    return 'СПОРНАЯ';
+  }
+  if (_isTerritoryProtected(territory)) {
+    return 'ЗАЩИЩЕНА';
+  }
+  return 'УЯЗВИМА';
+}
+
+String? _territoryStatusSubtitle(Territory territory) {
+  if (territory.featureKind == TerritoryFeatureKind.contestedArea) {
+    final resolveIn = territory.resolveAt == null
+        ? null
+        : _formatTimeLeft(territory.resolveAt!);
+    return resolveIn == null ? null : 'До решения: $resolveIn';
+  }
+  if (_isTerritoryProtected(territory) && territory.protectedUntil != null) {
+    return 'До ${_formatDateTime(territory.protectedUntil!)}';
+  }
+  return null;
+}
+
+Color _territoryStatusColor(BuildContext context, Territory territory) {
+  final scheme = Theme.of(context).colorScheme;
+  if (territory.featureKind == TerritoryFeatureKind.contestedArea) {
+    return scheme.tertiary;
+  }
+  if (_isTerritoryProtected(territory)) {
+    return scheme.primary;
+  }
+  return scheme.error;
+}
+
 class _TerritoryOwnerBottomSheet extends StatelessWidget {
   const _TerritoryOwnerBottomSheet({
     required this.territory,
@@ -954,6 +1050,17 @@ class _TerritoryOwnerBottomSheet extends StatelessWidget {
     final sharePercent = stats.ownedAreaM2 <= 0
         ? 0
         : ((areaM2 / stats.ownedAreaM2) * 100).clamp(0, 100);
+    final isContested =
+        territory.featureKind == TerritoryFeatureKind.contestedArea;
+    final participantNames = territory.participants
+        .map((p) => p.displayName.isEmpty ? 'Игрок' : p.displayName)
+        .join(', ');
+    final resolveIn = territory.resolveAt == null
+        ? null
+        : _formatTimeLeft(territory.resolveAt!);
+    final statusHeadline = _territoryStatusHeadline(territory);
+    final statusSubtitle = _territoryStatusSubtitle(territory);
+    final statusColor = _territoryStatusColor(context, territory);
     return SafeArea(
       child: Padding(
         padding: EdgeInsets.fromLTRB(16, 8, 16, 16 + insets),
@@ -963,6 +1070,7 @@ class _TerritoryOwnerBottomSheet extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   CircleAvatar(
                     radius: 22,
@@ -983,59 +1091,116 @@ class _TerritoryOwnerBottomSheet extends StatelessWidget {
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: Text(
-                      territory.displayName.isEmpty
-                          ? 'Игрок'
-                          : territory.displayName,
-                      style: Theme.of(context).textTheme.titleLarge,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          territory.displayName.isEmpty
+                              ? 'Игрок'
+                              : territory.displayName,
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          statusHeadline,
+                          style: Theme.of(context).textTheme.headlineMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 1.2,
+                                height: 1.05,
+                                color: statusColor,
+                              ),
+                        ),
+                        if (statusSubtitle != null) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            statusSubtitle,
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurface
+                                      .withValues(alpha: 0.72),
+                                ),
+                          ),
+                        ],
+                      ],
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 14),
-              _StatsSectionCard(
-                title: 'Статистика данной области',
-                children: [
-                  _MetricRow(
-                    label: l10n.capturedArea,
-                    value: formatAreaM2(areaM2),
-                  ),
-                  _MetricRow(
-                    label: 'Доля от всей территории',
-                    value: '${sharePercent.toStringAsFixed(1)}%',
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              _StatsSectionCard(
-                title: 'Общая статистика пользователя',
-                children: [
-                  _MetricRow(
-                    label: l10n.profileRunsCount,
-                    value: '${stats.runCount}',
-                  ),
-                  _MetricRow(
-                    label: l10n.distance,
-                    value: formatMeters(stats.totalDistanceM),
-                  ),
-                  _MetricRow(
-                    label: l10n.elapsed,
-                    value: formatDurationMmSs(stats.totalElapsedS),
-                  ),
-                  _MetricRow(
-                    label: l10n.paused,
-                    value: formatDurationMmSs(stats.totalPausedS),
-                  ),
-                  _MetricRow(
-                    label: l10n.moving,
-                    value: formatDurationMmSs(stats.totalMovingS),
-                  ),
-                  _MetricRow(
-                    label: l10n.profileOwnedArea,
-                    value: formatAreaM2(stats.ownedAreaM2),
-                  ),
-                ],
-              ),
+              if (isContested) ...[
+                _StatsSectionCard(
+                  title: 'Спорная область',
+                  children: [
+                    _MetricRow(
+                      label: l10n.capturedArea,
+                      value: formatAreaM2(areaM2),
+                    ),
+                    _MetricRow(
+                      label: 'Участники спора',
+                      value: participantNames.isEmpty
+                          ? 'Нет данных'
+                          : participantNames,
+                    ),
+                    _MetricRow(
+                      label: 'Текущий претендент',
+                      value:
+                          territory.currentWinnerDisplayName?.isNotEmpty == true
+                          ? territory.currentWinnerDisplayName!
+                          : 'Игрок',
+                    ),
+                    if (resolveIn != null)
+                      _MetricRow(label: 'До решения', value: resolveIn),
+                  ],
+                ),
+              ],
+              if (!isContested) ...[
+                _StatsSectionCard(
+                  title: 'Статистика данной области',
+                  children: [
+                    _MetricRow(
+                      label: l10n.capturedArea,
+                      value: formatAreaM2(areaM2),
+                    ),
+                    _MetricRow(
+                      label: 'Доля от всей территории',
+                      value: '${sharePercent.toStringAsFixed(1)}%',
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                _StatsSectionCard(
+                  title: 'Общая статистика пользователя',
+                  children: [
+                    _MetricRow(
+                      label: l10n.profileRunsCount,
+                      value: '${stats.runCount}',
+                    ),
+                    _MetricRow(
+                      label: l10n.distance,
+                      value: formatMeters(stats.totalDistanceM),
+                    ),
+                    _MetricRow(
+                      label: l10n.elapsed,
+                      value: formatDurationMmSs(stats.totalElapsedS),
+                    ),
+                    _MetricRow(
+                      label: l10n.paused,
+                      value: formatDurationMmSs(stats.totalPausedS),
+                    ),
+                    _MetricRow(
+                      label: l10n.moving,
+                      value: formatDurationMmSs(stats.totalMovingS),
+                    ),
+                    _MetricRow(
+                      label: l10n.profileOwnedArea,
+                      value: formatAreaM2(stats.ownedAreaM2),
+                    ),
+                  ],
+                ),
+              ],
             ],
           ),
         ),

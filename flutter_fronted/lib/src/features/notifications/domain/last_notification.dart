@@ -6,6 +6,7 @@ class LastNotification {
     required this.attackerDisplayName,
     required this.runId,
     required this.stolenAreaM2,
+    required this.affectedAreaM2,
     required this.createdAt,
   });
 
@@ -15,5 +16,6 @@ class LastNotification {
   final String? attackerDisplayName;
   final String? runId;
   final double stolenAreaM2;
+  final double affectedAreaM2;
   final DateTime createdAt;
 }

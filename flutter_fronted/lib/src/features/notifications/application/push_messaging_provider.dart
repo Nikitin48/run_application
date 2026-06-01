@@ -97,9 +97,10 @@ class PushMessagingController extends Notifier<void> {
   Future<void> _onForegroundMessage(RemoteMessage message) async {
     developer.log('Foreground FCM message received', name: 'push');
     final attacker = message.data['attacker_display_name'] ?? 'Игрок';
+    final kind = message.data['kind'] ?? 'territory_contested';
     await ref
         .read(localNotificationsServiceProvider)
-        .showTerritoryAttacked(attackerName: attacker);
+        .showTerritoryAttacked(attackerName: attacker, kind: kind);
     ref.invalidate(notificationsHistoryProvider);
   }
 
