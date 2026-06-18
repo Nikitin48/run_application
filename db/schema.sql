@@ -1,18 +1,9 @@
--- Final DB schema for:
--- - users + basic auth identities
--- - runs (track line + optional points)
--- - territories (protected / contested / vulnerable owned fragments)
--- - user_stats (aggregates)
--- - user_notifications (history up to last N notifications per user)
---
--- This script enables required extensions automatically (recommended for local dev).
 
 CREATE EXTENSION IF NOT EXISTS postgis;
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 BEGIN;
 
--- Reference locations (Russia-focused leaderboard scopes).
 CREATE TABLE IF NOT EXISTS ref_countries (
   code text PRIMARY KEY,
   name text NOT NULL,
@@ -41,7 +32,6 @@ CREATE INDEX IF NOT EXISTS ref_regions_lookup_ix
 CREATE INDEX IF NOT EXISTS ref_cities_lookup_ix
   ON ref_cities(country_code, region_code, normalized_name);
 
--- Users
 CREATE TABLE IF NOT EXISTS users (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   username text NOT NULL UNIQUE,
@@ -68,7 +58,6 @@ CREATE INDEX IF NOT EXISTS users_location_ix
 CREATE INDEX IF NOT EXISTS users_is_banned_ix
   ON users(is_banned);
 
--- Auth identities (email/phone). Password hash stored as text (algorithm handled by backend).
 CREATE TABLE IF NOT EXISTS auth_identities (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -82,7 +71,6 @@ CREATE TABLE IF NOT EXISTS auth_identities (
   UNIQUE (user_id, provider)
 );
 
--- Refresh tokens (rotation). Store only token hash in DB.
 CREATE TABLE IF NOT EXISTS refresh_tokens (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -99,7 +87,6 @@ CREATE INDEX IF NOT EXISTS refresh_tokens_user_ix ON refresh_tokens(user_id);
 CREATE INDEX IF NOT EXISTS refresh_tokens_expires_ix ON refresh_tokens(expires_at);
 CREATE INDEX IF NOT EXISTS refresh_tokens_revoked_ix ON refresh_tokens(revoked_at);
 
--- Runs (activities)
 CREATE TABLE IF NOT EXISTS runs (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -107,20 +94,14 @@ CREATE TABLE IF NOT EXISTS runs (
   started_at timestamptz,
   ended_at timestamptz,
   distance_m double precision,
-  -- Total time (including pauses). If not provided, can be derived from started_at/ended_at.
   elapsed_s integer,
-  -- Total paused time (manual + auto pauses).
   paused_s integer NOT NULL DEFAULT 0,
-  -- Moving time = elapsed_s - paused_s (store for convenience / UI).
   moving_s integer,
-  -- Capture metrics for finished run (used in history UI).
   capture_area_m2 double precision NOT NULL DEFAULT 0,
   victims_count integer NOT NULL DEFAULT 0,
   capture_geom geometry(MultiPolygon, 4326),
   avg_pace_s_per_km integer,
-  -- Raw points (optional). In MVP you can store points here and/or compute LineString server-side.
   points jsonb,
-  -- Normalized track line (WGS84)
   track_line geometry(LineString, 4326) NOT NULL,
   processing_error text,
   created_at timestamptz NOT NULL DEFAULT now(),
@@ -130,7 +111,6 @@ CREATE TABLE IF NOT EXISTS runs (
 CREATE INDEX IF NOT EXISTS runs_user_ix ON runs(user_id);
 CREATE INDEX IF NOT EXISTS runs_status_ix ON runs(status);
 
--- Raw GPS points (recommended when you have pause/auto-pause and want fair stats/anti-cheat).
 CREATE TABLE IF NOT EXISTS run_points (
   run_id uuid NOT NULL REFERENCES runs(id) ON DELETE CASCADE,
   seq integer NOT NULL,
@@ -145,7 +125,6 @@ CREATE TABLE IF NOT EXISTS run_points (
 
 CREATE INDEX IF NOT EXISTS run_points_run_ts_ix ON run_points(run_id, ts);
 
--- Pause intervals (manual or automatic).
 CREATE TABLE IF NOT EXISTS run_pauses (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   run_id uuid NOT NULL REFERENCES runs(id) ON DELETE CASCADE,
@@ -157,7 +136,6 @@ CREATE TABLE IF NOT EXISTS run_pauses (
 
 CREATE INDEX IF NOT EXISTS run_pauses_run_started_ix ON run_pauses(run_id, started_at);
 
--- Territories: owned fragments with their own protection timer.
 CREATE TABLE IF NOT EXISTS territories (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -174,9 +152,7 @@ CREATE INDEX IF NOT EXISTS territories_geom_gix ON territories USING GIST (geom)
 CREATE INDEX IF NOT EXISTS territories_status_protected_until_ix
   ON territories(status, protected_until);
 
--- Contested areas belong to one protected territory fragment. Participants are
--- normalized so the UI can show everyone involved while current_winner_user_id
--- tracks the last valid claimant for that contested geometry.
+
 CREATE TABLE IF NOT EXISTS territory_contested_areas (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   territory_id uuid NOT NULL REFERENCES territories(id) ON DELETE CASCADE,
@@ -205,7 +181,6 @@ CREATE TABLE IF NOT EXISTS territory_contested_area_participants (
 CREATE INDEX IF NOT EXISTS territory_contested_area_participants_user_ix
   ON territory_contested_area_participants(user_id);
 
--- Aggregated stats
 CREATE TABLE IF NOT EXISTS user_stats (
   user_id uuid PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
   run_count integer NOT NULL DEFAULT 0,
@@ -222,7 +197,6 @@ CREATE TABLE IF NOT EXISTS user_stats (
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 
--- Achievement catalog
 CREATE TABLE IF NOT EXISTS achievement_definitions (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   code text NOT NULL UNIQUE,
@@ -240,7 +214,6 @@ CREATE TABLE IF NOT EXISTS achievement_definitions (
 CREATE INDEX IF NOT EXISTS achievement_definitions_category_sort_ix
   ON achievement_definitions(category, sort_order, code);
 
--- Earned achievements per user
 CREATE TABLE IF NOT EXISTS user_achievements (
   user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   achievement_id uuid NOT NULL REFERENCES achievement_definitions(id) ON DELETE CASCADE,
@@ -324,7 +297,6 @@ CREATE TABLE IF NOT EXISTS user_notifications (
 CREATE INDEX IF NOT EXISTS user_notifications_user_created_ix
   ON user_notifications(user_id, created_at DESC);
 
--- Push tokens per user-device.
 CREATE TABLE IF NOT EXISTS user_push_tokens (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -340,7 +312,6 @@ CREATE TABLE IF NOT EXISTS user_push_tokens (
 CREATE INDEX IF NOT EXISTS user_push_tokens_user_ix
   ON user_push_tokens(user_id, updated_at DESC);
 
--- Minimal bootstrap data for Russia-only MVP.
 INSERT INTO ref_countries (code, name)
 VALUES ('RU', 'Россия')
 ON CONFLICT (code) DO UPDATE

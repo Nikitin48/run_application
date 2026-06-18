@@ -1,19 +1,4 @@
--- PostGIS functions:
--- 1) compute_capture_polygons(track_line, tol_m, min_area_m2)
---    - builds all enclosed areas (MultiPolygon) from a run track
---    - handles "figure-eight" (returns multiple polygons)
---    - uses self-snapping with tol_m so "almost" closures become real nodes
--- 2) finalize_run_capture(run_id, tol_m, min_area_m2)
---    - computes capture polygons for the run
---    - creates contested areas on protected territories
---    - instantly transfers intersections with vulnerable territories
---    - merges adjacent/overlapping vulnerable fragments of the same user
---    - writes notification history for attacked owners
---    - updates user_stats for runner and affected owners
---
--- Requires:
---   CREATE EXTENSION IF NOT EXISTS postgis;
---   CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 
 BEGIN;
 
@@ -38,26 +23,21 @@ BEGIN
     RETURN ST_SetSRID('MULTIPOLYGON EMPTY'::geometry, 4326);
   END IF;
 
-  -- Work in meters (WebMercator). For MVP this is acceptable; can be refined later.
+ 
   line_m := ST_Transform(p_track_line, 3857);
 
-  -- Snap the line to itself so near-intersections become nodes.
   snapped := ST_Snap(line_m, line_m, p_tol_m);
 
-  -- Node the linework (split at intersections).
   noded := ST_Node(snapped);
 
-  -- Polygonize: produce faces (supports figure-eight -> multiple polygons).
   poly_coll := ST_Polygonize(noded);
 
-  -- Extract polygons, make valid, unify.
   poly_m := ST_CollectionExtract(ST_MakeValid(ST_UnaryUnion(poly_coll)), 3);
 
   IF poly_m IS NULL OR ST_IsEmpty(poly_m) THEN
     RETURN ST_SetSRID('MULTIPOLYGON EMPTY'::geometry, 4326);
   END IF;
 
-  -- Filter tiny polygons by area (still in meters).
   filtered_m := (
     SELECT COALESCE(
       ST_Multi(ST_Union(geom)),
@@ -138,8 +118,7 @@ DECLARE
   v_pair record;
   v_union geometry;
 BEGIN
-  -- Merge only vulnerable fragments (protection expired). Protected pieces stay
-  -- separate even if they touch, until all involved timers expire.
+
   LOOP
     SELECT
       t1.id AS keep_id,
@@ -234,8 +213,7 @@ AS $$
 DECLARE
   v_now timestamptz := now();
 BEGIN
-  -- Fragment status reflects protection timer only. Contested intersections
-  -- are stored separately in territory_contested_areas.
+
   UPDATE territories t
   SET status = CASE
         WHEN t.protected_until > v_now THEN 'protected'
@@ -446,7 +424,6 @@ BEGIN
     RAISE EXCEPTION 'run % not found', p_run_id;
   END IF;
 
-  -- Load run metrics (fallbacks are allowed).
   SELECT
     COALESCE(r.distance_m, 0),
     COALESCE(
@@ -616,7 +593,6 @@ BEGIN
     );
   END LOOP;
 
-  -- The owner can reclaim current-winner position by crossing an active contest.
   FOR v_row IN
     SELECT ca.id, ca.geom
     FROM territory_contested_areas ca
@@ -644,7 +620,6 @@ BEGIN
     DO UPDATE SET last_joined_at = EXCLUDED.last_joined_at;
   END LOOP;
 
-  -- Process all other users whose territories intersect with the capture.
   FOR v_row IN
     SELECT t.id, t.user_id, t.geom, t.protected_until
     FROM territories t
@@ -804,7 +779,6 @@ BEGIN
       CONTINUE;
     END IF;
 
-    -- Vulnerable territories lose the valid intersection immediately.
     INSERT INTO tmp_victim_touched(victim_user_id, affected_area_m2, notification_kind)
     VALUES (v_row.user_id, v_intersection_area, 'territory_stolen')
     ON CONFLICT (victim_user_id)
@@ -868,7 +842,6 @@ BEGIN
 
   PERFORM refresh_territory_statuses();
 
-  -- Update runs table status
   UPDATE runs
   SET status = 'processed',
       elapsed_s = v_elapsed_s,
@@ -877,7 +850,6 @@ BEGIN
       updated_at = v_now
   WHERE id = p_run_id;
 
-  -- Append notification history for victims.
   INSERT INTO user_notifications(
     user_id, kind, attacker_user_id, run_id, stolen_area_m2, payload, created_at
   )
@@ -894,7 +866,6 @@ BEGIN
     v_now
   FROM tmp_victim_touched tvt;
 
-  -- Keep only the latest 10 notifications per affected user.
   DELETE FROM user_notifications un
   USING (
     SELECT id
@@ -914,8 +885,7 @@ BEGIN
 
   SELECT COUNT(*) INTO v_victims FROM tmp_victim_touched;
 
-  -- Update stats (runner + victims touched)
-  -- Runner: increment run_count + distance, recompute owned area from territories.
+
   INSERT INTO user_stats(
     user_id,
     run_count,
@@ -955,13 +925,11 @@ BEGIN
     owned_area_m2 = territory_owned_area_m2(v_runner_id),
     updated_at = v_now;
 
-  -- Victims: recompute owned_area_m2 only (distance/run_count unchanged here).
   UPDATE user_stats us
   SET owned_area_m2 = territory_owned_area_m2(us.user_id),
       updated_at = v_now
   WHERE us.user_id IN (SELECT victim_user_id FROM tmp_victim_touched);
 
-  -- Victims that don't have a stats row yet:
   INSERT INTO user_stats(
     user_id,
     run_count,
